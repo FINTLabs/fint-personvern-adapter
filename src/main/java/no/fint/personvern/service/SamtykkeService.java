@@ -150,7 +150,7 @@ public class SamtykkeService {
         resource.setAktiv(true);
         resource.setFormal("Vise profilbilde på ansattside");
         resource.addTjeneste(Link.with(Tjeneste.class, "systemid", "A"));
-        resource.addBehandlingsgrunnlag(Link.with(Behandlingsgrunnlag.class, "systemid", "A"));
+        resource.addBehandlingsgrunnlag(Link.with(Behandlingsgrunnlag.class, "personvern", "kodeverk", "behandlingsgrunnlag", "systemid", "A"));
         resource.addPersonopplysning(Link.with("https://beta.felleskomponent.no/fint/metamodell/attributt/bilde"));
         mongoTemplate.insert(resource, orgId);
     }
