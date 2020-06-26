@@ -1,0 +1,19 @@
+server:
+  port: 8091
+
+springfox:
+  title: '@title@'
+  version: '@version@'
+
+fint:
+  adapter:
+    endpoints:
+      sse: /sse/%s
+      status: /status
+      response: /response
+    organizations: fake.no
+
+  oauth:
+    enabled: false
+    access-token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token
+    scope: fint-client
