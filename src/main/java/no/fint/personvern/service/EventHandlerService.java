@@ -11,6 +11,8 @@ import no.fint.event.model.health.HealthStatus;
 import no.fint.model.personvern.kodeverk.KodeverkActions;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
+import no.fint.personvern.exception.MongoCantFindDocumentException;
+import no.fint.personvern.exception.MongoEntryExistsException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -65,6 +67,14 @@ public class EventHandlerService {
                         }
                     }
                     responseEvent.setResponseStatus(ResponseStatus.ACCEPTED);
+                } catch (MongoEntryExistsException e) {
+                    log.error("Error handling event {}{}", event, e);
+                    responseEvent.setResponseStatus(ResponseStatus.CONFLICT);
+                    responseEvent.setMessage(e.getMessage());
+                } catch (MongoCantFindDocumentException e) {
+                    log.error("Error handling event {}", event, e);
+                    responseEvent.setResponseStatus(ResponseStatus.REJECTED);
+                    responseEvent.setMessage(e.getMessage());
                 } catch (Exception e) {
                     log.error("Error handling event {}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.ERROR);
