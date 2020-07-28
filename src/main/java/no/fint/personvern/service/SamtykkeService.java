@@ -86,21 +86,35 @@ public class SamtykkeService {
                 mongoTemplate.insert(samtykke, orgId);
             }
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
-            String identificator = responseEvent.getQuery();
-            String identificatorNumber = identificator.split("/")[1];
+            String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
             Query query1 = Query.query(Criteria.where("systemId.identifikatorverdi")
                     .is(identificatorNumber
                     ));
-            SamtykkeResourceWrapper found = mongoTemplate.findOne(query1
+            SamtykkeResourceWrapper original = mongoTemplate.findOne(query1
                     , SamtykkeResourceWrapper.class, orgId);
 
-            if (found != null) {
-                found.setSystemId(samtykke.getSystemId());
-                found.setGyldighetsperiode(samtykke.getGyldighetsperiode());
-                found.setOpprettet(samtykke.getOpprettet());
-                found.setLinks(samtykke.getLinks());
-                mongoTemplate.save(found, orgId);
+            Query query2 = Query.query(Criteria.where("systemId.identifikatorverdi")
+                    .is(samtykke.getSystemId().getIdentifikatorverdi()
+                    ));
+            SamtykkeResourceWrapper found = mongoTemplate.findOne(query2
+                    , SamtykkeResourceWrapper.class, orgId);
+
+            if (found !=null){
+                ArrayList<FintLinks> fintLinks = createSamtykkeResource(found);
+                responseEvent.setData(fintLinks);
+                throw new MongoEntryExistsException(
+                        "Invalid operation: systemId.identifikatorverdi "
+                                + samtykke.getSystemId().getIdentifikatorverdi()
+                                + "  exist: "
+                                + responseEvent.getOperation());
+            }
+            if (original != null) {
+                original.setSystemId(samtykke.getSystemId());
+                original.setGyldighetsperiode(samtykke.getGyldighetsperiode());
+                original.setOpprettet(samtykke.getOpprettet());
+                original.setLinks(samtykke.getLinks());
+                mongoTemplate.save(original, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
@@ -137,11 +151,11 @@ public class SamtykkeService {
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
-        TjenesteResource tjeneste = objectMapper.convertValue(responseEvent.getData().get(0), TjenesteResource.class);
+        TjenesteResourceWrapper tjeneste = objectMapper.convertValue(responseEvent.getData().get(0), TjenesteResourceWrapper.class);
         if (responseEvent.getOperation() == Operation.CREATE) {
-            Query query = new Query().restrict(TjenesteResource.class);
-            List<TjenesteResource> resources = mongoTemplate.find(query, TjenesteResource.class, orgId);
-            Optional<TjenesteResource> any =
+            Query query = new Query().restrict(TjenesteResourceWrapper.class);
+            List<TjenesteResourceWrapper> resources = mongoTemplate.find(query, TjenesteResourceWrapper.class, orgId);
+            Optional<TjenesteResourceWrapper> any =
                     resources.stream()
                             .filter(tjenesteResource -> tjenesteResource.getSystemId().equals(tjeneste.getSystemId()))
                             .findAny();
@@ -150,20 +164,35 @@ public class SamtykkeService {
             }
             mongoTemplate.insert(tjeneste, orgId);
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
-            String identificator = responseEvent.getQuery();
-            String identificatorNumber = identificator.split("/")[1];
+            String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
             Query query1 = Query.query(Criteria.where("systemId.identifikatorverdi")
                     .is(identificatorNumber
                     ));
-            TjenesteResource found = mongoTemplate.findOne(query1
-                    , TjenesteResource.class, orgId);
+            TjenesteResourceWrapper original = mongoTemplate.findOne(query1
+                    , TjenesteResourceWrapper.class, orgId);
 
-            if (found != null) {
-                found.setSystemId(tjeneste.getSystemId());
-                found.setNavn(tjeneste.getNavn());
-                found.setLinks(tjeneste.getLinks());
-                mongoTemplate.save(found, orgId);
+            Query query2 = Query.query(Criteria.where("systemId.identifikatorverdi")
+                    .is(tjeneste.getSystemId().getIdentifikatorverdi()
+                    ));
+            TjenesteResourceWrapper found = mongoTemplate.findOne(query2
+                    , TjenesteResourceWrapper.class, orgId);
+
+            if (found !=null){
+                ArrayList<FintLinks> fintLinks = createTjenesteResource(found);
+                responseEvent.setData(fintLinks);
+                throw new MongoEntryExistsException(
+                        "Invalid operation: systemId.identifikatorverdi "
+                                + tjeneste.getSystemId().getIdentifikatorverdi()
+                                + "  exist: "
+                                + responseEvent.getOperation());
+            }
+
+            if (original != null) {
+                original.setSystemId(tjeneste.getSystemId());
+                original.setNavn(tjeneste.getNavn());
+                original.setLinks(tjeneste.getLinks());
+                mongoTemplate.save(original, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
@@ -202,12 +231,12 @@ public class SamtykkeService {
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
-        BehandlingResource behandling = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResource.class);
+        BehandlingResourceWrapper behandling = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResourceWrapper.class);
         if (responseEvent.getOperation() == Operation.CREATE) {
             Query query = new Query().restrict(BehandlingResource.class);
-            List<BehandlingResource> resources = mongoTemplate.find(query, BehandlingResource.class, orgId);
+            List<BehandlingResourceWrapper> resources = mongoTemplate.find(query, BehandlingResourceWrapper.class, orgId);
 
-            Optional<BehandlingResource> any =
+            Optional<BehandlingResourceWrapper> any =
                     resources.stream()
                             .filter(behandlingResource -> behandlingResource.getSystemId().equals(behandling.getSystemId()))
                             .findAny();
@@ -216,21 +245,36 @@ public class SamtykkeService {
             }
             mongoTemplate.insert(behandling, orgId);
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
-            String identificator = responseEvent.getQuery();
-            String identificatorNumber = identificator.split("/")[1];
+            String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
             Query query1 = Query.query(Criteria.where("systemId.identifikatorverdi")
                     .is(identificatorNumber
                     ));
-            BehandlingResource found = mongoTemplate.findOne(query1
-                    , BehandlingResource.class, orgId);
+            BehandlingResourceWrapper orginial = mongoTemplate.findOne(query1
+                    , BehandlingResourceWrapper.class, orgId);
 
-            if (found != null) {
-                found.setSystemId(behandling.getSystemId());
-                found.setAktiv(behandling.getAktiv());
-                found.setFormal(behandling.getFormal());
-                found.setLinks(behandling.getLinks());
-                mongoTemplate.save(found, orgId);
+            Query query2 = Query.query(Criteria.where("systemId.identifikatorverdi")
+                    .is(behandling.getSystemId().getIdentifikatorverdi()
+                    ));
+            BehandlingResourceWrapper found = mongoTemplate.findOne(query2
+                    , BehandlingResourceWrapper.class, orgId);
+
+            if (found !=null){
+                ArrayList<FintLinks> fintLinks = createBehandlingResource(found);
+                responseEvent.setData(fintLinks);
+                throw new MongoEntryExistsException(
+                        "Invalid operation: systemId.identifikatorverdi "
+                                + behandling.getSystemId().getIdentifikatorverdi()
+                                + "  exist: "
+                                + responseEvent.getOperation());
+            }
+
+            if (orginial != null) {
+                orginial.setSystemId(behandling.getSystemId());
+                orginial.setAktiv(behandling.getAktiv());
+                orginial.setFormal(behandling.getFormal());
+                orginial.setLinks(behandling.getLinks());
+                mongoTemplate.save(orginial, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
@@ -280,5 +324,36 @@ public class SamtykkeService {
         resource.addBehandlingsgrunnlag(Link.with(Behandlingsgrunnlag.class, "systemid", "A"));
         resource.addPersonopplysning(Link.with("https://beta.felleskomponent.no/fint/metamodell/attributt/bilde"));
         mongoTemplate.insert(resource, orgId);
+    }
+    private ArrayList<FintLinks> createSamtykkeResource(SamtykkeResourceWrapper samtykkeResourceWrapper){
+        ArrayList<FintLinks> fintLinks = new ArrayList<>();
+        SamtykkeResource resource = new SamtykkeResource();
+        resource.setGyldighetsperiode(samtykkeResourceWrapper.getGyldighetsperiode());
+        resource.setLinks(samtykkeResourceWrapper.getLinks());
+        resource.setOpprettet(samtykkeResourceWrapper.getOpprettet());
+        resource.setSystemId(samtykkeResourceWrapper.getSystemId());
+        fintLinks.add(resource);
+        return fintLinks;
+    }
+
+    private ArrayList<FintLinks> createTjenesteResource(TjenesteResourceWrapper tjenesteResourceWrapper){
+        ArrayList<FintLinks> fintLinks = new ArrayList<>();
+        TjenesteResource resource = new TjenesteResource();
+        resource.setNavn(tjenesteResourceWrapper.getNavn());
+        resource.setLinks(tjenesteResourceWrapper.getLinks());
+        resource.setSystemId(tjenesteResourceWrapper.getSystemId());
+        fintLinks.add(resource);
+        return fintLinks;
+    }
+
+    private ArrayList<FintLinks> createBehandlingResource(BehandlingResourceWrapper behandlingResourceWrapper){
+        ArrayList<FintLinks> fintLinks = new ArrayList<>();
+        BehandlingResource resource = new BehandlingResource();
+        resource.setAktiv(behandlingResourceWrapper.getAktiv());
+        resource.setLinks(behandlingResourceWrapper.getLinks());
+        resource.setFormal(behandlingResourceWrapper.getFormal());
+        resource.setSystemId(behandlingResourceWrapper.getSystemId());
+        fintLinks.add(resource);
+        return fintLinks;
     }
 }
