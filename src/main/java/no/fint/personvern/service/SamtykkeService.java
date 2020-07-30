@@ -68,7 +68,6 @@ public class SamtykkeService extends SpringerRepository {
     }
 
     public void updateSamtykke(Event<FintLinks> responseEvent) throws MongoEntryExistsException {
-
         String orgId = responseEvent.getOrgId();
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
@@ -95,13 +94,15 @@ public class SamtykkeService extends SpringerRepository {
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
             String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
-            Optional<SamtykkeResource> optinalOriginal =
+            Optional<Springer> optinalOriginal =
                     resources.stream()
-                            .map(link -> objectMapper.convertValue(link.getValue(), SamtykkeResource.class))
-                            .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(identificatorNumber))
+                            .filter(fintLink -> {
+                                SamtykkeResource samtykkeResource = objectMapper.convertValue(fintLink.getValue(), SamtykkeResource.class);
+                                return samtykkeResource.getSystemId().getIdentifikatorverdi().equals(identificatorNumber);
+                            })
                             .findFirst();
-            SamtykkeResource original = null;
-            if (optinalOriginal.isPresent()){
+            Springer original = null;
+            if (optinalOriginal.isPresent()) {
                 original = optinalOriginal.get();
             }
             Optional<SamtykkeResource> optinalExists =
@@ -110,11 +111,11 @@ public class SamtykkeService extends SpringerRepository {
                             .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(samtykke.getSystemId().getIdentifikatorverdi()))
                             .findFirst();
             SamtykkeResource found = null;
-            if (optinalExists.isPresent()){
+            if (optinalExists.isPresent()) {
                 found = optinalExists.get();
             }
 
-            if (found !=null){
+            if (found != null) {
                 ArrayList<FintLinks> fintLinks = new ArrayList<>();
                 fintLinks.add(found);
                 responseEvent.setData(fintLinks);
@@ -125,11 +126,8 @@ public class SamtykkeService extends SpringerRepository {
                                 + responseEvent.getOperation());
             }
             if (original != null) {
-                original.setSystemId(samtykke.getSystemId());
-                original.setGyldighetsperiode(samtykke.getGyldighetsperiode());
-                original.setOpprettet(samtykke.getOpprettet());
-                original.setLinks(samtykke.getLinks());
-                mongoTemplate.save(wrapper.wrap(original, SamtykkeResource.class), orgId);
+                original.setValue(samtykke);
+                mongoTemplate.save(original, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
@@ -143,83 +141,92 @@ public class SamtykkeService extends SpringerRepository {
     }
 
     public void getAllTjeneste(Event<FintLinks> responseEvent) {
+
         String orgId = responseEvent.getOrgId();
 
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
 
-        Query query = new Query().restrict(TjenesteResource.class);
+        query(TjenesteResource.class, responseEvent, mongoTemplate, orgId);
 
-        List<TjenesteResource> resources = mongoTemplate.find(query, TjenesteResource.class, orgId);
-
-        if (resources.isEmpty() && orgId.equals(FINTLabs)) {
+        if (responseEvent.getData().isEmpty() && orgId.equals(FINTLabs)) {
             createTjenester(orgId);
-            resources = mongoTemplate.find(query, TjenesteResource.class, orgId);
+            query(TjenesteResource.class, responseEvent, mongoTemplate, orgId);
         }
-
-        resources.forEach(responseEvent::addData);
     }
 
     public void updateTjeneste(Event<FintLinks> responseEvent) {
+
         String orgId = responseEvent.getOrgId();
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
-        TjenesteResourceWrapper tjeneste = objectMapper.convertValue(responseEvent.getData().get(0), TjenesteResourceWrapper.class);
+
+        TjenesteResource tjenesteResource = objectMapper.convertValue(responseEvent.getData().get(0), TjenesteResource.class);
+        List<Springer> resources = stream(TjenesteResource.class, mongoTemplate, orgId).collect(Collectors.toList());
+
         if (responseEvent.getOperation() == Operation.CREATE) {
-            Query query = new Query().restrict(TjenesteResourceWrapper.class);
-            List<TjenesteResourceWrapper> resources = mongoTemplate.find(query, TjenesteResourceWrapper.class, orgId);
-            Optional<TjenesteResourceWrapper> any =
+            Optional<TjenesteResource> any =
                     resources.stream()
-                            .filter(tjenesteResource -> tjenesteResource.getSystemId().equals(tjeneste.getSystemId()))
+                            .map(link -> objectMapper.convertValue(link.getValue(), TjenesteResource.class))
+                            .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(tjenesteResource.getSystemId().getIdentifikatorverdi()))
                             .findAny();
             if (any.isPresent()) {
+                ArrayList<FintLinks> fintLinks = new ArrayList<>();
+                TjenesteResource resource = any.get();
+                fintLinks.add(resource);
+                responseEvent.setData(fintLinks);
                 throw new MongoEntryExistsException("Tjeneste allready exists: " + responseEvent.getOperation());
+            } else {
+                mongoTemplate.insert(wrapper.wrap(tjenesteResource, TjenesteResource.class), orgId);
             }
-            mongoTemplate.insert(tjeneste, orgId);
+
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
             String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
-            Query query1 = Query.query(Criteria.where("systemId.identifikatorverdi")
-                    .is(identificatorNumber
-                    ));
-            TjenesteResourceWrapper original = mongoTemplate.findOne(query1
-                    , TjenesteResourceWrapper.class, orgId);
-
-            Query query2 = Query.query(Criteria.where("systemId.identifikatorverdi")
-                    .is(tjeneste.getSystemId().getIdentifikatorverdi()
-                    ));
-            TjenesteResourceWrapper found = mongoTemplate.findOne(query2
-                    , TjenesteResourceWrapper.class, orgId);
-
-            if (found !=null){
-                ArrayList<FintLinks> fintLinks = createTjenesteResource(found);
+            Optional<Springer> optinalOriginal =
+                    resources.stream()
+                            .filter(fintLink -> {
+                                TjenesteResource tjenesteResource1 = objectMapper.convertValue(fintLink.getValue(), TjenesteResource.class);
+                                return tjenesteResource1.getSystemId().getIdentifikatorverdi().equals(identificatorNumber);
+                            }).findFirst();
+            Springer original = null;
+            if (optinalOriginal.isPresent()) {
+                original = optinalOriginal.get();
+            }
+            Optional<TjenesteResource> optinalExists =
+                    resources.stream()
+                            .map(link -> objectMapper.convertValue(link.getValue(), TjenesteResource.class))
+                            .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(tjenesteResource.getSystemId().getIdentifikatorverdi()))
+                            .findFirst();
+            TjenesteResource found = null;
+            if (optinalExists.isPresent()) {
+                found = optinalExists.get();
+            }
+            if (found != null) {
+                ArrayList<FintLinks> fintLinks = new ArrayList<>();
+                fintLinks.add(found);
                 responseEvent.setData(fintLinks);
                 throw new MongoEntryExistsException(
                         "Invalid operation: systemId.identifikatorverdi "
-                                + tjeneste.getSystemId().getIdentifikatorverdi()
+                                + tjenesteResource.getSystemId().getIdentifikatorverdi()
                                 + "  exist: "
                                 + responseEvent.getOperation());
             }
-
             if (original != null) {
-                original.setSystemId(tjeneste.getSystemId());
-                original.setNavn(tjeneste.getNavn());
-                original.setLinks(tjeneste.getLinks());
+                original.setValue(tjenesteResource);
                 mongoTemplate.save(original, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
-                                + tjeneste.getSystemId().getIdentifikatorverdi()
+                                + identificatorNumber
                                 + " doesnt exist: "
-                                + responseEvent.getOperation()
-                );
+                                + responseEvent.getOperation());
             }
         } else {
             throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
         }
-
     }
 
     public void getAllBehandling(Event<FintLinks> responseEvent) {
@@ -229,74 +236,80 @@ public class SamtykkeService extends SpringerRepository {
             throw new CollectionNotFoundException(orgId);
         }
 
-        Query query = new Query().restrict(BehandlingResource.class);
+        query(BehandlingResource.class, responseEvent, mongoTemplate, orgId);
 
-        List<BehandlingResource> resources = mongoTemplate.find(query, BehandlingResource.class, orgId);
-
-        if (resources.isEmpty() && orgId.equals(FINTLabs)) {
+        if (responseEvent.getData().isEmpty() && orgId.equals(FINTLabs)) {
             createBehandlinger(orgId);
-            resources = mongoTemplate.find(query, BehandlingResource.class, orgId);
+            query(BehandlingResource.class, responseEvent, mongoTemplate, orgId);
         }
-
-        resources.forEach(responseEvent::addData);
     }
 
     public void updateBehandling(Event<FintLinks> responseEvent) {
+
         String orgId = responseEvent.getOrgId();
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
-        BehandlingResourceWrapper behandling = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResourceWrapper.class);
-        if (responseEvent.getOperation() == Operation.CREATE) {
-            Query query = new Query().restrict(BehandlingResource.class);
-            List<BehandlingResourceWrapper> resources = mongoTemplate.find(query, BehandlingResourceWrapper.class, orgId);
 
-            Optional<BehandlingResourceWrapper> any =
+        BehandlingResource behandlingResource = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResource.class);
+        List<Springer> resources = stream(BehandlingResource.class, mongoTemplate, orgId).collect(Collectors.toList());
+
+        if (responseEvent.getOperation() == Operation.CREATE) {
+            Optional<BehandlingResource> any =
                     resources.stream()
-                            .filter(behandlingResource -> behandlingResource.getSystemId().equals(behandling.getSystemId()))
+                            .map(link -> objectMapper.convertValue(link.getValue(), BehandlingResource.class))
+                            .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(behandlingResource.getSystemId().getIdentifikatorverdi()))
                             .findAny();
             if (any.isPresent()) {
+                ArrayList<FintLinks> fintLinks = new ArrayList<>();
+                BehandlingResource resource = any.get();
+                fintLinks.add(resource);
+                responseEvent.setData(fintLinks);
                 throw new MongoEntryExistsException("Behandling allready exists: " + responseEvent.getOperation());
+            } else {
+                mongoTemplate.insert(wrapper.wrap(behandlingResource, BehandlingResource.class), orgId);
             }
-            mongoTemplate.insert(behandling, orgId);
         } else if (responseEvent.getOperation() == Operation.UPDATE) {
             String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
-            Query query1 = Query.query(Criteria.where("systemId.identifikatorverdi")
-                    .is(identificatorNumber
-                    ).and("_class").is(BehandlingResourceWrapper.class.getName()));
-            BehandlingResourceWrapper orginial = mongoTemplate.findOne(query1
-                    , BehandlingResourceWrapper.class, orgId);
-
-            Query query2 = Query.query(Criteria.where("systemId.identifikatorverdi")
-                    .is(behandling.getSystemId().getIdentifikatorverdi()
-                    ));
-            BehandlingResourceWrapper found = mongoTemplate.findOne(query2
-                    , BehandlingResourceWrapper.class, orgId);
-
-            if (found !=null){
-                ArrayList<FintLinks> fintLinks = createBehandlingResource(found);
+            Optional<Springer> optinalOriginal =
+                    resources.stream()
+                            .filter(fintLink -> {
+                                BehandlingResource behandlingResource1 = objectMapper.convertValue(fintLink.getValue(), BehandlingResource.class);
+                                return behandlingResource1.getSystemId().getIdentifikatorverdi().equals(identificatorNumber);
+                            }).findFirst();
+            Springer original = null;
+            if (optinalOriginal.isPresent()) {
+                original = optinalOriginal.get();
+            }
+            Optional<BehandlingResource> optinalExists =
+                    resources.stream()
+                            .map(link -> objectMapper.convertValue(link.getValue(), BehandlingResource.class))
+                            .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(behandlingResource.getSystemId().getIdentifikatorverdi()))
+                            .findFirst();
+            BehandlingResource found = null;
+            if (optinalExists.isPresent()) {
+                found = optinalExists.get();
+            }
+            if (found != null) {
+                ArrayList<FintLinks> fintLinks = new ArrayList<>();
+                fintLinks.add(found);
                 responseEvent.setData(fintLinks);
                 throw new MongoEntryExistsException(
                         "Invalid operation: systemId.identifikatorverdi "
-                                + behandling.getSystemId().getIdentifikatorverdi()
+                                + behandlingResource.getSystemId().getIdentifikatorverdi()
                                 + "  exist: "
                                 + responseEvent.getOperation());
             }
-
-            if (orginial != null) {
-                orginial.setSystemId(behandling.getSystemId());
-                orginial.setAktiv(behandling.getAktiv());
-                orginial.setFormal(behandling.getFormal());
-                orginial.setLinks(behandling.getLinks());
-                mongoTemplate.save(orginial, orgId);
+            if (original != null) {
+                original.setValue(behandlingResource);
+                mongoTemplate.save(original, orgId);
             } else {
                 throw new MongoCantFindDocumentException(
                         "Invalid operation: systemId.identifikatorverdi "
-                                + behandling.getSystemId().getIdentifikatorverdi()
+                                + identificatorNumber
                                 + " doesnt exist: "
-                                + responseEvent.getOperation()
-                );
+                                + responseEvent.getOperation());
             }
         } else {
             throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
@@ -340,7 +353,8 @@ public class SamtykkeService extends SpringerRepository {
         resource.addPersonopplysning(Link.with("https://beta.felleskomponent.no/fint/metamodell/attributt/bilde"));
         mongoTemplate.insert(resource, orgId);
     }
-    private ArrayList<FintLinks> createSamtykkeResource(SamtykkeResourceWrapper samtykkeResourceWrapper){
+
+    private ArrayList<FintLinks> createSamtykkeResource(SamtykkeResourceWrapper samtykkeResourceWrapper) {
         ArrayList<FintLinks> fintLinks = new ArrayList<>();
         SamtykkeResource resource = new SamtykkeResource();
         resource.setGyldighetsperiode(samtykkeResourceWrapper.getGyldighetsperiode());
@@ -351,7 +365,7 @@ public class SamtykkeService extends SpringerRepository {
         return fintLinks;
     }
 
-    private ArrayList<FintLinks> createTjenesteResource(TjenesteResourceWrapper tjenesteResourceWrapper){
+    private ArrayList<FintLinks> createTjenesteResource(TjenesteResourceWrapper tjenesteResourceWrapper) {
         ArrayList<FintLinks> fintLinks = new ArrayList<>();
         TjenesteResource resource = new TjenesteResource();
         resource.setNavn(tjenesteResourceWrapper.getNavn());
@@ -361,7 +375,7 @@ public class SamtykkeService extends SpringerRepository {
         return fintLinks;
     }
 
-    private ArrayList<FintLinks> createBehandlingResource(BehandlingResourceWrapper behandlingResourceWrapper){
+    private ArrayList<FintLinks> createBehandlingResource(BehandlingResourceWrapper behandlingResourceWrapper) {
         ArrayList<FintLinks> fintLinks = new ArrayList<>();
         BehandlingResource resource = new BehandlingResource();
         resource.setAktiv(behandlingResourceWrapper.getAktiv());
