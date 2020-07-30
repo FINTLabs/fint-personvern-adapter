@@ -97,11 +97,11 @@ public class EventHandlerService {
                     }
                     responseEvent.setResponseStatus(ResponseStatus.ACCEPTED);
                 } catch (MongoEntryExistsException e) {
-                    log.error("Error handling event {}{}", event, e);
+                    log.error("Error handling event MongoEntryExistsException {}{}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.CONFLICT);
                     responseEvent.setMessage(e.getMessage());
                 } catch (MongoCantFindDocumentException e) {
-                    log.error("Error handling event {}", event, e);
+                    log.error("Error handling event MongoCantFindDocumentException {}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.REJECTED);
                     responseEvent.setMessage(e.getMessage());
                 } catch (Exception e) {
