@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.adapter.event.EventResponseService;
 import no.fint.adapter.event.EventStatusService;
 import no.fint.event.model.Event;
+import no.fint.event.model.Operation;
 import no.fint.event.model.ResponseStatus;
 import no.fint.event.model.Status;
 import no.fint.event.model.health.Health;
@@ -11,6 +12,8 @@ import no.fint.event.model.health.HealthStatus;
 import no.fint.model.personvern.kodeverk.KodeverkActions;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
+import no.fint.personvern.exception.MongoCantFindDocumentException;
+import no.fint.personvern.exception.MongoEntryExistsException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,12 +26,22 @@ public class EventHandlerService {
     private final EventStatusService eventStatusService;
     private final KodeverkService kodeverkService;
     private final SamtykkeService samtykkeService;
+    private final BehandlingService behandlingService;
+    private final TjenesteService tjenesteService;
 
-    public EventHandlerService(EventResponseService eventResponseService, EventStatusService eventStatusService, KodeverkService kodeverkService, SamtykkeService samtykkeService) {
+    public EventHandlerService(
+            EventResponseService eventResponseService,
+            EventStatusService eventStatusService,
+            KodeverkService kodeverkService,
+            SamtykkeService samtykkeService,
+            BehandlingService behandlingService,
+            TjenesteService tjenesteService) {
         this.eventResponseService = eventResponseService;
         this.eventStatusService = eventStatusService;
         this.kodeverkService = kodeverkService;
         this.samtykkeService = samtykkeService;
+        this.behandlingService = behandlingService;
+        this.tjenesteService = tjenesteService;
     }
 
     public void handleEvent(String component, Event event) {
@@ -48,23 +61,49 @@ public class EventHandlerService {
                                 samtykkeService.getAllSamtykke(responseEvent);
                                 break;
                             case UPDATE_SAMTYKKE:
-                                samtykkeService.updateSamtykke(responseEvent);
+                                if (responseEvent.getOperation() == Operation.CREATE) {
+                                    samtykkeService.createSamtykke(responseEvent);
+                                } else if (responseEvent.getOperation() == Operation.UPDATE) {
+                                    samtykkeService.updateSamtykke(responseEvent);
+                                } else {
+                                    throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+                                }
                                 break;
                             case GET_ALL_BEHANDLING:
-                                samtykkeService.getAllBehandling(responseEvent);
+                                behandlingService.getAllBehandling(responseEvent);
                                 break;
                             case UPDATE_BEHANDLING:
-                                samtykkeService.updateBehandling(responseEvent);
+                                if (responseEvent.getOperation() == Operation.CREATE) {
+                                    behandlingService.createBehandling(responseEvent);
+                                } else if (responseEvent.getOperation() == Operation.UPDATE) {
+                                    behandlingService.updateBehandling(responseEvent);
+                                } else {
+                                    throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+                                }
                                 break;
                             case GET_ALL_TJENESTE:
-                                samtykkeService.getAllTjeneste(responseEvent);
+                                tjenesteService.getAllTjeneste(responseEvent);
                                 break;
                             case UPDATE_TJENESTE:
-                                samtykkeService.updateTjeneste(responseEvent);
+                                if (responseEvent.getOperation() == Operation.CREATE) {
+                                    tjenesteService.createTjeneste(responseEvent);
+                                } else if (responseEvent.getOperation() == Operation.UPDATE) {
+                                    tjenesteService.updateTjeneste(responseEvent);
+                                } else {
+                                    throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+                                }
                                 break;
                         }
                     }
                     responseEvent.setResponseStatus(ResponseStatus.ACCEPTED);
+                } catch (MongoEntryExistsException e) {
+                    log.error("Error handling event MongoEntryExistsException {}{}", event, e);
+                    responseEvent.setResponseStatus(ResponseStatus.CONFLICT);
+                    responseEvent.setMessage(e.getMessage());
+                } catch (MongoCantFindDocumentException e) {
+                    log.error("Error handling event MongoCantFindDocumentException {}", event, e);
+                    responseEvent.setResponseStatus(ResponseStatus.REJECTED);
+                    responseEvent.setMessage(e.getMessage());
                 } catch (Exception e) {
                     log.error("Error handling event {}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.ERROR);

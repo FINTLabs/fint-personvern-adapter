@@ -1,36 +1,45 @@
 package no.fint.personvern.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.event.model.Event;
-import no.fint.event.model.Operation;
 import no.fint.model.administrasjon.organisasjon.Organisasjonselement;
 import no.fint.model.felles.Person;
 import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.felles.kompleksedatatyper.Periode;
-import no.fint.model.personvern.kodeverk.Behandlingsgrunnlag;
 import no.fint.model.personvern.samtykke.Behandling;
-import no.fint.model.personvern.samtykke.Tjeneste;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.Link;
-import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fint.personvern.exception.CollectionNotFoundException;
+import no.fint.personvern.exception.MongoCantFindDocumentException;
+import no.fint.personvern.exception.MongoEntryExistsException;
+import no.fint.personvern.utility.Springer;
+import no.fint.personvern.utility.SpringerRepository;
+import no.fint.personvern.utility.Wrapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class SamtykkeService {
+public class SamtykkeService extends SpringerRepository {
+    @Autowired
+    protected Wrapper wrapper;
+
     private static final String FINTLabs = "fintlabs.no";
 
     private final MongoTemplate mongoTemplate;
+    private ObjectMapper objectMapper = new ObjectMapper();
+
 
     public SamtykkeService(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
@@ -43,77 +52,87 @@ public class SamtykkeService {
             throw new CollectionNotFoundException(orgId);
         }
 
-        Query query = new Query().restrict(SamtykkeResource.class);
+        query(SamtykkeResource.class, responseEvent, mongoTemplate, orgId);
 
-        List<SamtykkeResource> resources = mongoTemplate.find(query, SamtykkeResource.class, orgId);
-
-        if (resources.isEmpty() && orgId.equals(FINTLabs)) {
+        if (responseEvent.getData().isEmpty() && orgId.equals(FINTLabs)) {
             createSamtykker(orgId);
-            resources = mongoTemplate.find(query, SamtykkeResource.class, orgId);
-        }
-
-        resources.forEach(responseEvent::addData);
-    }
-
-    public void updateSamtykke(Event<FintLinks> responseEvent) {
-        if (responseEvent.getOperation() == Operation.CREATE) {
-
-        } else {
-            throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+            query(SamtykkeResource.class, responseEvent, mongoTemplate, orgId);
         }
     }
 
-    public void getAllTjeneste(Event<FintLinks> responseEvent) {
+    public void createSamtykke(Event<FintLinks> responseEvent) {
         String orgId = responseEvent.getOrgId();
-
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
 
-        Query query = new Query().restrict(TjenesteResource.class);
+        SamtykkeResource samtykke = objectMapper.convertValue(responseEvent.getData().get(0), SamtykkeResource.class);
+        List<Springer> resources = stream(SamtykkeResource.class, mongoTemplate, orgId).collect(Collectors.toList());
 
-        List<TjenesteResource> resources = mongoTemplate.find(query, TjenesteResource.class, orgId);
-
-        if (resources.isEmpty() && orgId.equals(FINTLabs)) {
-            createTjenester(orgId);
-            resources = mongoTemplate.find(query, TjenesteResource.class, orgId);
-        }
-
-        resources.forEach(responseEvent::addData);
-    }
-
-    public void updateTjeneste(Event<FintLinks> responseEvent) {
-        if (responseEvent.getOperation() == Operation.CREATE) {
-
+        Optional<SamtykkeResource> any =
+                resources.stream()
+                        .map(link -> objectMapper.convertValue(link.getValue(), SamtykkeResource.class))
+                        .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(samtykke.getSystemId().getIdentifikatorverdi()))
+                        .findAny();
+        if (any.isPresent()) {
+            ArrayList<FintLinks> fintLinks = new ArrayList<>();
+            SamtykkeResource samtykkeResource = any.get();
+            fintLinks.add(samtykkeResource);
+            responseEvent.setData(fintLinks);
+            throw new MongoEntryExistsException("Samtykke allready exists: " + responseEvent.getOperation());
         } else {
-            throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+            mongoTemplate.insert(wrapper.wrap(samtykke, SamtykkeResource.class), orgId);
         }
     }
 
-    public void getAllBehandling(Event<FintLinks> responseEvent) {
+    public void updateSamtykke(Event<FintLinks> responseEvent) throws MongoEntryExistsException {
         String orgId = responseEvent.getOrgId();
-
         if (!mongoTemplate.collectionExists(orgId)) {
             throw new CollectionNotFoundException(orgId);
         }
 
-        Query query = new Query().restrict(BehandlingResource.class);
+        SamtykkeResource samtykke = objectMapper.convertValue(responseEvent.getData().get(0), SamtykkeResource.class);
+        List<Springer> resources = stream(SamtykkeResource.class, mongoTemplate, orgId).collect(Collectors.toList());
 
-        List<BehandlingResource> resources = mongoTemplate.find(query, BehandlingResource.class, orgId);
+        String identificatorNumber = responseEvent.getQuery().split("/")[1];
 
-        if (resources.isEmpty() && orgId.equals(FINTLabs)) {
-            createBehandlinger(orgId);
-            resources = mongoTemplate.find(query, BehandlingResource.class, orgId);
+        Optional<Springer> optinalOriginal =
+                resources.stream()
+                        .filter(fintLink -> {
+                            SamtykkeResource samtykkeResource = objectMapper.convertValue(fintLink.getValue(), SamtykkeResource.class);
+                            return samtykkeResource.getSystemId().getIdentifikatorverdi().equals(identificatorNumber);
+                        })
+                        .findFirst();
+        Springer original = optinalOriginal.orElse(null);
+
+        Optional<SamtykkeResource> optinalExists =
+                resources.stream()
+                        .map(link -> objectMapper.convertValue(link.getValue(), SamtykkeResource.class))
+                        .filter(fintLink -> fintLink.getSystemId().getIdentifikatorverdi().equals(samtykke.getSystemId().getIdentifikatorverdi()))
+                        .findFirst();
+        SamtykkeResource found = optinalExists.orElse(null);
+
+        if (found != null) {
+            ArrayList<FintLinks> fintLinks = new ArrayList<>();
+            fintLinks.add(found);
+            responseEvent.setData(fintLinks);
+            throw new MongoEntryExistsException(
+                    "Invalid operation: systemId.identifikatorverdi "
+                            + samtykke.getSystemId().getIdentifikatorverdi()
+                            + "  exist: "
+                            + responseEvent.getOperation());
         }
-
-        resources.forEach(responseEvent::addData);
-    }
-
-    public void updateBehandling(Event<FintLinks> responseEvent) {
-        if (responseEvent.getOperation() == Operation.CREATE) {
-
+        if (original != null) {
+            Springer wrap = wrapper.wrap(samtykke, SamtykkeResource.class);
+            wrap.setId(original.getId());
+            wrap.setType(original.getType());
+            mongoTemplate.save(wrap, orgId);
         } else {
-            throw new IllegalArgumentException("Invalid operation: " + responseEvent.getOperation());
+            throw new MongoCantFindDocumentException(
+                    "Invalid operation: systemId.identifikatorverdi "
+                            + identificatorNumber
+                            + " doesnt exist: "
+                            + responseEvent.getOperation());
         }
     }
 

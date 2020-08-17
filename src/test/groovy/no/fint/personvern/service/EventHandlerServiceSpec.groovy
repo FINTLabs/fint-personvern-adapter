@@ -12,13 +12,15 @@ class EventHandlerServiceSpec extends Specification {
     private EventResponseService eventResponseService
     private KodeverkService kodeverkService;
     private SamtykkeService samtykkeService;
+    private BehandlingService behandlingService;
+    private TjenesteService tjenesteService;
 
     void setup() {
         eventStatusService = Mock(EventStatusService)
         eventResponseService = Mock(EventResponseService)
         kodeverkService = Mock(KodeverkService)
         samtykkeService = Mock(SamtykkeService)
-        eventHandlerService = new EventHandlerService(eventResponseService, eventStatusService, kodeverkService, samtykkeService)
+        eventHandlerService = new EventHandlerService(eventResponseService, eventStatusService, kodeverkService, samtykkeService, behandlingService, tjenesteService)
     }
 
     def "Post response on health check"() {
