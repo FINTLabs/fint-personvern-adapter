@@ -7,5 +7,5 @@ FROM gcr.io/distroless/java
 ENV JAVA_TOOL_OPTIONS -XX:+ExitOnOutOfMemoryError
 COPY --from=builder /home/gradle/build/deps/external/*.jar /data/
 COPY --from=builder /home/gradle/build/deps/fint/*.jar /data/
-COPY --from=builder /home/gradle/build/libs/fint-sse-adapter-skeleton-*.jar /data/fint-sse-adapter-skeleton.jar
-CMD ["/data/fint-sse-adapter-skeleton.jar"]
+COPY --from=builder /home/gradle/build/libs/fint-personvern-adapter-*.jar /data/fint-personvern-adapter.jar
+CMD ["/data/fint-personvern-adapter.jar"]

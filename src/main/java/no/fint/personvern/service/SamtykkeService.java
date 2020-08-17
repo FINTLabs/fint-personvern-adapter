@@ -150,4 +150,27 @@ public class SamtykkeService extends SpringerRepository {
         resource.addBehandling(Link.with(Behandling.class, "systemid", "A"));
         mongoTemplate.insert(resource, orgId);
     }
+
+    private void createTjenester(String orgId) {
+        TjenesteResource resource = new TjenesteResource();
+        Identifikator systemId = new Identifikator();
+        systemId.setIdentifikatorverdi("A");
+        resource.setSystemId(systemId);
+        resource.setNavn("Intranett");
+        resource.addBehandling(Link.with(Behandling.class, "systemid", "A"));
+        mongoTemplate.insert(resource, orgId);
+    }
+
+    private void createBehandlinger(String orgId) {
+        BehandlingResource resource = new BehandlingResource();
+        Identifikator systemId = new Identifikator();
+        systemId.setIdentifikatorverdi("A");
+        resource.setSystemId(systemId);
+        resource.setAktiv(true);
+        resource.setFormal("Vise profilbilde på ansattside");
+        resource.addTjeneste(Link.with(Tjeneste.class, "systemid", "A"));
+        resource.addBehandlingsgrunnlag(Link.with(Behandlingsgrunnlag.class, "personvern", "kodeverk", "behandlingsgrunnlag", "systemid", "A"));
+        resource.addPersonopplysning(Link.with("https://beta.felleskomponent.no/fint/metamodell/attributt/bilde"));
+        mongoTemplate.insert(resource, orgId);
+    }
 }
