@@ -103,6 +103,7 @@ public class EventHandlerService {
                 } catch (MongoCantFindDocumentException e) {
                     log.error("Error handling event MongoCantFindDocumentException {}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.REJECTED);
+                    responseEvent.setStatusCode("NOT_FOUND");
                     responseEvent.setMessage(e.getMessage());
                 } catch (Exception e) {
                     log.error("Error handling event {}", event, e);
