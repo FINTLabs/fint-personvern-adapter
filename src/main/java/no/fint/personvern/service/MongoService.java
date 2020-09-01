@@ -1,5 +1,8 @@
 package no.fint.personvern.service;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
+import com.mongodb.DBObject;
 import lombok.Getter;
 import no.fint.personvern.AppProps;
 import no.fint.personvern.utility.Springer;
@@ -25,6 +28,10 @@ public class MongoService {
 
     public void insert(Springer object) {
         mongoTemplate.insert(object, appProps.getDatabaseCollection());
+    }
+
+    public boolean ping() {
+            return mongoTemplate.getDb().command(new BasicDBObject("ping", "1")).ok();
     }
 
 }
