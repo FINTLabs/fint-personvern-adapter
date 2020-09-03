@@ -51,8 +51,13 @@ public class EventHandlerService {
                 Event<FintLinks> responseEvent = new Event<>(event);
                 try {
                     if (KodeverkActions.getActions().contains(event.getAction())) {
-                        if (KodeverkActions.valueOf(event.getAction()) == KodeverkActions.GET_ALL_BEHANDLINGSGRUNNLAG) {
-                            kodeverkService.getAllBehandlingsgrunnlag(responseEvent);
+                        switch (KodeverkActions.valueOf(event.getAction())) {
+                            case GET_ALL_BEHANDLINGSGRUNNLAG:
+                                kodeverkService.getAllBehandlingsgrunnlag(responseEvent);
+                                break;
+                            case GET_ALL_PERSONOPPLYSNING:
+                                kodeverkService.getAllPersonopplysning(responseEvent);
+                                break;
                         }
                     } else if (SamtykkeActions.getActions().contains(event.getAction())) {
                         switch (SamtykkeActions.valueOf(event.getAction())) {

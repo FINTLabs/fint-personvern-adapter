@@ -5,6 +5,7 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.felles.kompleksedatatyper.Periode;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.BehandlingsgrunnlagResource;
+import no.fint.model.resource.personvern.kodeverk.PersonopplysningResource;
 import no.fint.personvern.utility.SpringerRepository;
 import no.fint.personvern.utility.Wrapper;
 import org.springframework.stereotype.Service;
@@ -28,17 +29,22 @@ public class KodeverkService extends SpringerRepository {
         this.wrapper = wrapper;
     }
 
-
     public void getAllBehandlingsgrunnlag(Event<FintLinks> responseEvent) {
-        if (behandlinggrunnlagExistsInDatabase(responseEvent.getOrgId())) {
+        if (existsInDatabase(BehandlingsgrunnlagResource.class, responseEvent.getOrgId())) {
             createBehandlingsgrunnlag(responseEvent.getOrgId());
         }
         query(BehandlingsgrunnlagResource.class, responseEvent, responseEvent.getOrgId());
-
     }
 
-    private boolean behandlinggrunnlagExistsInDatabase(String orgId) {
-        return stream(BehandlingsgrunnlagResource.class, orgId).count() == 0;
+    public void getAllPersonopplysning(Event<FintLinks> responseEvent) {
+        if (existsInDatabase(PersonopplysningResource.class, responseEvent.getOrgId())) {
+            //TODO
+        }
+        query(PersonopplysningResource.class, responseEvent, responseEvent.getOrgId());
+    }
+
+    private boolean existsInDatabase(Class<? extends FintLinks> clazz, String orgId) {
+        return stream(clazz, orgId).count() == 0;
     }
 
     private void createBehandlingsgrunnlag(String orgId) {
