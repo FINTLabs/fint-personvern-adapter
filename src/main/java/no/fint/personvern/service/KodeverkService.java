@@ -1,11 +1,11 @@
 package no.fint.personvern.service;
 
 import no.fint.event.model.Event;
+import no.fint.event.model.ResponseStatus;
 import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.felles.kompleksedatatyper.Periode;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.BehandlingsgrunnlagResource;
-import no.fint.model.resource.personvern.kodeverk.PersonopplysningResource;
 import no.fint.personvern.utility.SpringerRepository;
 import no.fint.personvern.utility.Wrapper;
 import org.springframework.stereotype.Service;
@@ -20,12 +20,14 @@ import java.util.stream.Stream;
 @Service
 public class KodeverkService extends SpringerRepository {
     private final MongoService mongoService;
+    private final PersonopplysningsService personopplysningsService;
     protected final Wrapper wrapper;
 
 
-    public KodeverkService(MongoService mongoService, Wrapper wrapper) {
+    public KodeverkService(MongoService mongoService, PersonopplysningsService personopplysningsService, Wrapper wrapper) {
         super(wrapper, mongoService.getAppProps(), mongoService.getMongoTemplate());
         this.mongoService = mongoService;
+        this.personopplysningsService = personopplysningsService;
         this.wrapper = wrapper;
     }
 
@@ -37,10 +39,9 @@ public class KodeverkService extends SpringerRepository {
     }
 
     public void getAllPersonopplysning(Event<FintLinks> responseEvent) {
-        if (existsInDatabase(PersonopplysningResource.class, responseEvent.getOrgId())) {
-            //TODO
-        }
-        query(PersonopplysningResource.class, responseEvent, responseEvent.getOrgId());
+        responseEvent.setData(personopplysningsService.getPersonopplysningResourceList());
+        responseEvent.setResponseStatus(ResponseStatus.ACCEPTED);
+
     }
 
     private boolean existsInDatabase(Class<? extends FintLinks> clazz, String orgId) {
