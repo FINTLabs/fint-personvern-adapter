@@ -58,11 +58,12 @@ dependencies {
     compile('org.glassfish.jersey.core:jersey-common:2.28')
     compile('org.glassfish.jersey.core:jersey-client:2.28')
     compile('org.jooq:jool-java-8:0.9.14')
-
+    compile('org.apache.commons:commons-text:1.9')
 
     compile('no.fint:fint-sse:1.4.0')
     compile('no.fint:fint-event-model:3.0.0')
     compile('no.fint:fint-relation-model:1.1.5')
+    compile('no.fint:fint-metamodell-model-java:1.0.0-rc-2')
 
     /* --> Models <-- */
 

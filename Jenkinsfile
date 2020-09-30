@@ -14,9 +14,9 @@ pipeline {
                 branch 'master'
             }
             steps {
-                withDockerRegistry([credentialsId: 'fintlabs.azurecr.io', url: 'https://fintlabs.azurecr.io']) {
-                    sh "docker tag ${GIT_COMMIT} fintlabs.azurecr.io/personvern-adapter:build.${BUILD_NUMBER}"
-                    sh "docker push fintlabs.azurecr.io/personvern-adapter:build.${BUILD_NUMBER}"
+                withDockerRegistry([credentialsId: 'fintlabsacr.azurecr.io', url: 'https://fintlabsacr.azurecr.io']) {
+                    sh "docker tag ${GIT_COMMIT} fintlabsacr.azurecr.io/personvern-adapter:build.${BUILD_NUMBER}"
+                    sh "docker push fintlabsacr.azurecr.io/personvern-adapter:build.${BUILD_NUMBER}"
                 }
                 withDockerRegistry([credentialsId: 'asgeir-docker', url: '']) {
                     sh "docker tag ${GIT_COMMIT} fint/personvern-adapter:latest"
@@ -38,18 +38,18 @@ pipeline {
                     sh "docker tag fint/personvern-adapter:${VERSION} fint/personvern-adapter:latest"
                     sh "docker push fint/personvern-adapter:latest"
                 }
-                withDockerRegistry([credentialsId: 'fintlabs.azurecr.io', url: 'https://fintlabs.azurecr.io']) {
-                    sh "docker tag ${GIT_COMMIT} fintlabs.azurecr.io/personvern-adapter:${VERSION}"
-                    sh "docker push fintlabs.azurecr.io/personvern-adapter:${VERSION}"
+                withDockerRegistry([credentialsId: 'fintlabsacr.azurecr.io', url: 'https://fintlabsacr.azurecr.io']) {
+                    sh "docker tag ${GIT_COMMIT} fintlabsacr.azurecr.io/personvern-adapter:${VERSION}"
+                    sh "docker push fintlabsacr.azurecr.io/personvern-adapter:${VERSION}"
                 }
             }
         }
         stage('Publish PR') {
             when { changeRequest() }
             steps {
-                withDockerRegistry([credentialsId: 'fintlabs.azurecr.io', url: 'https://fintlabs.azurecr.io']) {
-                    sh "docker tag ${GIT_COMMIT} fintlabs.azurecr.io/personvern-adapter:${BRANCH_NAME}.${BUILD_NUMBER}"
-                    sh "docker push fintlabs.azurecr.io/personvern-adapter:${BRANCH_NAME}.${BUILD_NUMBER}"
+                withDockerRegistry([credentialsId: 'fintlabsacr.azurecr.io', url: 'https://fintlabsacr.azurecr.io']) {
+                    sh "docker tag ${GIT_COMMIT} fintlabsacr.azurecr.io/personvern-adapter:${BRANCH_NAME}.${BUILD_NUMBER}"
+                    sh "docker push fintlabsacr.azurecr.io/personvern-adapter:${BRANCH_NAME}.${BUILD_NUMBER}"
                 }
             }
         }

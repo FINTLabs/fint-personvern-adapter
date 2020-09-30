@@ -11,7 +11,7 @@ fint:
       sse: /sse/%s
       status: /status
       response: /response
-    organizations: fake.no
+    organizations: fintlabs.no
 
   oauth:
     enabled: false

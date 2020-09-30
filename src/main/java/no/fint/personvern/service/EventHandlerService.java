@@ -16,9 +16,6 @@ import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.exception.MongoEntryExistsException;
 import org.springframework.stereotype.Service;
 
-/**
- * The EventHandlerService receives the <code>event</code> from SSE endpoint (provider) in the {@link #handleEvent(String, Event)} method.
- */
 @Slf4j
 @Service
 public class EventHandlerService {
@@ -28,6 +25,7 @@ public class EventHandlerService {
     private final SamtykkeService samtykkeService;
     private final BehandlingService behandlingService;
     private final TjenesteService tjenesteService;
+    private final MongoService mongoService;
 
     public EventHandlerService(
             EventResponseService eventResponseService,
@@ -35,13 +33,14 @@ public class EventHandlerService {
             KodeverkService kodeverkService,
             SamtykkeService samtykkeService,
             BehandlingService behandlingService,
-            TjenesteService tjenesteService) {
+            TjenesteService tjenesteService, MongoService mongoService) {
         this.eventResponseService = eventResponseService;
         this.eventStatusService = eventStatusService;
         this.kodeverkService = kodeverkService;
         this.samtykkeService = samtykkeService;
         this.behandlingService = behandlingService;
         this.tjenesteService = tjenesteService;
+        this.mongoService = mongoService;
     }
 
     public void handleEvent(String component, Event event) {
@@ -52,8 +51,13 @@ public class EventHandlerService {
                 Event<FintLinks> responseEvent = new Event<>(event);
                 try {
                     if (KodeverkActions.getActions().contains(event.getAction())) {
-                        if (KodeverkActions.valueOf(event.getAction()) == KodeverkActions.GET_ALL_BEHANDLINGSGRUNNLAG) {
-                            kodeverkService.getAllBehandlingsgrunnlag(responseEvent);
+                        switch (KodeverkActions.valueOf(event.getAction())) {
+                            case GET_ALL_BEHANDLINGSGRUNNLAG:
+                                kodeverkService.getAllBehandlingsgrunnlag(responseEvent);
+                                break;
+                            case GET_ALL_PERSONOPPLYSNING:
+                                kodeverkService.getAllPersonopplysning(responseEvent);
+                                break;
                         }
                     } else if (SamtykkeActions.getActions().contains(event.getAction())) {
                         switch (SamtykkeActions.valueOf(event.getAction())) {
@@ -103,6 +107,7 @@ public class EventHandlerService {
                 } catch (MongoCantFindDocumentException e) {
                     log.error("Error handling event MongoCantFindDocumentException {}", event, e);
                     responseEvent.setResponseStatus(ResponseStatus.REJECTED);
+                    responseEvent.setStatusCode("NOT_FOUND");
                     responseEvent.setMessage(e.getMessage());
                 } catch (Exception e) {
                     log.error("Error handling event {}", event, e);
@@ -117,11 +122,6 @@ public class EventHandlerService {
         }
     }
 
-    /**
-     * Checks if the application is healthy and updates the event object.
-     *
-     * @param event The event object
-     */
     public void postHealthCheckResponse(String component, Event event) {
         Event<Health> healthCheckEvent = new Event<>(event);
         healthCheckEvent.setStatus(Status.TEMP_UPSTREAM_QUEUE);
@@ -136,16 +136,7 @@ public class EventHandlerService {
         eventResponseService.postResponse(component, healthCheckEvent);
     }
 
-    /**
-     * TODO
-     * This is where we implement the health check code
-     *
-     * @return {@code true} if health is ok, else {@code false}
-     */
     private boolean healthCheck() {
-        /*
-         * Check application connectivity etc.
-         */
-        return true;
+        return mongoService.ping();
     }
 }

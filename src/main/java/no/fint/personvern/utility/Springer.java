@@ -14,4 +14,5 @@ public class Springer {
     private String id;
     private String type;
     private Object value;
+    private String orgId;
 }
