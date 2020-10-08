@@ -50,7 +50,7 @@ repositories {
 
 dependencies {
     compile("no.fint:fint-felles-resource-model-java:${apiVersion}")
-    compile("no.fint:fint-administrasjon-resource-model-java:${apiVersion}")
+    compile("no.fint:fint-personvern-resource-model-java:${apiVersion}")
 
     compile('org.apache.commons:commons-lang3:3.8.1')
     compile('org.projectlombok:lombok:1.18.6')
