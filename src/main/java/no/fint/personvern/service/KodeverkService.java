@@ -6,7 +6,7 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.felles.kompleksedatatyper.Periode;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.BehandlingsgrunnlagResource;
-import no.fint.personvern.utility.SpringerRepository;
+import no.fint.personvern.utility.WrapperDocumentRepository;
 import no.fint.personvern.utility.Wrapper;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class KodeverkService extends SpringerRepository {
+public class KodeverkService extends WrapperDocumentRepository {
     private final MongoService mongoService;
     private final PersonopplysningsService personopplysningsService;
     protected final Wrapper wrapper;
