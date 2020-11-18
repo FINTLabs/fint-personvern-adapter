@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @AllArgsConstructor
-@Document(collection = "personvern")
+//@Document(collection = "personvern")
 public class WrapperDocument {
 
     @Id
