@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 @Data
 @AllArgsConstructor
-public class Springer {
+public class WrapperDocument {
 
     @Id
     private String id;

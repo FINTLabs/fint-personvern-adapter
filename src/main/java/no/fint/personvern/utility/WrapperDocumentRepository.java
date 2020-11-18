@@ -11,13 +11,13 @@ import org.springframework.stereotype.Service;
 import java.util.stream.Stream;
 
 @Service
-public abstract class SpringerRepository {
+public abstract class WrapperDocumentRepository {
 
     protected final Wrapper wrapper;
     private final AppProps appProps;
     private final MongoTemplate mongoTemplate;
 
-    protected SpringerRepository(Wrapper wrapper, AppProps appProps, MongoTemplate mongoTemplate) {
+    protected WrapperDocumentRepository(Wrapper wrapper, AppProps appProps, MongoTemplate mongoTemplate) {
         this.wrapper = wrapper;
         this.appProps = appProps;
         this.mongoTemplate = mongoTemplate;
@@ -29,8 +29,8 @@ public abstract class SpringerRepository {
         response.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
-    protected Stream<Springer> stream(Class<? extends FintLinks> type, String orgId) {
+    protected Stream<WrapperDocument> stream(Class<? extends FintLinks> type, String orgId) {
         return StreamUtils
-                .createStreamFromIterator(mongoTemplate.stream(wrapper.query(type, orgId), Springer.class, appProps.getDatabaseCollection()));
+                .createStreamFromIterator(mongoTemplate.stream(wrapper.query(type, orgId), WrapperDocument.class, appProps.getDatabaseCollection()));
     }
 }

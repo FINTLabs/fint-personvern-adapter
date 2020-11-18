@@ -7,15 +7,15 @@ import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.exception.MongoEntryExistsException;
-import no.fint.personvern.utility.SpringerRepository;
 import no.fint.personvern.utility.Wrapper;
+import no.fint.personvern.utility.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class TjenesteService extends SpringerRepository {
+public class TjenesteService extends WrapperDocumentRepository {
     protected final Wrapper wrapper;
     private final MongoService mongoService;
 

@@ -5,7 +5,7 @@ import com.mongodb.CommandResult;
 import com.mongodb.DBObject;
 import lombok.Getter;
 import no.fint.personvern.AppProps;
-import no.fint.personvern.utility.Springer;
+import no.fint.personvern.utility.WrapperDocument;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +22,11 @@ public class MongoService {
         this.appProps = appProps;
     }
 
-    public void save(Springer object) {
+    public void save(WrapperDocument object) {
         mongoTemplate.save(object, appProps.getDatabaseCollection());
     }
 
-    public void insert(Springer object) {
+    public void insert(WrapperDocument object) {
         mongoTemplate.insert(object, appProps.getDatabaseCollection());
     }
 

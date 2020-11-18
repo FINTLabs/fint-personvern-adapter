@@ -14,12 +14,12 @@ public class Wrapper {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public Function<Object, Springer> wrapper(Class<?> type, String orgId) {
-        return Unchecked.function((Object content) -> new Springer(null, type.getCanonicalName(), JSON.parse(objectMapper.writeValueAsString(content)), orgId));
+    public Function<Object, WrapperDocument> wrapper(Class<?> type, String orgId) {
+        return Unchecked.function((Object content) -> new WrapperDocument(null, type.getCanonicalName(), JSON.parse(objectMapper.writeValueAsString(content)), orgId));
     }
 
-    public <T> Function<Springer, T> unwrapper(Class<T> type) {
-        return (Springer springer) -> objectMapper.convertValue(springer.getValue(), type);
+    public <T> Function<WrapperDocument, T> unwrapper(Class<T> type) {
+        return (WrapperDocument wrapperDocument) -> objectMapper.convertValue(wrapperDocument.getValue(), type);
     }
 
     public <T> Query query(Class<T> type, String orgId) {
@@ -28,12 +28,12 @@ public class Wrapper {
                 .addCriteria(Criteria.where("orgId").is(orgId));
     }
 
-    public <T> Springer update(Springer springer, T content) {
-        springer.setValue(JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(content)));
-        return springer;
+    public <T> WrapperDocument update(WrapperDocument wrapperDocument, T content) {
+        wrapperDocument.setValue(JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(content)));
+        return wrapperDocument;
     }
 
-    public Springer wrap(Object object, Class<?> type, String orgId) {
-        return (new Springer(null, type.getCanonicalName(), JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(object)), orgId));
+    public WrapperDocument wrap(Object object, Class<?> type, String orgId) {
+        return (new WrapperDocument(null, type.getCanonicalName(), JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(object)), orgId));
     }
 }

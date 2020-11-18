@@ -2,8 +2,8 @@ package no.fint.personvern.service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.hateos.Embedded;
 import no.fint.model.felles.kompleksedatatyper.Identifikator;
+import no.fint.model.hateos.Embedded;
 import no.fint.model.metamodell.kompleksedatatyper.Attributt;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.PersonopplysningResource;
