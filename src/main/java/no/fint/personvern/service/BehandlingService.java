@@ -3,14 +3,15 @@ package no.fint.personvern.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.event.model.Event;
+import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.personvern.exception.MongoCantFindDocumentException;
-import no.fint.personvern.exception.MongoEntryExistsException;
 import no.fint.personvern.utility.Wrapper;
 import no.fint.personvern.utility.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,22 +35,27 @@ public class BehandlingService extends WrapperDocumentRepository {
 
     }
 
-    public void createBehandling(Event<FintLinks> responseEvent) {
+    public BehandlingResource createBehandling(Event<FintLinks> responseEvent) {
         String orgId = responseEvent.getOrgId();
         BehandlingResource behandlingResource = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResource.class);
 
-        stream(BehandlingResource.class, orgId).collect(Collectors.toList())
-                .stream()
-                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), BehandlingResource.class)
-                        .getSystemId()
-                        .getIdentifikatorverdi()
-                        .equals(behandlingResource.getSystemId().getIdentifikatorverdi()))
-                .findAny()
-                .ifPresent(tr -> {
-                    throw new MongoEntryExistsException();
-                });
+//        stream(BehandlingResource.class, orgId).collect(Collectors.toList())
+//                .stream()
+//                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), BehandlingResource.class)
+//                        .getSystemId()
+//                        .getIdentifikatorverdi()
+//                        .equals(behandlingResource.getSystemId().getIdentifikatorverdi()))
+//                .findAny()
+//                .ifPresent(tr -> {
+//                    throw new MongoEntryExistsException();
+//                });
+
+        Identifikator systemId = new Identifikator();
+        systemId.setIdentifikatorverdi(UUID.randomUUID().toString());
+        behandlingResource.setSystemId(systemId);
 
         mongoService.insert(wrapper.wrap(behandlingResource, BehandlingResource.class, orgId));
+        return behandlingResource;
     }
 
     public void updateBehandling(Event<FintLinks> responseEvent) {

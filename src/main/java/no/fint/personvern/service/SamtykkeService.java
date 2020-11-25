@@ -3,6 +3,7 @@ package no.fint.personvern.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.event.model.Event;
+import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fint.personvern.exception.MongoCantFindDocumentException;
@@ -11,6 +12,7 @@ import no.fint.personvern.utility.Wrapper;
 import no.fint.personvern.utility.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,22 +36,27 @@ public class SamtykkeService extends WrapperDocumentRepository {
         query(SamtykkeResource.class, responseEvent, orgId);
     }
 
-    public void createSamtykke(Event<FintLinks> responseEvent) {
+    public SamtykkeResource createSamtykke(Event<FintLinks> responseEvent) {
         String orgId = responseEvent.getOrgId();
         SamtykkeResource samtykkeResource = objectMapper.convertValue(responseEvent.getData().get(0), SamtykkeResource.class);
 
-        stream(SamtykkeResource.class, orgId).collect(Collectors.toList())
-                .stream()
-                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), SamtykkeResource.class)
-                        .getSystemId()
-                        .getIdentifikatorverdi()
-                        .equals(samtykkeResource.getSystemId().getIdentifikatorverdi()))
-                .findAny()
-                .ifPresent(tr -> {
-                    throw new MongoEntryExistsException();
-                });
+//        stream(SamtykkeResource.class, orgId).collect(Collectors.toList())
+//                .stream()
+//                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), SamtykkeResource.class)
+//                        .getSystemId()
+//                        .getIdentifikatorverdi()
+//                        .equals(samtykkeResource.getSystemId().getIdentifikatorverdi()))
+//                .findAny()
+//                .ifPresent(tr -> {
+//                    throw new MongoEntryExistsException();
+//                });
+
+        Identifikator systemId = new Identifikator();
+        systemId.setIdentifikatorverdi(UUID.randomUUID().toString());
+        samtykkeResource.setSystemId(systemId);
 
         mongoService.insert(wrapper.wrap(samtykkeResource, SamtykkeResource.class, orgId));
+        return samtykkeResource;
     }
 
     public void updateSamtykke(Event<FintLinks> responseEvent) throws MongoEntryExistsException {

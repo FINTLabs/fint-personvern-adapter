@@ -16,6 +16,8 @@ import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.exception.MongoEntryExistsException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+
 @Slf4j
 @Service
 public class EventHandlerService {
@@ -66,7 +68,7 @@ public class EventHandlerService {
                                 break;
                             case UPDATE_SAMTYKKE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    samtykkeService.createSamtykke(responseEvent);
+                                    responseEvent.setData(Collections.singletonList(samtykkeService.createSamtykke(responseEvent)));
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     samtykkeService.updateSamtykke(responseEvent);
                                 } else {
@@ -78,7 +80,7 @@ public class EventHandlerService {
                                 break;
                             case UPDATE_BEHANDLING:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    behandlingService.createBehandling(responseEvent);
+                                    responseEvent.setData(Collections.singletonList(behandlingService.createBehandling(responseEvent)));
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     behandlingService.updateBehandling(responseEvent);
                                 } else {
@@ -90,7 +92,7 @@ public class EventHandlerService {
                                 break;
                             case UPDATE_TJENESTE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    tjenesteService.createTjeneste(responseEvent);
+                                    responseEvent.setData(Collections.singletonList(tjenesteService.createTjeneste(responseEvent)));
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     tjenesteService.updateTjeneste(responseEvent);
                                 } else {
