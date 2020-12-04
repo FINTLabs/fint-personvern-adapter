@@ -1,0 +1,15 @@
+package no.fint.personvern.utility;
+
+import no.fint.model.felles.kompleksedatatyper.Identifikator;
+
+import java.util.UUID;
+
+public class FintUtilities {
+
+    public static Identifikator createUuiSystemId() {
+        Identifikator systemId = new Identifikator();
+        systemId.setIdentifikatorverdi(UUID.randomUUID().toString());
+
+        return systemId;
+    }
+}

@@ -1,7 +1,8 @@
-package no.fint.personvern.utility;
+package no.fint.personvern.wrapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.util.JSON;
+import no.fint.model.resource.FintLinks;
 import org.jooq.lambda.Unchecked;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -33,7 +34,11 @@ public class Wrapper {
         return wrapperDocument;
     }
 
+    public WrapperDocument wrap(Object object, Class<?> type, String orgId, String documentId) {
+        return (new WrapperDocument(documentId, type.getCanonicalName(), JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(object)), orgId));
+    }
+
     public WrapperDocument wrap(Object object, Class<?> type, String orgId) {
-        return (new WrapperDocument(null, type.getCanonicalName(), JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(object)), orgId));
+        return wrap(object, type, orgId, null);
     }
 }

@@ -1,4 +1,4 @@
-package no.fint.personvern.utility;
+package no.fint.personvern.wrapper;
 
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;

@@ -3,15 +3,14 @@ package no.fint.personvern.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.event.model.Event;
-import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.personvern.exception.MongoCantFindDocumentException;
-import no.fint.personvern.utility.Wrapper;
-import no.fint.personvern.utility.WrapperDocumentRepository;
+import no.fint.personvern.utility.FintUtilities;
+import no.fint.personvern.wrapper.Wrapper;
+import no.fint.personvern.wrapper.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,22 +38,17 @@ public class BehandlingService extends WrapperDocumentRepository {
         String orgId = responseEvent.getOrgId();
         BehandlingResource behandlingResource = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResource.class);
 
-//        stream(BehandlingResource.class, orgId).collect(Collectors.toList())
-//                .stream()
-//                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), BehandlingResource.class)
-//                        .getSystemId()
-//                        .getIdentifikatorverdi()
-//                        .equals(behandlingResource.getSystemId().getIdentifikatorverdi()))
-//                .findAny()
-//                .ifPresent(tr -> {
-//                    throw new MongoEntryExistsException();
-//                });
 
-        Identifikator systemId = new Identifikator();
-        systemId.setIdentifikatorverdi(UUID.randomUUID().toString());
-        behandlingResource.setSystemId(systemId);
+        behandlingResource.setSystemId(FintUtilities.createUuiSystemId());
 
-        mongoService.insert(wrapper.wrap(behandlingResource, BehandlingResource.class, orgId));
+        mongoService.insert(
+                wrapper.wrap(
+                        behandlingResource,
+                        BehandlingResource.class,
+                        orgId,
+                        behandlingResource.getSystemId().getIdentifikatorverdi()
+                )
+        );
         return behandlingResource;
     }
 

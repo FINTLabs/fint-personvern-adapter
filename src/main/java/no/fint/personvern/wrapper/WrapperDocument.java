@@ -1,13 +1,11 @@
-package no.fint.personvern.utility;
+package no.fint.personvern.wrapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @AllArgsConstructor
-//@Document(collection = "personvern")
 public class WrapperDocument {
 
     @Id

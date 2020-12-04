@@ -1,11 +1,9 @@
 package no.fint.personvern.service;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DBObject;
 import lombok.Getter;
 import no.fint.personvern.AppProps;
-import no.fint.personvern.utility.WrapperDocument;
+import no.fint.personvern.wrapper.WrapperDocument;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 

@@ -6,8 +6,8 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.felles.kompleksedatatyper.Periode;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.BehandlingsgrunnlagResource;
-import no.fint.personvern.utility.Wrapper;
-import no.fint.personvern.utility.WrapperDocumentRepository;
+import no.fint.personvern.wrapper.Wrapper;
+import no.fint.personvern.wrapper.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
