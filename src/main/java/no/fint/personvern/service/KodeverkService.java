@@ -1,5 +1,6 @@
 package no.fint.personvern.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.felles.kompleksedatatyper.Identifikator;
@@ -7,35 +8,44 @@ import no.fint.model.felles.kompleksedatatyper.Periode;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.BehandlingsgrunnlagResource;
 import no.fint.personvern.wrapper.Wrapper;
+import no.fint.personvern.wrapper.WrapperDocument;
 import no.fint.personvern.wrapper.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.Instant;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class KodeverkService extends WrapperDocumentRepository {
-    private final MongoService mongoService;
+public class KodeverkService {
+    //private final MongoService mongoService;
     private final PersonopplysningsService personopplysningsService;
     protected final Wrapper wrapper;
+    private final WrapperDocumentRepository repository;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public KodeverkService(MongoService mongoService, PersonopplysningsService personopplysningsService, Wrapper wrapper) {
-        super(wrapper, mongoService.getAppProps(), mongoService.getMongoTemplate());
-        this.mongoService = mongoService;
+    public KodeverkService(PersonopplysningsService personopplysningsService, Wrapper wrapper, WrapperDocumentRepository repository) {
         this.personopplysningsService = personopplysningsService;
         this.wrapper = wrapper;
+        this.repository = repository;
     }
 
-    public void getAllBehandlingsgrunnlag(Event<FintLinks> responseEvent) {
-        if (existsInDatabase(BehandlingsgrunnlagResource.class, responseEvent.getOrgId())) {
+    public List<BehandlingsgrunnlagResource> getAllBehandlingsgrunnlag(Event<FintLinks> responseEvent) {
+        if (existsInDatabase(responseEvent.getOrgId())) {
             createBehandlingsgrunnlag(responseEvent.getOrgId());
         }
-        query(BehandlingsgrunnlagResource.class, responseEvent, responseEvent.getOrgId());
+
+        return repository
+                .findByOrgIdAndType(responseEvent.getOrgId(), BehandlingsgrunnlagResource.class.getCanonicalName())
+                .stream()
+                .map(WrapperDocument::getValue)
+                .map(d -> objectMapper.convertValue(d, BehandlingsgrunnlagResource.class))
+                .collect(Collectors.toList());
     }
 
     public void getAllPersonopplysning(Event<FintLinks> responseEvent) {
@@ -44,8 +54,8 @@ public class KodeverkService extends WrapperDocumentRepository {
 
     }
 
-    private boolean existsInDatabase(Class<? extends FintLinks> clazz, String orgId) {
-        return stream(clazz, orgId).count() == 0;
+    private boolean existsInDatabase(   String orgId) {
+        return repository.findByOrgIdAndType(orgId, BehandlingsgrunnlagResource.class.getCanonicalName()).size() > 0;
     }
 
     private void createBehandlingsgrunnlag(String orgId) {
@@ -60,7 +70,7 @@ public class KodeverkService extends WrapperDocumentRepository {
             Periode gyldighetsperiode = new Periode();
             gyldighetsperiode.setStart(Date.from(Instant.parse("2018-07-20T00:00:00.00Z")));
             resource.setGyldighetsperiode(gyldighetsperiode);
-            mongoService.insert(wrapper.wrap(resource, BehandlingsgrunnlagResource.class, orgId));
+            repository.insert(wrapper.wrap(resource, BehandlingsgrunnlagResource.class, orgId));
         });
     }
 

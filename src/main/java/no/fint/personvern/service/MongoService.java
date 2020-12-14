@@ -5,6 +5,8 @@ import lombok.Getter;
 import no.fint.personvern.AppProps;
 import no.fint.personvern.wrapper.WrapperDocument;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,6 +28,10 @@ public class MongoService {
 
     public void insert(WrapperDocument object) {
         mongoTemplate.insert(object, appProps.getDatabaseCollection());
+    }
+
+    public WrapperDocument findById(String id) {
+        return mongoTemplate.findById(id, WrapperDocument.class, appProps.getDatabaseCollection());
     }
 
     public boolean ping() {

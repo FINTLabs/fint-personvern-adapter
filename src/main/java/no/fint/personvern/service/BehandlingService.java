@@ -8,63 +8,61 @@ import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.utility.FintUtilities;
 import no.fint.personvern.wrapper.Wrapper;
+import no.fint.personvern.wrapper.WrapperDocument;
 import no.fint.personvern.wrapper.WrapperDocumentRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class BehandlingService extends WrapperDocumentRepository {
-    protected final Wrapper wrapper;
-    private final MongoService mongoService;
+public class BehandlingService {
+    private final Wrapper wrapper;
+    private final WrapperDocumentRepository repository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public BehandlingService(Wrapper wrapper, MongoService mongoService) {
-        super(wrapper, mongoService.getAppProps(), mongoService.getMongoTemplate());
+    public BehandlingService(Wrapper wrapper, WrapperDocumentRepository repository) {
         this.wrapper = wrapper;
-        this.mongoService = mongoService;
+        this.repository = repository;
     }
 
-    public void getAllBehandling(Event<FintLinks> responseEvent) {
-        String orgId = responseEvent.getOrgId();
-        query(BehandlingResource.class, responseEvent, orgId);
-
+    public List<BehandlingResource> getAllBehandling(String orgId) {
+        return repository
+                .findByOrgIdAndType(orgId, BehandlingResource.class.getCanonicalName())
+                .stream()
+                .map(WrapperDocument::getValue)
+                .map(d -> objectMapper.convertValue(d, BehandlingResource.class))
+                .collect(Collectors.toList());
     }
 
     public BehandlingResource createBehandling(Event<FintLinks> responseEvent) {
+
         String orgId = responseEvent.getOrgId();
         BehandlingResource behandlingResource = objectMapper.convertValue(responseEvent.getData().get(0), BehandlingResource.class);
 
-
         behandlingResource.setSystemId(FintUtilities.createUuiSystemId());
+        repository.insert(wrapper.wrap(
+                behandlingResource,
+                BehandlingResource.class,
+                orgId,
+                behandlingResource.getSystemId().getIdentifikatorverdi()
+        ));
 
-        mongoService.insert(
-                wrapper.wrap(
-                        behandlingResource,
-                        BehandlingResource.class,
-                        orgId,
-                        behandlingResource.getSystemId().getIdentifikatorverdi()
-                )
-        );
         return behandlingResource;
+
     }
 
     public void updateBehandling(Event<FintLinks> responseEvent) {
-        String orgId = responseEvent.getOrgId();
         String id = responseEvent.getQuery().split("/")[1];
 
-        mongoService.save(
-                wrapper.update(stream(BehandlingResource.class, orgId).collect(Collectors.toList())
-                                .stream()
-                                .filter(fintLink -> objectMapper.convertValue(fintLink.getValue(), BehandlingResource.class)
-                                        .getSystemId()
-                                        .getIdentifikatorverdi()
-                                        .equals(id))
-                                .findFirst()
-                                .orElseThrow(MongoCantFindDocumentException::new),
+        Optional<WrapperDocument> byId = Optional.ofNullable(repository.findByIdAndOrgId(id, responseEvent.getOrgId()));
+
+        repository.save(
+                wrapper.update(byId.orElseThrow(MongoCantFindDocumentException::new),
                         responseEvent.getData().get(0))
         );
 

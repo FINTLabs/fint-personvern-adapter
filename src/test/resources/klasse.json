@@ -1,0 +1,111 @@
+{
+  "_embedded": {
+    "_entries": [
+      {
+        "abstrakt": false,
+        "attributter": [
+          {
+            "dokumentasjon": [
+              {
+                "tekst": "Brukernavn til en elev\n\n# Beskrivelse\n\nSkal inneholde brukernavn for pålogging, som finnes i katalogtjenesten (feks Active Directory). Brukes som en identifikator som består, når fødselsnummer og/eller andre identifikatorer endrer seg.\n\n# Format\n\nBrukernavn i det format en elev trenger for å logge seg på systemer i organisasjonen.\n\n# NB!\n\nFremtidig funksjon for dette feltet er under revisjon."
+              }
+            ],
+            "multiplisitet": {
+              "nedre": "0",
+              "ovre": "1"
+            },
+            "navn": "brukernavn",
+            "stereotype": "writable",
+            "type": "Identifikator"
+          },
+          {
+            "dokumentasjon": [
+              {
+                "tekst": "Et unikt nummer som identifiserer en elev"
+              }
+            ],
+            "multiplisitet": {
+              "nedre": "0",
+              "ovre": "1"
+            },
+            "navn": "elevnummer",
+            "stereotype": "",
+            "type": "Identifikator"
+          },
+          {
+            "dokumentasjon": [
+              {
+                "tekst": "Fullt Feide-navn\n\n# Beskrivelse\nDette er det samme som `eduPersonPrincipalName` i Feide skjemaet. Se [eduPersonPrincipalName](https://docs.feide.no/schema/info_go/go_attributter_ch02.html#edupersonprincipalname) for utdypende informasjon.\n\n# Eksempel\n- oleolsen@haugaland.fylkeskommune.no"
+              }
+            ],
+            "multiplisitet": {
+              "nedre": "0",
+              "ovre": "1"
+            },
+            "navn": "feidenavn",
+            "stereotype": "writable",
+            "type": "Identifikator"
+          },
+          {
+            "dokumentasjon": [
+              {
+                "tekst": "Skolespesifikk kontaktinformasjon til en elev\n\n# Beskrivelse\n\nDen fortrukne måten å komme i kontakt med en elev på skolen.\n"
+              }
+            ],
+            "multiplisitet": {
+              "nedre": "0",
+              "ovre": "1"
+            },
+            "navn": "kontaktinformasjon",
+            "stereotype": "writable",
+            "type": "Kontaktinformasjon"
+          },
+          {
+            "dokumentasjon": [
+              {
+                "tekst": "Systemidentifikator til en elev.\n\n# Beskrivelse \n\nDette kan være identifikator som eksisterer i SAS/SIS (IPOS/OID)."
+              }
+            ],
+            "multiplisitet": {
+              "nedre": "1",
+              "ovre": "1"
+            },
+            "navn": "systemId",
+            "stereotype": "",
+            "type": "Identifikator"
+          }
+        ],
+        "dokumentasjon": [
+          {
+            "tekst": "Informasjon om en person som mottar undervisning.\n\n# Beskrivelse \n\nBeskriver informasjon relatert til undervisning for en Person.\n\nTilsvarende finnes for ansatte: __Personalressurs__."
+          }
+        ],
+        "id": {
+          "identifikatorverdi": "no.fint.utdanning.elev.elev"
+        },
+        "navn": "Elev",
+        "stereotype": "hovedklasse",
+        "_links": {
+          "kontekst": [
+            {
+              "href": "https://beta.felleskomponent.no/fint/metamodell/kontekst/id/no.fint.utdanning.elev"
+            }
+          ],
+          "relasjon": [
+            {
+              "href": "https://beta.felleskomponent.no/fint/metamodell/relasjon/id/no.fint.utdanning.elev.elev_person"
+            },
+            {
+              "href": "https://beta.felleskomponent.no/fint/metamodell/relasjon/id/no.fint.utdanning.elev.elev_elevforhold"
+            }
+          ],
+          "self": [
+            {
+              "href": "https://beta.felleskomponent.no/fint/metamodell/klasse/id/no.fint.utdanning.elev.elev"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

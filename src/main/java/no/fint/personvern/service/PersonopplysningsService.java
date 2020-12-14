@@ -37,7 +37,7 @@ public class PersonopplysningsService {
     }
 
     @Scheduled(initialDelay = 1000L, fixedRate = 3600000L)
-    private void getPersonopplysninger() {
+    public void getPersonopplysninger() {
         log.info("Getting personopplysning list");
         ResponseEntity<Embedded> exchange = restTemplate.exchange(props.getMetamodellUri(),
                 HttpMethod.GET,
@@ -55,15 +55,15 @@ public class PersonopplysningsService {
 
     }
 
-    private PersonopplysningResource toPersonopplysning(Attributt component, String klasseId) {
+    private PersonopplysningResource toPersonopplysning(Attributt attributt, String klasseId) {
         PersonopplysningResource personopplysningResource = new PersonopplysningResource();
 
         personopplysningResource.setPassiv(false);
         Identifikator systemId = new Identifikator();
-        systemId.setIdentifikatorverdi(klasseId + "." + component.getNavn().toLowerCase());
+        systemId.setIdentifikatorverdi(klasseId + "." + attributt.getNavn().toLowerCase());
         personopplysningResource.setSystemId(systemId);
-        personopplysningResource.setKode(component.getNavn().toLowerCase());
-        personopplysningResource.setNavn(WordUtils.capitalize(component.getNavn()));
+        personopplysningResource.setKode(attributt.getNavn().toLowerCase());
+        personopplysningResource.setNavn(WordUtils.capitalize(attributt.getNavn()));
 
         return personopplysningResource;
     }

@@ -64,7 +64,9 @@ public class EventHandlerService {
                     } else if (SamtykkeActions.getActions().contains(event.getAction())) {
                         switch (SamtykkeActions.valueOf(event.getAction())) {
                             case GET_ALL_SAMTYKKE:
-                                samtykkeService.getAllSamtykke(responseEvent);
+                                samtykkeService
+                                        .getAllSamtykke(responseEvent.getOrgId())
+                                        .forEach(responseEvent::addData);
                                 break;
                             case UPDATE_SAMTYKKE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
@@ -76,7 +78,9 @@ public class EventHandlerService {
                                 }
                                 break;
                             case GET_ALL_BEHANDLING:
-                                behandlingService.getAllBehandling(responseEvent);
+                                behandlingService
+                                        .getAllBehandling(responseEvent.getOrgId())
+                                        .forEach(responseEvent::addData);
                                 break;
                             case UPDATE_BEHANDLING:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
@@ -88,7 +92,9 @@ public class EventHandlerService {
                                 }
                                 break;
                             case GET_ALL_TJENESTE:
-                                tjenesteService.getAllTjeneste(responseEvent);
+                                tjenesteService
+                                        .getAllTjeneste(responseEvent.getOrgId())
+                                        .forEach(responseEvent::addData);
                                 break;
                             case UPDATE_TJENESTE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
