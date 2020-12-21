@@ -16,32 +16,34 @@ import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.exception.MongoEntryExistsException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-
 @Slf4j
 @Service
 public class EventHandlerService {
     private final EventResponseService eventResponseService;
     private final EventStatusService eventStatusService;
-    private final KodeverkService kodeverkService;
     private final SamtykkeService samtykkeService;
     private final BehandlingService behandlingService;
     private final TjenesteService tjenesteService;
+    private final BehandlingsgrunnlagService behandlingsgrunnlagService;
+    private final PersonopplysningService personopplysningService;
     private final MongoService mongoService;
 
     public EventHandlerService(
             EventResponseService eventResponseService,
             EventStatusService eventStatusService,
-            KodeverkService kodeverkService,
             SamtykkeService samtykkeService,
             BehandlingService behandlingService,
-            TjenesteService tjenesteService, MongoService mongoService) {
+            TjenesteService tjenesteService,
+            BehandlingsgrunnlagService behandlingsgrunnlagService,
+            PersonopplysningService personopplysningService,
+            MongoService mongoService) {
         this.eventResponseService = eventResponseService;
         this.eventStatusService = eventStatusService;
-        this.kodeverkService = kodeverkService;
+        this.behandlingsgrunnlagService = behandlingsgrunnlagService;
         this.samtykkeService = samtykkeService;
         this.behandlingService = behandlingService;
         this.tjenesteService = tjenesteService;
+        this.personopplysningService = personopplysningService;
         this.mongoService = mongoService;
     }
 
@@ -55,22 +57,20 @@ public class EventHandlerService {
                     if (KodeverkActions.getActions().contains(event.getAction())) {
                         switch (KodeverkActions.valueOf(event.getAction())) {
                             case GET_ALL_BEHANDLINGSGRUNNLAG:
-                                kodeverkService.getAllBehandlingsgrunnlag(responseEvent);
+                                behandlingsgrunnlagService.getAllBehandlingsgrunnlag(responseEvent);
                                 break;
                             case GET_ALL_PERSONOPPLYSNING:
-                                kodeverkService.getAllPersonopplysning(responseEvent);
+                                personopplysningService.getAllPersonopplysning(responseEvent);
                                 break;
                         }
                     } else if (SamtykkeActions.getActions().contains(event.getAction())) {
                         switch (SamtykkeActions.valueOf(event.getAction())) {
                             case GET_ALL_SAMTYKKE:
-                                samtykkeService
-                                        .getAllSamtykke(responseEvent.getOrgId())
-                                        .forEach(responseEvent::addData);
+                                samtykkeService.getAllSamtykke(responseEvent);
                                 break;
                             case UPDATE_SAMTYKKE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    responseEvent.setData(Collections.singletonList(samtykkeService.createSamtykke(responseEvent)));
+                                    samtykkeService.createSamtykke(responseEvent);
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     samtykkeService.updateSamtykke(responseEvent);
                                 } else {
@@ -78,13 +78,11 @@ public class EventHandlerService {
                                 }
                                 break;
                             case GET_ALL_BEHANDLING:
-                                behandlingService
-                                        .getAllBehandling(responseEvent.getOrgId())
-                                        .forEach(responseEvent::addData);
+                                behandlingService.getAllBehandling(responseEvent);
                                 break;
                             case UPDATE_BEHANDLING:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    responseEvent.setData(Collections.singletonList(behandlingService.createBehandling(responseEvent)));
+                                    behandlingService.createBehandling(responseEvent);
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     behandlingService.updateBehandling(responseEvent);
                                 } else {
@@ -92,13 +90,11 @@ public class EventHandlerService {
                                 }
                                 break;
                             case GET_ALL_TJENESTE:
-                                tjenesteService
-                                        .getAllTjeneste(responseEvent.getOrgId())
-                                        .forEach(responseEvent::addData);
+                                tjenesteService.getAllTjeneste(responseEvent);
                                 break;
                             case UPDATE_TJENESTE:
                                 if (responseEvent.getOperation() == Operation.CREATE) {
-                                    responseEvent.setData(Collections.singletonList(tjenesteService.createTjeneste(responseEvent)));
+                                    tjenesteService.createTjeneste(responseEvent);
                                 } else if (responseEvent.getOperation() == Operation.UPDATE) {
                                     tjenesteService.updateTjeneste(responseEvent);
                                 } else {

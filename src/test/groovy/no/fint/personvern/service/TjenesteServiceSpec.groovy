@@ -1,40 +1,24 @@
 package no.fint.personvern.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.fint.TestApplication
-import no.fint.model.resource.Link
+import no.fint.event.model.Event
+import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.TjenesteResource
-import no.fint.personvern.AppProps
 import no.fint.personvern.exception.MongoCantFindDocumentException
-import no.fint.personvern.wrapper.Wrapper
 import no.fint.personvern.wrapper.WrapperDocumentRepository
-import no.fint.utilities.ObjectFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
 @DataMongoTest
-@ActiveProfiles("test")
-@ContextConfiguration(classes = [AppProps.class])
-@SpringBootTest(classes = TestApplication)
 class TjenesteServiceSpec extends Specification {
 
     @Autowired
     WrapperDocumentRepository repository
 
-    @Autowired
-    AppProps appProps
-
-    Wrapper wrapper = new Wrapper()
     TjenesteService tjenesteService
-    ObjectMapper objectMapper = new ObjectMapper()
 
     void setup() {
-        tjenesteService = new TjenesteService(wrapper, repository)
-
+        tjenesteService = new TjenesteService(repository)
     }
 
     void cleanup() {
@@ -43,53 +27,54 @@ class TjenesteServiceSpec extends Specification {
 
     def "When creating a new Tjeneste systemId should be set"() {
         given:
-        def event = ObjectFactory.createTjenesteEvent()
+        def event = newTjenesteEvent('test.no', [newTjenesteResource('navn')], null)
 
         when:
-        def tjeneste = tjenesteService.createTjeneste(event)
+        tjenesteService.createTjeneste(event)
 
         then:
-        tjeneste.getSystemId().identifikatorverdi != null
-    }
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as TjenesteResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.navn == 'navn'
 
-    def "When creating a new Tjeneste document _id should be equal to systemId"() {
-        given:
-        def event = ObjectFactory.createTjenesteEvent()
-
-        when:
-        def tjeneste = tjenesteService.createTjeneste(event)
-        def doc = repository.findByIdAndOrgId(tjeneste.getSystemId().getIdentifikatorverdi(), event.getOrgId())
-
-        then:
-        doc.id == tjeneste.getSystemId().getIdentifikatorverdi()
+        event.data.size() == 1
+        def data = event.data.first() as TjenesteResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.navn == 'navn'
     }
 
     def "When updating the mongo document should be updateds"() {
         given:
-        def event = ObjectFactory.createTjenesteEvent()
-        def tjeneste = tjenesteService.createTjeneste(event)
-        tjeneste.setNavn("Updated tjeneste")
-        tjeneste.addBehandling(Link.with("test1"))
-        tjeneste.addBehandling(Link.with("test2"))
-        event.setData([tjeneste])
-        event.setQuery("systemid/" + tjeneste.getSystemId().getIdentifikatorverdi())
+        def createEvent = newTjenesteEvent('test.no', [newTjenesteResource('navn')], null)
+        tjenesteService.createTjeneste(createEvent)
+
+        TjenesteResource tjenesteResource = createEvent.data.first() as TjenesteResource
+        def updateEvent = newTjenesteEvent('test.no', [newTjenesteResource('nytt navn')], 'systemid/' + tjenesteResource.systemId.identifikatorverdi)
 
         when:
-        tjenesteService.updateTjeneste(event)
-        def updatedTjeneste = objectMapper.convertValue(
-                repository
-                        .findByIdAndOrgId(tjeneste.getSystemId().getIdentifikatorverdi(), event.orgId)
-                        .getValue(),
-                TjenesteResource.class)
+        tjenesteService.updateTjeneste(updateEvent)
 
         then:
-        updatedTjeneste.getNavn() == "Updated tjeneste"
-        updatedTjeneste.getBehandling().size() == 2
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as TjenesteResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.navn == 'nytt navn'
+
+        updateEvent.data.size() == 1
+        def data = updateEvent.data.first() as TjenesteResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.navn == 'nytt navn'
     }
 
     def "When updating an object that does not exist and exception should be raised"() {
+        given:
+        def event = newTjenesteEvent('test.no', [newTjenesteResource(null)], 'systemid/id')
+
         when:
-        tjenesteService.updateTjeneste(ObjectFactory.createTjenesteEvent())
+        tjenesteService.updateTjeneste(event)
 
         then:
         thrown(MongoCantFindDocumentException)
@@ -97,16 +82,35 @@ class TjenesteServiceSpec extends Specification {
 
     def "When get all Tjeneste the list should only contain Tjenster for the given orgId"() {
         given:
-        tjenesteService.createTjeneste(ObjectFactory.createTjenesteEvent("test1.no"))
-        tjenesteService.createTjeneste(ObjectFactory.createTjenesteEvent("test1.no"))
-        tjenesteService.createTjeneste(ObjectFactory.createTjenesteEvent("test2.no"))
+        def createEventOne = newTjenesteEvent('test1.no', [newTjenesteResource('navn')], null)
+        tjenesteService.createTjeneste(createEventOne)
+
+        def createEventTwo = newTjenesteEvent('test2.no', [newTjenesteResource('navn')], null)
+        tjenesteService.createTjeneste(createEventTwo)
+
+        def getEvent = newTjenesteEvent('test1.no', [], null)
 
         when:
-        def test1 = tjenesteService.getAllTjeneste("test1.no")
-        def test2 = tjenesteService.getAllTjeneste("test2.no")
+        tjenesteService.getAllTjeneste(getEvent)
 
         then:
-        test1.size() == 2
-        test2.size() == 1
+        def resources = repository.findByOrgIdAndType('test1.no', TjenesteResource.class.getCanonicalName())
+        resources.size() == 1
+
+        getEvent.data.size() == 1
+    }
+
+    def newTjenesteEvent(String orgId, List<FintLinks> data, String query) {
+        return new Event<FintLinks>(
+                orgId: orgId,
+                data: data,
+                query: query
+        )
+    }
+
+    def newTjenesteResource(String navn) {
+        return new TjenesteResource(
+                navn: navn
+        )
     }
 }

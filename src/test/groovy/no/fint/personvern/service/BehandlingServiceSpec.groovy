@@ -1,111 +1,125 @@
 package no.fint.personvern.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.fint.TestApplication
-import no.fint.model.resource.Link
+import no.fint.event.model.Event
+import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
-import no.fint.personvern.AppProps
 import no.fint.personvern.exception.MongoCantFindDocumentException
-import no.fint.personvern.wrapper.Wrapper
 import no.fint.personvern.wrapper.WrapperDocumentRepository
-import no.fint.utilities.ObjectFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
 @DataMongoTest
-@ActiveProfiles("test")
-@ContextConfiguration(classes = [AppProps.class])
-@SpringBootTest(classes = TestApplication)
 class BehandlingServiceSpec extends Specification {
+
     @Autowired
     WrapperDocumentRepository repository
 
-    @Autowired
-    AppProps appProps
-
-    Wrapper wrapper = new Wrapper()
     BehandlingService behandlingService
-    ObjectMapper objectMapper = new ObjectMapper()
 
     void setup() {
-        behandlingService = new BehandlingService(wrapper, repository)
-
+        behandlingService = new BehandlingService(repository)
     }
 
     void cleanup() {
         repository.deleteAll()
     }
 
-    def "When creating a new Behandling systemId should be set"() {
+    def "When creating a new behandling the resource should be created"() {
         given:
-        def event = ObjectFactory.createBehandlingEvent()
+        def event = newBehandlingEvent('test.no', [newBehandlingResource(true)], null)
 
         when:
-        def behandling = behandlingService.createBehandling(event)
+        behandlingService.createBehandling(event)
 
         then:
-        behandling.getSystemId().identifikatorverdi != null
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as BehandlingResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.formal == 'formal'
+        mongo.aktiv
+
+        event.data.size() == 1
+        def data = event.data.first() as BehandlingResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.formal == 'formal'
+        data.aktiv
     }
 
-    def "When creating a new Behandling document _id should be equal to systemId"() {
+    def "When updating a behandling the resource should be updated"() {
         given:
-        def event = ObjectFactory.createBehandlingEvent()
+        def createEvent = newBehandlingEvent('test.no', [newBehandlingResource(true)], null)
+        behandlingService.createBehandling(createEvent)
+
+        BehandlingResource behandlingResource = createEvent.data.first() as BehandlingResource
+        def updateEvent = newBehandlingEvent('test.no', [newBehandlingResource(false)], 'systemid/' + behandlingResource.systemId.identifikatorverdi)
 
         when:
-        def behandling = behandlingService.createBehandling(event)
-        def doc = repository.findByIdAndOrgId(behandling.getSystemId().getIdentifikatorverdi(), event.getOrgId())
+        behandlingService.updateBehandling(updateEvent)
 
         then:
-        doc.id == behandling.getSystemId().getIdentifikatorverdi()
-    }
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as BehandlingResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.formal == 'formal'
+        !mongo.aktiv
 
-    def "When updating the mongo document should be updated"() {
-        given:
-        def event = ObjectFactory.createBehandlingEvent()
-        def behandling = behandlingService.createBehandling(event)
-        behandling.setFormal("Formål")
-        behandling.addBehandlingsgrunnlag(Link.with("test1"))
-        behandling.addBehandlingsgrunnlag(Link.with("test2"))
-        event.setData([behandling])
-        event.setQuery("systemid/" + behandling.getSystemId().getIdentifikatorverdi())
-
-        when:
-        behandlingService.updateBehandling(event)
-        def updatedBehandling = objectMapper.convertValue(
-                repository
-                        .findByIdAndOrgId(behandling.getSystemId().getIdentifikatorverdi(), event.orgId)
-                        .getValue(),
-                BehandlingResource.class)
-
-        then:
-        updatedBehandling.getFormal() == "Formål"
-        updatedBehandling.getBehandlingsgrunnlag().size() == 2
+        updateEvent.data.size() == 1
+        def data = updateEvent.data.first() as BehandlingResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.formal == 'formal'
+        !data.aktiv
     }
 
     def "When updating an object that does not exist and exception should be raised"() {
+        given:
+        def updateEvent = newBehandlingEvent('test.no', [newBehandlingResource(false)], 'systemid/id')
+
         when:
-        behandlingService.updateBehandling(ObjectFactory.createBehandlingEvent())
+        behandlingService.updateBehandling(updateEvent)
 
         then:
         thrown(MongoCantFindDocumentException)
     }
 
-    def "When get all Behandling the list should only contain Tjenster for the given orgId"() {
+    def "When get all Behandling the list should only contain Tjenester for the given orgId"() {
         given:
-        behandlingService.createBehandling(ObjectFactory.createBehandlingEvent("test1.no"))
-        behandlingService.createBehandling(ObjectFactory.createBehandlingEvent("test1.no"))
-        behandlingService.createBehandling(ObjectFactory.createBehandlingEvent("test2.no"))
+        def createEventOne = newBehandlingEvent('test1.no', [newBehandlingResource(true)], null)
+        behandlingService.createBehandling(createEventOne)
+
+        def createEventTwo = newBehandlingEvent('test2.no', [newBehandlingResource(true)], null)
+        behandlingService.createBehandling(createEventTwo)
+
+        def getEvent = newBehandlingEvent('test1.no', [], null)
 
         when:
-        def test1 = behandlingService.getAllBehandling("test1.no")
-        def test2 = behandlingService.getAllBehandling("test2.no")
+        behandlingService.getAllBehandling(getEvent)
 
         then:
-        test1.size() == 2
-        test2.size() == 1
+        def resources = repository.findAll()
+        resources.size() == 2
+
+        getEvent.data.size() == 1
+        def resource = getEvent.data.first() as BehandlingResource
+        resource.systemId.identifikatorverdi
+        resource.formal == 'formal'
+        resource.aktiv
+    }
+
+    def newBehandlingEvent(String orgId, List<FintLinks> data, String query) {
+        return new Event<FintLinks>(
+                orgId: orgId,
+                data: data,
+                query: query
+        )
+    }
+
+    def newBehandlingResource(boolean aktiv) {
+        return new BehandlingResource(
+                aktiv: aktiv,
+                formal: 'formal'
+        )
     }
 }

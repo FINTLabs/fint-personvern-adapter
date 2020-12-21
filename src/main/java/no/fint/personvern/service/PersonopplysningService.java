@@ -2,13 +2,14 @@ package no.fint.personvern.service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import no.fint.event.model.Event;
 import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.hateos.Embedded;
 import no.fint.model.metamodell.kompleksedatatyper.Attributt;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.kodeverk.PersonopplysningResource;
-import no.fint.personvern.AppProps;
 import org.apache.commons.text.WordUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -16,43 +17,51 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 @Service
 @Slf4j
-public class PersonopplysningsService {
-
+public class PersonopplysningService {
     private final RestTemplate restTemplate;
-    private final AppProps props;
+
+    @Value("${fint.metamodell}")
+    private String metamodellUri;
 
     @Getter
-    private List<FintLinks> personopplysningResourceList;
+    private final ConcurrentNavigableMap<String, FintLinks> personopplysningResources = new ConcurrentSkipListMap<>();
 
-    public PersonopplysningsService(
-            RestTemplate restTemplate,
-            AppProps props) {
+    public PersonopplysningService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.props = props;
+    }
+
+    public void getAllPersonopplysning(Event<FintLinks> responseEvent) {
+        if (personopplysningResources.isEmpty()) {
+            getPersonopplysninger();
+        }
+
+        personopplysningResources.values().forEach(responseEvent::addData);
     }
 
     @Scheduled(initialDelay = 1000L, fixedRate = 3600000L)
     public void getPersonopplysninger() {
-        log.info("Getting personopplysning list");
-        ResponseEntity<Embedded> exchange = restTemplate.exchange(props.getMetamodellUri(),
+        log.info("Updating personopplysning resources");
+
+        ResponseEntity<Embedded> exchange = restTemplate.exchange(metamodellUri,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<Embedded>() {
                 }
         );
 
-        personopplysningResourceList = exchange.getBody()
+        exchange.getBody()
                 .getEmbedded()
                 .getEntries()
                 .stream()
                 .flatMap(k -> k.getAttributter().stream().map(a -> toPersonopplysning(a, k.getId().getIdentifikatorverdi())))
-                .collect(Collectors.toList());
+                .forEach(personopplysningResource -> personopplysningResources.putIfAbsent(personopplysningResource.getSystemId().getIdentifikatorverdi(), personopplysningResource));
 
+        log.info("{} personopplysning resources", personopplysningResources.size());
     }
 
     private PersonopplysningResource toPersonopplysning(Attributt attributt, String klasseId) {
@@ -67,6 +76,4 @@ public class PersonopplysningsService {
 
         return personopplysningResource;
     }
-
-
 }

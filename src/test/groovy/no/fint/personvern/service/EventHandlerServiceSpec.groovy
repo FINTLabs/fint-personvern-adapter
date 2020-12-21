@@ -7,22 +7,19 @@ import no.fint.event.model.Event
 import spock.lang.Specification
 
 class EventHandlerServiceSpec extends Specification {
-    private EventHandlerService eventHandlerService
-    private EventStatusService eventStatusService
-    private EventResponseService eventResponseService
-    private KodeverkService kodeverkService;
-    private SamtykkeService samtykkeService;
-    private BehandlingService behandlingService;
-    private TjenesteService tjenesteService;
-    private MongoService mongoService;
+    EventStatusService eventStatusService = Mock()
+    EventResponseService eventResponseService = Mock()
+    SamtykkeService samtykkeService = Mock()
+    BehandlingService behandlingService = Mock()
+    TjenesteService tjenesteService = Mock()
+    BehandlingsgrunnlagService behandlingsgrunnlagService = Mock()
+    PersonopplysningService personopplysningService = Mock()
+    MongoService mongoService = Mock()
+
+    EventHandlerService eventHandlerService
 
     void setup() {
-        eventStatusService = Mock(EventStatusService)
-        eventResponseService = Mock(EventResponseService)
-        kodeverkService = Mock(KodeverkService)
-        samtykkeService = Mock(SamtykkeService)
-        mongoService = Mock(MongoService)
-        eventHandlerService = new EventHandlerService(eventResponseService, eventStatusService, kodeverkService, samtykkeService, behandlingService, tjenesteService, mongoService)
+        eventHandlerService = new EventHandlerService(eventResponseService, eventStatusService, samtykkeService, behandlingService, tjenesteService, behandlingsgrunnlagService, personopplysningService, mongoService)
     }
 
     def "Post response on health check"() {

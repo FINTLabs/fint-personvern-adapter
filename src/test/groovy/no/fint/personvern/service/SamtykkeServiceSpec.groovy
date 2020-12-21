@@ -1,41 +1,27 @@
 package no.fint.personvern.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.fint.TestApplication
+import no.fint.event.model.Event
 import no.fint.model.felles.kompleksedatatyper.Periode
-import no.fint.model.resource.Link
+import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource
-import no.fint.personvern.AppProps
 import no.fint.personvern.exception.MongoCantFindDocumentException
-import no.fint.personvern.wrapper.Wrapper
 import no.fint.personvern.wrapper.WrapperDocumentRepository
-import no.fint.utilities.ObjectFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
+import java.time.ZonedDateTime
+
 @DataMongoTest
-@ActiveProfiles("test")
-@ContextConfiguration(classes = [AppProps.class])
-@SpringBootTest(classes = TestApplication)
 class SamtykkeServiceSpec extends Specification {
 
     @Autowired
     WrapperDocumentRepository repository
 
-    @Autowired
-    AppProps appProps
-
-    Wrapper wrapper = new Wrapper()
     SamtykkeService samtykkeService
-    ObjectMapper objectMapper = new ObjectMapper()
 
     void setup() {
-        samtykkeService = new SamtykkeService(wrapper, repository)
-
+        samtykkeService = new SamtykkeService(repository)
     }
 
     void cleanup() {
@@ -44,55 +30,57 @@ class SamtykkeServiceSpec extends Specification {
 
     def "When creating a new Samtykke systemId and Opprettet should be set"() {
         given:
-        def event = ObjectFactory.createSamtykkeEvent()
+        def date = Date.from(ZonedDateTime.parse('2020-12-12T14:00:00Z').toInstant())
+        def event = newSamtykkeEvent('test.no', [newSamtykkeResource(date)], null)
 
         when:
-        def samtykke = samtykkeService.createSamtykke(event)
+        samtykkeService.createSamtykke(event)
 
         then:
-        samtykke.getSystemId().identifikatorverdi != null
-        samtykke.getOpprettet() != null
-    }
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as SamtykkeResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.gyldighetsperiode.start == date
 
-    def "When creating a new Samtykke document _id should be equal to systemId"() {
-        given:
-        def event = ObjectFactory.createSamtykkeEvent()
-
-        when:
-        def samtykke = samtykkeService.createSamtykke(event)
-        def doc = repository.findByIdAndOrgId(samtykke.getSystemId().getIdentifikatorverdi(), event.getOrgId())
-
-        then:
-        doc.id == samtykke.getSystemId().getIdentifikatorverdi()
+        event.data.size() == 1
+        def data = event.data.first() as SamtykkeResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.gyldighetsperiode.start == date
     }
 
     def "When updating the mongo document should be updated"() {
         given:
-        def event = ObjectFactory.createSamtykkeEvent()
-        def samtykke = samtykkeService.createSamtykke(event)
-        def slutt = new Date()
-        samtykke.setGyldighetsperiode(new Periode(slutt: slutt))
-        samtykke.addBehandling(Link.with("test1"))
-        samtykke.addBehandling(Link.with("test2"))
-        event.setData([samtykke])
-        event.setQuery("systemid/" + samtykke.getSystemId().getIdentifikatorverdi())
+        def oldDate = Date.from(ZonedDateTime.parse('2020-12-12T14:00:00Z').toInstant())
+        def createEvent = newSamtykkeEvent('test.no', [newSamtykkeResource(oldDate)], null)
+        samtykkeService.createSamtykke(createEvent)
+
+        def newDate = Date.from(ZonedDateTime.parse('2020-12-12T15:00:00Z').toInstant())
+        SamtykkeResource samtykkeResource = createEvent.data.first() as SamtykkeResource
+        def updateEvent = newSamtykkeEvent('test.no', [newSamtykkeResource(newDate)], 'systemid/' + samtykkeResource.systemId.identifikatorverdi)
 
         when:
-        samtykkeService.updateSamtykke(event)
-        def updatedSamtykke = objectMapper.convertValue(
-                repository
-                        .findByIdAndOrgId(samtykke.getSystemId().getIdentifikatorverdi(), event.orgId)
-                        .getValue(),
-                SamtykkeResource.class)
+        samtykkeService.updateSamtykke(updateEvent)
 
         then:
-        updatedSamtykke.getGyldighetsperiode().slutt == slutt
-        updatedSamtykke.getBehandling().size() == 2
+        def resources = repository.findAll()
+        resources.size() == 1
+        def mongo = resources.first().value as SamtykkeResource
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.gyldighetsperiode.start == newDate
+
+        updateEvent.data.size() == 1
+        def data = updateEvent.data.first() as SamtykkeResource
+        data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
+        data.gyldighetsperiode.start == newDate
     }
 
     def "When updating an object that does not exist and exception should be raised"() {
+        given:
+        def updateEvent = newSamtykkeEvent('test.no', [newSamtykkeResource(null)], 'systemid/id')
+
         when:
-        samtykkeService.updateSamtykke(ObjectFactory.createSamtykkeEvent())
+        samtykkeService.updateSamtykke(updateEvent)
 
         then:
         thrown(MongoCantFindDocumentException)
@@ -100,16 +88,40 @@ class SamtykkeServiceSpec extends Specification {
 
     def "When get all Samtykke the list should only contain Tjenster for the given orgId"() {
         given:
-        samtykkeService.createSamtykke(ObjectFactory.createSamtykkeEvent("test1.no"))
-        samtykkeService.createSamtykke(ObjectFactory.createSamtykkeEvent("test1.no"))
-        samtykkeService.createSamtykke(ObjectFactory.createSamtykkeEvent("test2.no"))
+        def createEventOne = newSamtykkeEvent('test1.no', [newSamtykkeResource(null)], null)
+        samtykkeService.createSamtykke(createEventOne)
+
+        def createEventTwo = newSamtykkeEvent('test2.no', [newSamtykkeResource(null)], null)
+        samtykkeService.createSamtykke(createEventTwo)
+
+        def getEvent = newSamtykkeEvent('test1.no', [], null)
 
         when:
-        def test1 = samtykkeService.getAllSamtykke("test1.no")
-        def test2 = samtykkeService.getAllSamtykke("test2.no")
+        samtykkeService.getAllSamtykke(getEvent)
 
         then:
-        test1.size() == 2
-        test2.size() == 1
+        def resources = repository.findAll()
+        resources.size() == 2
+
+        getEvent.data.size() == 1
+        def resource = getEvent.data.first() as SamtykkeResource
+        resource.systemId.identifikatorverdi
+    }
+
+    def newSamtykkeEvent(String orgId, List<FintLinks> data, String query) {
+        return new Event<FintLinks>(
+                orgId: orgId,
+                data: data,
+                query: query
+        )
+    }
+
+    def newSamtykkeResource(Date start) {
+        return new SamtykkeResource(
+                gyldighetsperiode: new Periode(
+                        start: start,
+                        slutt: null
+                )
+        )
     }
 }

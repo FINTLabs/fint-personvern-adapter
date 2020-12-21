@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class Wrapper {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public <T> WrapperDocument update(WrapperDocument wrapperDocument, T content) {
         wrapperDocument.setValue(JSON.parse(Unchecked.function(objectMapper::writeValueAsString).apply(content)));
