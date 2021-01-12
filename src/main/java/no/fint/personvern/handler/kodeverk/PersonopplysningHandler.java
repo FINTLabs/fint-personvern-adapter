@@ -50,7 +50,7 @@ public class PersonopplysningHandler implements Handler {
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
-    @Scheduled(initialDelay = 1000L, fixedRate = 3600000L)
+    @Scheduled(initialDelay = 1000L, fixedDelay = 3600000L)
     private void updatePersonopplysningResources() {
         log.info("Updating PersonopplysningResource");
 
