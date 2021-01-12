@@ -2,8 +2,6 @@ package no.fint.personvern.repository
 
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource
-import no.fint.personvern.wrapper.WrapperDocument
-import no.fint.personvern.wrapper.WrapperDocumentRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import spock.lang.Specification

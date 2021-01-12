@@ -1,4 +1,4 @@
-package no.fint.personvern.wrapper;
+package no.fint.personvern.repository;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

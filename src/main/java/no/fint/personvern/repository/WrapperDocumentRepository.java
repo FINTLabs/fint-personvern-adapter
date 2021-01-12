@@ -1,5 +1,6 @@
-package no.fint.personvern.wrapper;
+package no.fint.personvern.repository;
 
+import no.fint.personvern.repository.WrapperDocument;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

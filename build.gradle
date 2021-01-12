@@ -64,6 +64,7 @@ dependencies {
     compile('no.fint:fint-sse:1.4.0')
     compile('no.fint:fint-event-model:3.0.0')
     compile('no.fint:fint-relation-model:1.1.5')
+    compile('no.fint:fint-model-resource:0.3.3')
     compile('no.fint:fint-metamodell-model-java:1.0.0-rc-2')
 
     /* --> Models <-- */
