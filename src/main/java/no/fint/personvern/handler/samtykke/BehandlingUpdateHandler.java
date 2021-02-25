@@ -75,7 +75,7 @@ public class BehandlingUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        if (validate().negate().test(behandlingResource, wrapperDocument)) {
+        if (validate.negate().test(behandlingResource, wrapperDocument)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Updates to non-writeable attributes not allowed");
             event.setData(Collections.emptyList());
@@ -96,12 +96,9 @@ public class BehandlingUpdateHandler implements Handler {
         return Collections.singleton(SamtykkeActions.UPDATE_BEHANDLING.name());
     }
 
-    private BiPredicate<BehandlingResource, WrapperDocument> validate() {
-        return (behandlingResource, wrapperDocument) -> {
-            BehandlingResource value = objectMapper.convertValue(wrapperDocument.getValue(), BehandlingResource.class);
+    private final BiPredicate<BehandlingResource, WrapperDocument> validate = (behandlingResource, wrapperDocument) -> {
+        BehandlingResource value = objectMapper.convertValue(wrapperDocument.getValue(), BehandlingResource.class);
 
-            return behandlingResource.getSystemId().equals(value.getSystemId()) &&
-                    behandlingResource.getFormal().equals(value.getFormal());
-        };
-    }
+        return behandlingResource.getSystemId().equals(value.getSystemId()) && behandlingResource.getFormal().equals(value.getFormal());
+    };
 }

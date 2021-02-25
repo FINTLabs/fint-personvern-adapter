@@ -75,7 +75,7 @@ public class SamtykkeUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        if (validate().negate().test(samtykkeResource, wrapperDocument)) {
+        if (validate.negate().test(samtykkeResource, wrapperDocument)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Updates to non-writeable attributes not allowed");
             event.setData(Collections.emptyList());
@@ -96,12 +96,9 @@ public class SamtykkeUpdateHandler implements Handler {
         return Collections.singleton(SamtykkeActions.UPDATE_SAMTYKKE.name());
     }
 
-    private BiPredicate<SamtykkeResource, WrapperDocument> validate() {
-        return (samtykkeResource, wrapperDocument) -> {
-            SamtykkeResource value = objectMapper.convertValue(wrapperDocument.getValue(), SamtykkeResource.class);
+    private final BiPredicate<SamtykkeResource, WrapperDocument> validate = (samtykkeResource, wrapperDocument) -> {
+        SamtykkeResource value = objectMapper.convertValue(wrapperDocument.getValue(), SamtykkeResource.class);
 
-            return samtykkeResource.getSystemId().equals(value.getSystemId()) &&
-                    samtykkeResource.getOpprettet().equals(value.getOpprettet());
-        };
-    }
+        return samtykkeResource.getSystemId().equals(value.getSystemId()) && samtykkeResource.getOpprettet().equals(value.getOpprettet());
+    };
 }

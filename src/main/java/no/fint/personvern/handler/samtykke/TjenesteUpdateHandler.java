@@ -73,7 +73,7 @@ public class TjenesteUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        if (validate().negate().test(tjenesteResource, wrapperDocument)) {
+        if (validate.negate().test(tjenesteResource, wrapperDocument)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Updates to non-writeable attributes not allowed");
             event.setData(Collections.emptyList());
@@ -94,11 +94,9 @@ public class TjenesteUpdateHandler implements Handler {
         return Collections.singleton(SamtykkeActions.UPDATE_TJENESTE.name());
     }
 
-    private BiPredicate<TjenesteResource, WrapperDocument> validate() {
-        return (tjenesteResource, wrapperDocument) -> {
-            TjenesteResource value = objectMapper.convertValue(wrapperDocument.getValue(), TjenesteResource.class);
+    private final BiPredicate<TjenesteResource, WrapperDocument> validate = (tjenesteResource, wrapperDocument) -> {
+        TjenesteResource value = objectMapper.convertValue(wrapperDocument.getValue(), TjenesteResource.class);
 
-            return tjenesteResource.getSystemId().equals(value.getSystemId());
-        };
-    }
+        return tjenesteResource.getSystemId().equals(value.getSystemId());
+    };
 }
