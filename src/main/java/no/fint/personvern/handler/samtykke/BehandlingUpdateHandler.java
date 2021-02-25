@@ -3,7 +3,6 @@ package no.fint.personvern.handler.samtykke;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.event.model.Event;
-import no.fint.event.model.Operation;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 @Slf4j
 @Component
@@ -37,16 +37,17 @@ public class BehandlingUpdateHandler implements Handler {
             return;
         }
 
-        Operation operation = event.getOperation();
-
         BehandlingResource behandlingResource = objectMapper.convertValue(event.getData().get(0), BehandlingResource.class);
 
-        if (operation == Operation.CREATE) {
-            createBehandlingResource(event, behandlingResource);
-        } else if (operation == Operation.UPDATE){
-            updateBehandlingResource(event, behandlingResource);
-        } else {
-            throw new IllegalArgumentException("Invalid operation: " + operation);
+        switch (event.getOperation()) {
+            case CREATE:
+                createBehandlingResource(event, behandlingResource);
+                break;
+            case UPDATE:
+                updateBehandlingResource(event, behandlingResource);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
         }
     }
 
@@ -56,7 +57,7 @@ public class BehandlingUpdateHandler implements Handler {
         repository.insert(WrapperDocument.builder()
                 .id(behandlingResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(behandlingResource)
+                .value(objectMapper.convertValue(behandlingResource, Object.class))
                 .type(BehandlingResource.class.getCanonicalName())
                 .build());
 
@@ -74,9 +75,14 @@ public class BehandlingUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        behandlingResource.setSystemId(((BehandlingResource) wrapperDocument.getValue()).getSystemId());
+        if (validate().negate().test(behandlingResource, wrapperDocument)) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Updates to non-writeable attributes not allowed");
+            event.setData(Collections.emptyList());
+            return;
+        }
 
-        wrapperDocument.setValue(behandlingResource);
+        wrapperDocument.setValue(objectMapper.convertValue(behandlingResource, Object.class));
 
         repository.save(wrapperDocument);
 
@@ -88,5 +94,14 @@ public class BehandlingUpdateHandler implements Handler {
     @Override
     public Set<String> actions() {
         return Collections.singleton(SamtykkeActions.UPDATE_BEHANDLING.name());
+    }
+
+    private BiPredicate<BehandlingResource, WrapperDocument> validate() {
+        return (behandlingResource, wrapperDocument) -> {
+            BehandlingResource value = objectMapper.convertValue(wrapperDocument.getValue(), BehandlingResource.class);
+
+            return behandlingResource.getSystemId().equals(value.getSystemId()) &&
+                    behandlingResource.getFormal().equals(value.getFormal());
+        };
     }
 }

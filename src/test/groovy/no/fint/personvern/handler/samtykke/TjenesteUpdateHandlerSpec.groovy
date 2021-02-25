@@ -1,7 +1,9 @@
 package no.fint.personvern.handler.samtykke
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.fint.event.model.Event
 import no.fint.event.model.Operation
+import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.TjenesteResource
@@ -38,7 +40,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
         then:
         def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
         resources.size() == 1
-        def mongo = resources.first().value as TjenesteResource
+        def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.navn == 'navn'
 
@@ -60,7 +62,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
         then:
         def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
         resources.size() == 1
-        def mongo = resources.first().value as TjenesteResource
+        def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.navn == 'navn-2'
 
@@ -68,6 +70,30 @@ class TjenesteUpdateHandlerSpec extends Specification {
         def data = event.data.first() as TjenesteResource
         data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
         data.navn == 'navn-2'
+    }
+
+    def "Given invalid update event error is returned"() {
+        given:
+        def resource = newTjenesteResource('navn')
+
+        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
+
+        resource.setSystemId(new Identifikator(identifikatorverdi: '123'))
+
+        def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
+
+        when:
+        handler.accept(event)
+
+        then:
+        def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
+        resources.size() == 1
+        def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.navn == 'navn'
+
+        event.data.size() == 0
+        event.responseStatus == ResponseStatus.REJECTED
     }
 
     def "Given update event on non-existent TjenesteResource exception is thrown"() {

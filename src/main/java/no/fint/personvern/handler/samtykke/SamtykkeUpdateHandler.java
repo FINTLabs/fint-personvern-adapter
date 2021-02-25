@@ -2,7 +2,6 @@ package no.fint.personvern.handler.samtykke;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
-import no.fint.event.model.Operation;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
@@ -17,10 +16,12 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 @Component
 public class SamtykkeUpdateHandler implements Handler {
     private final WrapperDocumentRepository repository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SamtykkeUpdateHandler(WrapperDocumentRepository repository) {
@@ -35,16 +36,17 @@ public class SamtykkeUpdateHandler implements Handler {
             return;
         }
 
-        Operation operation = event.getOperation();
-
         SamtykkeResource samtykkeResource = objectMapper.convertValue(event.getData().get(0), SamtykkeResource.class);
 
-        if (operation == Operation.CREATE) {
-            createSamtykkeResource(event, samtykkeResource);
-        } else if (operation == Operation.UPDATE){
-            updateSamtykkeResource(event, samtykkeResource);
-        } else {
-            throw new IllegalArgumentException("Invalid operation: " + operation);
+        switch (event.getOperation()) {
+            case CREATE:
+                createSamtykkeResource(event, samtykkeResource);
+                break;
+            case UPDATE:
+                updateSamtykkeResource(event, samtykkeResource);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
         }
     }
 
@@ -55,7 +57,7 @@ public class SamtykkeUpdateHandler implements Handler {
         repository.insert(WrapperDocument.builder()
                 .id(samtykkeResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(samtykkeResource)
+                .value(objectMapper.convertValue(samtykkeResource, Object.class))
                 .type(SamtykkeResource.class.getCanonicalName())
                 .build());
 
@@ -73,9 +75,14 @@ public class SamtykkeUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        samtykkeResource.setSystemId(((SamtykkeResource) wrapperDocument.getValue()).getSystemId());
+        if (validate().negate().test(samtykkeResource, wrapperDocument)) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Updates to non-writeable attributes not allowed");
+            event.setData(Collections.emptyList());
+            return;
+        }
 
-        wrapperDocument.setValue(samtykkeResource);
+        wrapperDocument.setValue(objectMapper.convertValue(samtykkeResource, Object.class));
 
         repository.save(wrapperDocument);
 
@@ -87,5 +94,14 @@ public class SamtykkeUpdateHandler implements Handler {
     @Override
     public Set<String> actions() {
         return Collections.singleton(SamtykkeActions.UPDATE_SAMTYKKE.name());
+    }
+
+    private BiPredicate<SamtykkeResource, WrapperDocument> validate() {
+        return (samtykkeResource, wrapperDocument) -> {
+            SamtykkeResource value = objectMapper.convertValue(wrapperDocument.getValue(), SamtykkeResource.class);
+
+            return samtykkeResource.getSystemId().equals(value.getSystemId()) &&
+                    samtykkeResource.getOpprettet().equals(value.getOpprettet());
+        };
     }
 }

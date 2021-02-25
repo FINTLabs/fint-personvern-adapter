@@ -1,7 +1,9 @@
 package no.fint.personvern.handler.samtykke
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.fint.event.model.Event
 import no.fint.event.model.Operation
+import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.felles.kompleksedatatyper.Periode
 import no.fint.model.resource.FintLinks
@@ -41,7 +43,7 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         then:
         def resources = repository.findByOrgIdAndType('test.no', SamtykkeResource.canonicalName)
         resources.size() == 1
-        def mongo = resources.first().value as SamtykkeResource
+        def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
         mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
@@ -65,7 +67,7 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         then:
         def resources = repository.findByOrgIdAndType('test.no', SamtykkeResource.canonicalName)
         resources.size() == 1
-        def mongo = resources.first().value as SamtykkeResource
+        def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
         mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
@@ -75,6 +77,31 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
         data.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
         data.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
+    }
+
+    def "Given invalid update event error is returned"() {
+        given:
+        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+
+        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(SamtykkeResource.canonicalName).value(resource).build())
+
+        resource.setOpprettet(Date.from(Instant.parse('2021-02-01T00:00:00.00Z')))
+
+        def event = newSamtykkeEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
+
+        when:
+        handler.accept(event)
+
+        then:
+        def resources = repository.findByOrgIdAndType('test.no', SamtykkeResource.canonicalName)
+        resources.size() == 1
+        def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
+        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+
+        event.data.size() == 0
+        event.responseStatus == ResponseStatus.REJECTED
     }
 
     def "Given update event on non-existent SamtykkeResource exception is thrown"() {

@@ -1,5 +1,6 @@
 package no.fint.personvern.handler.samtykke;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
@@ -31,7 +32,7 @@ public class SamtykkeGetHandler implements Handler {
                 .findByOrgIdAndType(event.getOrgId(), SamtykkeResource.class.getCanonicalName())
                 .stream()
                 .map(WrapperDocument::getValue)
-                .map(SamtykkeResource.class::cast)
+                .map(value -> new ObjectMapper().convertValue(value, SamtykkeResource.class))
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);

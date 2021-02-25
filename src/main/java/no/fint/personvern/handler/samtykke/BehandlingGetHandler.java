@@ -1,5 +1,6 @@
 package no.fint.personvern.handler.samtykke;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
@@ -31,7 +32,7 @@ public class BehandlingGetHandler implements Handler {
                 .findByOrgIdAndType(event.getOrgId(), BehandlingResource.class.getCanonicalName())
                 .stream()
                 .map(WrapperDocument::getValue)
-                .map(BehandlingResource.class::cast)
+                .map(value -> new ObjectMapper().convertValue(value, BehandlingResource.class))
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);
