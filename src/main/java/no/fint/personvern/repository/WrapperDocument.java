@@ -1,15 +1,16 @@
 package no.fint.personvern.repository;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
-@AllArgsConstructor
-@Document(collection = "personvernBeta")
+@Document(collection = "#{@collection}")
 public class WrapperDocument {
 
     @Id
@@ -17,4 +18,7 @@ public class WrapperDocument {
     private String type;
     private Object value;
     private String orgId;
+
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
 }

@@ -8,15 +8,18 @@ import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.TjenesteResource
+import no.fint.personvern.configuration.MongoConfiguration
 import no.fint.personvern.exception.MongoCantFindDocumentException
 import no.fint.personvern.repository.WrapperDocument
 import no.fint.personvern.repository.WrapperDocumentRepository
 import no.fint.personvern.service.ValidationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
+import org.springframework.context.annotation.Import
 import spock.lang.Specification
 
 @DataMongoTest
+@Import(MongoConfiguration.class)
 class TjenesteUpdateHandlerSpec extends Specification {
 
     @Autowired

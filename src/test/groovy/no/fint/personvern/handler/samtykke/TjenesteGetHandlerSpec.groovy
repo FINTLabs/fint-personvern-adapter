@@ -4,13 +4,16 @@ import no.fint.event.model.Event
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.TjenesteResource
+import no.fint.personvern.configuration.MongoConfiguration
 import no.fint.personvern.repository.WrapperDocument
 import no.fint.personvern.repository.WrapperDocumentRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
+import org.springframework.context.annotation.Import
 import spock.lang.Specification
 
 @DataMongoTest
+@Import(MongoConfiguration.class)
 class TjenesteGetHandlerSpec extends Specification {
 
     @Autowired
