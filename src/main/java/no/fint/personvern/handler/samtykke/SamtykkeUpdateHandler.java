@@ -15,6 +15,7 @@ import no.fint.personvern.repository.WrapperDocument;
 import no.fint.personvern.repository.WrapperDocumentRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Component
@@ -45,10 +46,10 @@ public class SamtykkeUpdateHandler implements Handler {
             switch (event.getOperation()) {
                 case CREATE:
                     createSamtykkeResource(event, samtykkeResource);
-                    break;
+                    return;
                 case UPDATE:
                     updateSamtykkeResource(event, samtykkeResource);
-                    break;
+                    return;
                 default:
                     throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
             }
@@ -106,7 +107,8 @@ public class SamtykkeUpdateHandler implements Handler {
     }
 
     private boolean hasInvalidUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
-        return !(Objects.equals(samtykkeResource.getSystemId(), value.getSystemId()) && samtykkeResource.getOpprettet().equals(value.getOpprettet()));
+        return !(Objects.equals(samtykkeResource.getSystemId(), value.getSystemId()) &&
+                samtykkeResource.getOpprettet().toInstant().equals(value.getOpprettet().toInstant().truncatedTo(ChronoUnit.SECONDS)));
     }
 
     private boolean hasValidUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
