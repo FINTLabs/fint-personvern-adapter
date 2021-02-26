@@ -2,6 +2,7 @@ package no.fint.personvern.handler.samtykke;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
+import no.fint.event.model.Problem;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
@@ -10,57 +11,70 @@ import no.fint.personvern.exception.MongoCantFindDocumentException;
 import no.fint.personvern.repository.WrapperDocument;
 import no.fint.personvern.repository.WrapperDocumentRepository;
 import no.fint.personvern.service.Handler;
+import no.fint.personvern.service.ValidationService;
 import no.fint.personvern.utility.FintUtilities;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiPredicate;
 
 @Component
 public class TjenesteUpdateHandler implements Handler {
     private final WrapperDocumentRepository repository;
+    private final ValidationService validationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TjenesteUpdateHandler(WrapperDocumentRepository repository) {
+    public TjenesteUpdateHandler(WrapperDocumentRepository repository, ValidationService validationService) {
         this.repository = repository;
+        this.validationService = validationService;
     }
 
     @Override
     public void accept(Event<FintLinks> event) {
         if (event.getData().size() != 1) {
             event.setResponseStatus(ResponseStatus.REJECTED);
-            event.setMessage("Invalid request");
+            event.setMessage("Payload missing");
             return;
         }
 
         TjenesteResource tjenesteResource = objectMapper.convertValue(event.getData().get(0), TjenesteResource.class);
 
-        switch (event.getOperation()) {
-            case CREATE:
-                createTjenesteResource(event, tjenesteResource);
-                break;
-            case UPDATE:
-                updateTjenesteResource(event, tjenesteResource);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+        List<Problem> problems = validationService.getProblems(tjenesteResource);
+
+        if (problems.isEmpty()) {
+            switch (event.getOperation()) {
+                case CREATE:
+                    createTjenesteResource(event, tjenesteResource);
+                    break;
+                case UPDATE:
+                    updateTjenesteResource(event, tjenesteResource);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+            }
         }
+
+        event.setProblems(problems);
+        event.setResponseStatus(ResponseStatus.REJECTED);
+        event.setMessage("Payload failed validation");
     }
 
     private void createTjenesteResource(Event<FintLinks> event, TjenesteResource tjenesteResource) {
         tjenesteResource.setSystemId(FintUtilities.createUuidSystemId());
 
-        repository.insert(WrapperDocument.builder()
+        WrapperDocument wrapperDocument = WrapperDocument.builder()
                 .id(tjenesteResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
                 .value(objectMapper.convertValue(tjenesteResource, Object.class))
                 .type(TjenesteResource.class.getCanonicalName())
-                .build());
+                .build();
+
+        repository.insert(wrapperDocument);
 
         event.setData(Collections.singletonList(tjenesteResource));
-
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
@@ -73,30 +87,36 @@ public class TjenesteUpdateHandler implements Handler {
             throw new MongoCantFindDocumentException();
         }
 
-        if (validate.negate().test(tjenesteResource, wrapperDocument)) {
+        TjenesteResource value = objectMapper.convertValue(wrapperDocument.getValue(), TjenesteResource.class);
+
+        if (hasInvalidUpdates(tjenesteResource, value)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
-            event.setMessage("Updates to non-writeable attributes not allowed");
-            event.setData(Collections.emptyList());
+            event.setMessage("Payload contains updates to non-writeable attributes");
             return;
         }
 
-        wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
+        if (hasValidUpdates(tjenesteResource, value)) {
+            value.setNavn(tjenesteResource.getNavn());
 
-        repository.save(wrapperDocument);
+            wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
 
-        event.setData(Collections.singletonList(tjenesteResource));
+            repository.save(wrapperDocument);
+        }
 
+        event.setData(Collections.singletonList(value));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
+    }
+
+    private boolean hasInvalidUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
+        return !Objects.equals(tjenesteResource.getSystemId(), value.getSystemId());
+    }
+
+    private boolean hasValidUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
+        return !tjenesteResource.getNavn().equals(value.getNavn());
     }
 
     @Override
     public Set<String> actions() {
         return Collections.singleton(SamtykkeActions.UPDATE_TJENESTE.name());
     }
-
-    private final BiPredicate<TjenesteResource, WrapperDocument> validate = (tjenesteResource, wrapperDocument) -> {
-        TjenesteResource value = objectMapper.convertValue(wrapperDocument.getValue(), TjenesteResource.class);
-
-        return tjenesteResource.getSystemId().equals(value.getSystemId());
-    };
 }

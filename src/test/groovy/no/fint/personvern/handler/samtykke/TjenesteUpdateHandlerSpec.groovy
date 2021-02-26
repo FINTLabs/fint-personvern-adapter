@@ -3,6 +3,7 @@ package no.fint.personvern.handler.samtykke
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.fint.event.model.Event
 import no.fint.event.model.Operation
+import no.fint.event.model.Problem
 import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
@@ -10,6 +11,7 @@ import no.fint.model.resource.personvern.samtykke.TjenesteResource
 import no.fint.personvern.exception.MongoCantFindDocumentException
 import no.fint.personvern.repository.WrapperDocument
 import no.fint.personvern.repository.WrapperDocumentRepository
+import no.fint.personvern.service.ValidationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import spock.lang.Specification
@@ -20,24 +22,30 @@ class TjenesteUpdateHandlerSpec extends Specification {
     @Autowired
     WrapperDocumentRepository repository
 
+    ValidationService validationService = Mock()
+
     TjenesteUpdateHandler handler
 
     void setup() {
-        handler = new TjenesteUpdateHandler(repository)
+        handler = new TjenesteUpdateHandler(repository, validationService)
     }
 
     void cleanup() {
         repository.deleteAll()
     }
 
-    def "Given create event a new TjenesteResource is created"() {
+    def "Given create event new TjenesteResource is created"() {
         given:
-        def event = newTjenesteEvent('test.no', [newTjenesteResource('navn')], null, Operation.CREATE)
+        def resource = newTjenesteResource('navn')
+
+        def event = newTjenesteEvent('test.no', [resource], null, Operation.CREATE)
 
         when:
         handler.accept(event)
 
         then:
+        1 * validationService.getProblems(resource) >> []
+
         def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
@@ -50,16 +58,20 @@ class TjenesteUpdateHandlerSpec extends Specification {
         data.navn == 'navn'
     }
 
-    def "Given update event a TjenesteResource is updated"() {
+    def "Given update event TjenesteResource is updated"() {
         given:
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(newTjenesteResource('navn-1')).build())
+        def resource = newTjenesteResource('navn-1')
+        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        def event = newTjenesteEvent('test.no', [newTjenesteResource('navn-2')], 'systemid/id', Operation.UPDATE)
+        resource.setNavn('navn-2')
+        def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
         handler.accept(event)
 
         then:
+        1 * validationService.getProblems(resource) >> []
+
         def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
@@ -72,40 +84,66 @@ class TjenesteUpdateHandlerSpec extends Specification {
         data.navn == 'navn-2'
     }
 
-    def "Given invalid update event error is returned"() {
+    def "Given update event with non-writable attribute error is returned"() {
         given:
         def resource = newTjenesteResource('navn')
-
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
         resource.setSystemId(new Identifikator(identifikatorverdi: '123'))
-
         def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
         handler.accept(event)
 
         then:
+        1 * validationService.getProblems(resource) >> []
+
         def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.navn == 'navn'
 
-        event.data.size() == 0
         event.responseStatus == ResponseStatus.REJECTED
     }
 
-    def "Given update event on non-existent TjenesteResource exception is thrown"() {
+    def "Given update event with invalid payload error is returned"() {
         given:
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(newTjenesteResource('navn')).build())
+        def resource = newTjenesteResource('navn')
+        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        def event = newTjenesteEvent('test.no', [newTjenesteResource('navn')], 'systemid/id-2', Operation.UPDATE)
+        resource.setNavn(null)
+        def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
         handler.accept(event)
 
         then:
+        1 * validationService.getProblems(resource) >> [new Problem()]
+
+        def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
+        resources.size() == 1
+        def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
+        mongo.systemId.identifikatorverdi == resources.first().id
+        mongo.navn == 'navn'
+
+        event.responseStatus == ResponseStatus.REJECTED
+    }
+
+    def "Given update event on non-existent TjenesteResource exception is thrown"() {
+        given:
+        def resource = newTjenesteResource('navn')
+        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
+
+        resource.setNavn('navn-2')
+        def event = newTjenesteEvent('test.no', [resource], 'systemid/id-2', Operation.UPDATE)
+
+        when:
+        handler.accept(event)
+
+        then:
+        1 * validationService.getProblems(resource) >> []
+
         thrown(MongoCantFindDocumentException)
     }
 
