@@ -68,7 +68,7 @@ dependencies {
     compile('no.fint:fint-metamodell-model-java:1.0.0-rc-2')
 
     compile 'javax.validation:validation-api:2.0.1.Final'
-    compile 'org.hibernate.validator:hibernate-validator:6.0.13.Final'
+    compile 'org.hibernate.validator:hibernate-validator:6.0.19.Final'
 
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-data-mongodb')
