@@ -43,22 +43,23 @@ public class BehandlingUpdateHandler implements Handler {
 
         List<Problem> problems = validationService.getProblems(behandlingResource);
 
-        if (problems.isEmpty()) {
-            switch (event.getOperation()) {
-                case CREATE:
-                    createBehandlingResource(event, behandlingResource);
-                    return;
-                case UPDATE:
-                    updateBehandlingResource(event, behandlingResource);
-                    return;
-                default:
-                    throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
-            }
+        if (problems.size() > 0) {
+            event.setProblems(problems);
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload failed validation");
+            return;
         }
 
-        event.setProblems(problems);
-        event.setResponseStatus(ResponseStatus.REJECTED);
-        event.setMessage("Payload failed validation");
+        switch (event.getOperation()) {
+            case CREATE:
+                createBehandlingResource(event, behandlingResource);
+                break;
+            case UPDATE:
+                updateBehandlingResource(event, behandlingResource);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+        }
     }
 
     private void createBehandlingResource(Event<FintLinks> event, BehandlingResource behandlingResource) {
@@ -94,24 +95,29 @@ public class BehandlingUpdateHandler implements Handler {
             return;
         }
 
-        if (hasValidUpdates(behandlingResource, value)) {
-            value.setAktiv(behandlingResource.getAktiv());
-
-            wrapperDocument.setValue(objectMapper.convertValue(value, Object.class));
-
-            repository.save(wrapperDocument);
+        if (hasNoUpdates(behandlingResource, value)) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload contains no updates");
+            return;
         }
+
+        value.setAktiv(behandlingResource.getAktiv());
+
+        wrapperDocument.setValue(objectMapper.convertValue(value, Object.class));
+
+        repository.save(wrapperDocument);
 
         event.setData(Collections.singletonList(value));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
     private boolean hasInvalidUpdates(BehandlingResource behandlingResource, BehandlingResource value) {
-        return !(Objects.equals(behandlingResource.getSystemId(), value.getSystemId()) && behandlingResource.getFormal().equals(value.getFormal()));
+        return !(behandlingResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi()) &&
+                behandlingResource.getFormal().equals(value.getFormal()));
     }
 
-    private boolean hasValidUpdates(BehandlingResource behandlingResource, BehandlingResource value) {
-        return !behandlingResource.getAktiv().equals(value.getAktiv());
+    private boolean hasNoUpdates(BehandlingResource behandlingResource, BehandlingResource value) {
+        return behandlingResource.getAktiv().equals(value.getAktiv());
     }
 
     @Override

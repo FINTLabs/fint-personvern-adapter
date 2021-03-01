@@ -15,6 +15,7 @@ import no.fint.personvern.repository.WrapperDocument;
 import no.fint.personvern.repository.WrapperDocumentRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -42,22 +43,23 @@ public class SamtykkeUpdateHandler implements Handler {
 
         List<Problem> problems = validationService.getProblems(samtykkeResource);
 
-        if (problems.isEmpty()) {
-            switch (event.getOperation()) {
-                case CREATE:
-                    createSamtykkeResource(event, samtykkeResource);
-                    return;
-                case UPDATE:
-                    updateSamtykkeResource(event, samtykkeResource);
-                    return;
-                default:
-                    throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
-            }
+        if (problems.size() > 0) {
+            event.setProblems(problems);
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload failed validation");
+            return;
         }
 
-        event.setProblems(problems);
-        event.setResponseStatus(ResponseStatus.REJECTED);
-        event.setMessage("Payload failed validation");
+        switch (event.getOperation()) {
+            case CREATE:
+                createSamtykkeResource(event, samtykkeResource);
+                break;
+            case UPDATE:
+                updateSamtykkeResource(event, samtykkeResource);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+        }
     }
 
     private void createSamtykkeResource(Event<FintLinks> event, SamtykkeResource samtykkeResource) {
@@ -94,25 +96,34 @@ public class SamtykkeUpdateHandler implements Handler {
             return;
         }
 
-        if (hasValidUpdates(samtykkeResource, value)) {
-            value.setGyldighetsperiode(samtykkeResource.getGyldighetsperiode());
-
-            wrapperDocument.setValue(objectMapper.convertValue(samtykkeResource, Object.class));
-
-            repository.save(wrapperDocument);
+        if (hasNoUpdates(samtykkeResource, value)) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload contains no updates");
+            return;
         }
+
+        value.setGyldighetsperiode(samtykkeResource.getGyldighetsperiode());
+
+        wrapperDocument.setValue(objectMapper.convertValue(samtykkeResource, Object.class));
+
+        repository.save(wrapperDocument);
 
         event.setData(Collections.singletonList(value));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
     private boolean hasInvalidUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
-        return !(Objects.equals(samtykkeResource.getSystemId(), value.getSystemId()) &&
-                samtykkeResource.getOpprettet().toInstant().equals(value.getOpprettet().toInstant().truncatedTo(ChronoUnit.SECONDS)));
+        return !(samtykkeResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi()) &&
+                getInstant(samtykkeResource.getOpprettet()).equals(getInstant(value.getOpprettet())));
     }
 
-    private boolean hasValidUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
-        return !Objects.equals(samtykkeResource.getGyldighetsperiode(), value.getGyldighetsperiode());
+    private boolean hasNoUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
+        return getInstant(samtykkeResource.getGyldighetsperiode().getStart()).equals(getInstant(value.getGyldighetsperiode().getStart())) &&
+                Objects.equals(getInstant(samtykkeResource.getGyldighetsperiode().getSlutt()), getInstant(value.getGyldighetsperiode().getSlutt()));
+    }
+
+    public Instant getInstant(Date date) {
+        return date.toInstant().truncatedTo(ChronoUnit.SECONDS);
     }
 
     @Override

@@ -66,7 +66,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
         def resource = newTjenesteResource('navn-1')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        resource.setNavn('navn-2')
+        resource.navn = 'navn-2'
         def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -92,7 +92,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
         def resource = newTjenesteResource('navn')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        resource.setSystemId(new Identifikator(identifikatorverdi: '123'))
+        resource.systemId.identifikatorverdi = '123'
         def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -115,7 +115,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
         def resource = newTjenesteResource('navn')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        resource.setNavn(null)
+        resource.navn = null
         def event = newTjenesteEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -138,7 +138,6 @@ class TjenesteUpdateHandlerSpec extends Specification {
         def resource = newTjenesteResource('navn')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(TjenesteResource.canonicalName).value(resource).build())
 
-        resource.setNavn('navn-2')
         def event = newTjenesteEvent('test.no', [resource], 'systemid/id-2', Operation.UPDATE)
 
         when:

@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @Component
@@ -44,22 +43,23 @@ public class TjenesteUpdateHandler implements Handler {
 
         List<Problem> problems = validationService.getProblems(tjenesteResource);
 
-        if (problems.isEmpty()) {
-            switch (event.getOperation()) {
-                case CREATE:
-                    createTjenesteResource(event, tjenesteResource);
-                    return;
-                case UPDATE:
-                    updateTjenesteResource(event, tjenesteResource);
-                    return;
-                default:
-                    throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
-            }
+        if (problems.size() > 0) {
+            event.setProblems(problems);
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload failed validation");
+            return;
         }
 
-        event.setProblems(problems);
-        event.setResponseStatus(ResponseStatus.REJECTED);
-        event.setMessage("Payload failed validation");
+        switch (event.getOperation()) {
+            case CREATE:
+                createTjenesteResource(event, tjenesteResource);
+                break;
+            case UPDATE:
+                updateTjenesteResource(event, tjenesteResource);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+        }
     }
 
     private void createTjenesteResource(Event<FintLinks> event, TjenesteResource tjenesteResource) {
@@ -95,24 +95,28 @@ public class TjenesteUpdateHandler implements Handler {
             return;
         }
 
-        if (hasValidUpdates(tjenesteResource, value)) {
-            value.setNavn(tjenesteResource.getNavn());
-
-            wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
-
-            repository.save(wrapperDocument);
+        if (hasNoUpdates(tjenesteResource, value)) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Payload contains no updates");
+            return;
         }
+
+        value.setNavn(tjenesteResource.getNavn());
+
+        wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
+
+        repository.save(wrapperDocument);
 
         event.setData(Collections.singletonList(value));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
     private boolean hasInvalidUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
-        return !Objects.equals(tjenesteResource.getSystemId(), value.getSystemId());
+        return !tjenesteResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi());
     }
 
-    private boolean hasValidUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
-        return !tjenesteResource.getNavn().equals(value.getNavn());
+    private boolean hasNoUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
+        return tjenesteResource.getNavn().equals(value.getNavn());
     }
 
     @Override

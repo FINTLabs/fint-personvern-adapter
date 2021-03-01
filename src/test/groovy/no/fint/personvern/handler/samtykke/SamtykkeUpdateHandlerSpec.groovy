@@ -42,7 +42,7 @@ class SamtykkeUpdateHandlerSpec extends Specification {
 
     def "Given create event new SamtykkeResource is created"() {
         given:
-        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+        def resource = newSamtykkeResource('2021-02-01T00:00:00Z')
 
         def event = newSamtykkeEvent('test.no', [resource], null, Operation.CREATE)
 
@@ -56,19 +56,19 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
-        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00Z'))
 
         event.data.size() == 1
         def data = event.data.first() as SamtykkeResource
         data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
-        data.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        data.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        data.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        data.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00Z'))
     }
 
     def "Given update event SamtykkeResource is updated"() {
         given:
-        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+        def resource = newSamtykkeResource('2021-02-01T00:00:00Z')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(SamtykkeResource.canonicalName).value(resource).build())
 
         resource.gyldighetsperiode.slutt = Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
@@ -84,22 +84,22 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
-        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
+        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00Z'))
 
         event.data.size() == 1
         def data = event.data.first() as SamtykkeResource
         data.systemId.identifikatorverdi == mongo.systemId.identifikatorverdi
-        data.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        data.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
+        data.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        data.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-03-01T00:00:00Z'))
     }
 
     def "Given update event with non-writable attribute error is returned"() {
         given:
-        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+        def resource = newSamtykkeResource('2021-02-01T00:00:00Z')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(SamtykkeResource.canonicalName).value(resource).build())
 
-        resource.setOpprettet(Date.from(Instant.parse('2021-02-01T00:00:00.00Z')))
+        resource.opprettet = Date.from(Instant.parse('2021-02-01T00:00:00Z'))
         def event = newSamtykkeEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -112,18 +112,18 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
-        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00Z'))
 
         event.responseStatus == ResponseStatus.REJECTED
     }
 
     def "Given update event with invalid payload error is returned"() {
         given:
-        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+        def resource = newSamtykkeResource('2021-02-01T00:00:00Z')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(SamtykkeResource.canonicalName).value(resource).build())
 
-        resource.setOpprettet(null)
+        resource.opprettet = null
         def event = newSamtykkeEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -136,18 +136,17 @@ class SamtykkeUpdateHandlerSpec extends Specification {
         resources.size() == 1
         def mongo = new ObjectMapper().convertValue(resources.first().value, SamtykkeResource.class)
         mongo.systemId.identifikatorverdi == resources.first().id
-        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        mongo.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00Z'))
+        mongo.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00Z'))
 
         event.responseStatus == ResponseStatus.REJECTED
     }
 
     def "Given update event on non-existent SamtykkeResource exception is thrown"() {
         given:
-        def resource = newSamtykkeResource('2021-02-01T00:00:00.00Z')
+        def resource = newSamtykkeResource('2021-02-01T00:00:00Z')
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(SamtykkeResource.canonicalName).value(resource).build())
 
-        resource.gyldighetsperiode.slutt = Date.from(Instant.parse('2021-03-01T00:00:00.00Z'))
         def event = newSamtykkeEvent('test.no', [resource], 'systemid/id-2', Operation.UPDATE)
 
         when:

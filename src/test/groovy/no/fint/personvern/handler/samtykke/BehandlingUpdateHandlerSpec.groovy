@@ -68,7 +68,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
         def resource = newBehandlingResource(true)
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
 
-        resource.setAktiv(false)
+        resource.aktiv = false
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -96,7 +96,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
         def resource = newBehandlingResource(true)
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
 
-        resource.setFormal('formal2')
+        resource.formal = 'formal2'
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -120,7 +120,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
         def resource = newBehandlingResource(true)
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
 
-        resource.setFormal(null)
+        resource.formal = null
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
 
         when:
@@ -144,7 +144,6 @@ class BehandlingUpdateHandlerSpec extends Specification {
         def resource = newBehandlingResource(true)
         repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
 
-        resource.setAktiv(false)
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id-2', Operation.UPDATE)
 
         when:
