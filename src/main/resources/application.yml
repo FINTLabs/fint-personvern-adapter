@@ -6,6 +6,7 @@ springfox:
   version: '@version@'
 
 fint:
+  metamodell: https://beta.felleskomponent.no/fint/metamodell/klasse
   adapter:
     endpoints:
       sse: /sse/%s

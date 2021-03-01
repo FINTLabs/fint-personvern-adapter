@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '1.5.19.RELEASE'
+        springBootVersion = '1.5.22.RELEASE'
     }
     repositories {
         jcenter()
@@ -29,6 +29,7 @@ javadoc {
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
+
 afterEvaluate {
     configure(processResources) {
         filesMatching('**/*.yml') {
@@ -63,9 +64,11 @@ dependencies {
     compile('no.fint:fint-sse:1.4.0')
     compile('no.fint:fint-event-model:3.0.0')
     compile('no.fint:fint-relation-model:1.1.5')
+    compile('no.fint:fint-model-resource:0.3.3')
     compile('no.fint:fint-metamodell-model-java:1.0.0-rc-2')
 
-    /* --> Models <-- */
+    compile 'javax.validation:validation-api:2.0.1.Final'
+    compile 'org.hibernate.validator:hibernate-validator:6.0.19.Final'
 
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-data-mongodb')
@@ -75,6 +78,9 @@ dependencies {
     testCompile('org.spockframework:spock-spring:1.1-groovy-2.4')
     testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.2.0')
+    testCompile('com.squareup.okhttp3:mockwebserver:4.3.1')
+    testCompile('com.squareup.okhttp3:okhttp:4.3.1')
 }
 
 task copyExternalDependencies(type: Copy) {

@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class FintUtilities {
 
-    public static Identifikator createUuiSystemId() {
+    public static Identifikator createUuidSystemId() {
         Identifikator systemId = new Identifikator();
         systemId.setIdentifikatorverdi(UUID.randomUUID().toString());
 

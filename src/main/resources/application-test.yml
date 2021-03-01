@@ -3,6 +3,7 @@ security:
     enabled: false
 
 fint:
+  metamodell: https://beta.felleskomponent.no/fint/metamodell/klasse
   adapter:
     organizations: mock.no
     sse-endpoint: http://localhost:8080/provider/sse/%s
