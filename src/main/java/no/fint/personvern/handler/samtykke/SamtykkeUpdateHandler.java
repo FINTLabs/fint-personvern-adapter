@@ -96,12 +96,6 @@ public class SamtykkeUpdateHandler implements Handler {
             return;
         }
 
-        if (hasNoUpdates(samtykkeResource, value)) {
-            event.setResponseStatus(ResponseStatus.REJECTED);
-            event.setMessage("Payload contains no updates");
-            return;
-        }
-
         value.setGyldighetsperiode(samtykkeResource.getGyldighetsperiode());
 
         wrapperDocument.setValue(objectMapper.convertValue(samtykkeResource, Object.class));
@@ -115,11 +109,6 @@ public class SamtykkeUpdateHandler implements Handler {
     private boolean hasInvalidUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
         return !(samtykkeResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi()) &&
                 getInstant(samtykkeResource.getOpprettet()).equals(getInstant(value.getOpprettet())));
-    }
-
-    private boolean hasNoUpdates(SamtykkeResource samtykkeResource, SamtykkeResource value) {
-        return getInstant(samtykkeResource.getGyldighetsperiode().getStart()).equals(getInstant(value.getGyldighetsperiode().getStart())) &&
-                Objects.equals(getInstant(samtykkeResource.getGyldighetsperiode().getSlutt()), getInstant(value.getGyldighetsperiode().getSlutt()));
     }
 
     public Instant getInstant(Date date) {

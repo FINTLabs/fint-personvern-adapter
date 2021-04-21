@@ -95,12 +95,6 @@ public class TjenesteUpdateHandler implements Handler {
             return;
         }
 
-        if (hasNoUpdates(tjenesteResource, value)) {
-            event.setResponseStatus(ResponseStatus.REJECTED);
-            event.setMessage("Payload contains no updates");
-            return;
-        }
-
         value.setNavn(tjenesteResource.getNavn());
 
         wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
@@ -113,10 +107,6 @@ public class TjenesteUpdateHandler implements Handler {
 
     private boolean hasInvalidUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
         return !tjenesteResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi());
-    }
-
-    private boolean hasNoUpdates(TjenesteResource tjenesteResource, TjenesteResource value) {
-        return tjenesteResource.getNavn().equals(value.getNavn());
     }
 
     @Override

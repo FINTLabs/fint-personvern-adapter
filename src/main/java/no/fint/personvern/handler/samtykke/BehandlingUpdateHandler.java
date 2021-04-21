@@ -95,12 +95,6 @@ public class BehandlingUpdateHandler implements Handler {
             return;
         }
 
-        if (hasNoUpdates(behandlingResource, value)) {
-            event.setResponseStatus(ResponseStatus.REJECTED);
-            event.setMessage("Payload contains no updates");
-            return;
-        }
-
         value.setAktiv(behandlingResource.getAktiv());
 
         wrapperDocument.setValue(objectMapper.convertValue(value, Object.class));
@@ -114,10 +108,6 @@ public class BehandlingUpdateHandler implements Handler {
     private boolean hasInvalidUpdates(BehandlingResource behandlingResource, BehandlingResource value) {
         return !(behandlingResource.getSystemId().getIdentifikatorverdi().equals(value.getSystemId().getIdentifikatorverdi()) &&
                 behandlingResource.getFormal().equals(value.getFormal()));
-    }
-
-    private boolean hasNoUpdates(BehandlingResource behandlingResource, BehandlingResource value) {
-        return behandlingResource.getAktiv().equals(value.getAktiv());
     }
 
     @Override
