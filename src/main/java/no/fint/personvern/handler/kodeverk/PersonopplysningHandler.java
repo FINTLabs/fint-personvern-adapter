@@ -52,7 +52,7 @@ public class PersonopplysningHandler implements Handler {
 
     @Scheduled(initialDelay = 1000L, fixedDelay = 3600000L)
     private void updatePersonopplysningResources() {
-        log.info("Updating PersonopplysningResource");
+        log.info("Updating PersonopplysningResource...");
 
         try {
             KlasseResources resources = restTemplate.getForObject(metamodellUri, KlasseResources.class);
