@@ -45,7 +45,7 @@ repositories {
     mavenLocal()
     jcenter()
     maven {
-        url 'http://dl.bintray.com/fint/maven'
+        url 'https://repo.fintlabs.no/releases'
     }
 }
 
@@ -61,11 +61,11 @@ dependencies {
     compile('org.jooq:jool-java-8:0.9.14')
     compile('org.apache.commons:commons-text:1.9')
 
-    compile('no.fint:fint-sse:1.4.0')
-    compile('no.fint:fint-event-model:3.0.0')
-    compile('no.fint:fint-relation-model:1.1.5')
-    compile('no.fint:fint-model-resource:0.3.3')
-    compile('no.fint:fint-metamodell-model-java:1.0.0-rc-2')
+    compile('no.fint:fint-sse:1.4.1')
+    compile('no.fint:fint-event-model:3.0.2')
+    compile('no.fint:fint-relation-model:1.1.6')
+    compile('no.fint:fint-model-resource:0.4.1')
+    compile('no.fintlabs:fint-metamodell-model-java:1.0.0')
 
     compile 'javax.validation:validation-api:2.0.1.Final'
     compile 'org.hibernate.validator:hibernate-validator:6.0.19.Final'
