@@ -63,7 +63,7 @@ public class TjenesteUpdateHandler implements Handler {
     }
 
     private void createTjenesteResource(Event<FintLinks> event, TjenesteResource tjenesteResource) {
-        tjenesteResource.setSystemId(FintUtilities.createUuidSystemId());
+        //tjenesteResource.setSystemId(FintUtilities.createUuidSystemId());
 
         WrapperDocument wrapperDocument = WrapperDocument.builder()
                 .id(tjenesteResource.getSystemId().getIdentifikatorverdi())
