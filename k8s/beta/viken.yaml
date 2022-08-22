@@ -29,7 +29,7 @@ spec:
             sizeLimit: 1G
       containers:
         - name: adapter-personvern-viken
-          image: fintlabsacr.azurecr.io/personvern-adapter:build.14
+          image: fintlabsacr.azurecr.io/fint-personvern-adapter:dummy
           resources:
             limits:
               memory: "2Gi"
