@@ -23,8 +23,9 @@ jobs:
           java-version: '8'
           cache: 'gradle'
 
-      - name: Gradle Wrapper Validation
-        uses: gradle/wrapper-validation-action@v1.0.4
+      # Disabled because it doesn't support gradle 3.3-4
+      #- name: Gradle Wrapper Validation
+      #  uses: gradle/wrapper-validation-action@v1.0.4
 
       - name: Gradle Setup
         uses: gradle/gradle-build-action@v2.1.6
