@@ -1,6 +1,7 @@
 package no.fint.personvern.service;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.MongoException;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.adapter.event.EventResponseService;
 import no.fint.adapter.event.EventStatusService;
@@ -92,7 +93,12 @@ public class EventHandlerService {
     }
 
     private boolean healthCheck() {
-        return mongoTemplate.getDb().command(new BasicDBObject("ping", "1")).ok();
+        try {
+            mongoTemplate.getDb().runCommand(new BasicDBObject("ping", "1"));
+        } catch (MongoException e) {
+            return false;
+        }
+        return true;
     }
 
     /*

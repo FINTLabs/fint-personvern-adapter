@@ -16,8 +16,10 @@ import no.fint.personvern.service.ValidationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.TestPropertySource
 import spock.lang.Specification
 
+@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
 @DataMongoTest
 @Import(MongoConfiguration.class)
 class BehandlingUpdateHandlerSpec extends Specification {

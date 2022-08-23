@@ -6,8 +6,10 @@ import no.fint.personvern.configuration.MongoConfiguration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.TestPropertySource
 import spock.lang.Specification
 
+@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
 @DataMongoTest
 @Import(MongoConfiguration.class)
 class WrapperDocumentRepositorySpec extends Specification {
