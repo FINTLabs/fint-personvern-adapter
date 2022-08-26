@@ -1,4 +1,4 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.tjeneste;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
@@ -7,12 +7,10 @@ import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
-import no.fint.personvern.exception.MongoCantFindDocumentException;
-import no.fint.personvern.repository.WrapperDocument;
-import no.fint.personvern.repository.WrapperDocumentRepository;
+import no.fint.personvern.exception.IllegalOrganizationException;
+import no.fint.personvern.exception.RowNotFoundException;
 import no.fint.personvern.service.Handler;
 import no.fint.personvern.service.ValidationService;
-import no.fint.personvern.utility.FintUtilities;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -21,12 +19,12 @@ import java.util.Set;
 
 @Component
 public class TjenesteUpdateHandler implements Handler {
-    private final WrapperDocumentRepository repository;
+    private final TjenesteRepository repository;
     private final ValidationService validationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TjenesteUpdateHandler(WrapperDocumentRepository repository, ValidationService validationService) {
+    public TjenesteUpdateHandler(TjenesteRepository repository, ValidationService validationService) {
         this.repository = repository;
         this.validationService = validationService;
     }
@@ -65,43 +63,44 @@ public class TjenesteUpdateHandler implements Handler {
     private void createTjenesteResource(Event<FintLinks> event, TjenesteResource tjenesteResource) {
         //tjenesteResource.setSystemId(FintUtilities.createUuidSystemId());
 
-        WrapperDocument wrapperDocument = WrapperDocument.builder()
+        if (repository.existsById(tjenesteResource.getSystemId().getIdentifikatorverdi())) {
+            event.setResponseStatus(ResponseStatus.REJECTED);
+            event.setMessage("Entry with same id already exists");
+            return;
+        }
+
+        TjenesteEntity tjenesteEntity = TjenesteEntity.builder()
                 .id(tjenesteResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(objectMapper.convertValue(tjenesteResource, Object.class))
-                .type(TjenesteResource.class.getCanonicalName())
+                .value(tjenesteResource)
                 .build();
 
-        repository.insert(wrapperDocument);
+        repository.save(tjenesteEntity);
 
         event.setData(Collections.singletonList(tjenesteResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
-    private void updateTjenesteResource(Event<FintLinks> event, TjenesteResource tjenesteResource) {
+    private void updateTjenesteResource(Event<FintLinks> event, TjenesteResource updatedTjenesteResource) {
         String id = event.getQuery().split("/")[1];
 
-        WrapperDocument wrapperDocument = repository.findByIdAndOrgId(id, event.getOrgId());
+        TjenesteEntity tjenesteEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);
+        if (!tjenesteEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        if (wrapperDocument == null) {
-            throw new MongoCantFindDocumentException();
-        }
+        TjenesteResource exsistingTjenesteResource = tjenesteEntity.getValue();
 
-        TjenesteResource value = objectMapper.convertValue(wrapperDocument.getValue(), TjenesteResource.class);
-
-        if (hasInvalidUpdates(tjenesteResource, value)) {
+        if (hasInvalidUpdates(updatedTjenesteResource, exsistingTjenesteResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Payload contains updates to non-writeable attributes");
             return;
         }
 
-        value.setNavn(tjenesteResource.getNavn());
+        exsistingTjenesteResource.setNavn(updatedTjenesteResource.getNavn());
 
-        wrapperDocument.setValue(objectMapper.convertValue(tjenesteResource, Object.class));
+        tjenesteEntity.setValue(exsistingTjenesteResource);
+        repository.save(tjenesteEntity);
 
-        repository.save(wrapperDocument);
-
-        event.setData(Collections.singletonList(value));
+        event.setData(Collections.singletonList(exsistingTjenesteResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 

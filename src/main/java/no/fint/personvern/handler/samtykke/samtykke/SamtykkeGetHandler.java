@@ -1,4 +1,4 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.samtykke;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
@@ -7,8 +7,6 @@ import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fint.personvern.service.Handler;
-import no.fint.personvern.repository.WrapperDocument;
-import no.fint.personvern.repository.WrapperDocumentRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -16,9 +14,9 @@ import java.util.Set;
 
 @Component
 public class SamtykkeGetHandler implements Handler {
-    private final WrapperDocumentRepository repository;
+    private final SamtykkeRepository repository;
 
-    public SamtykkeGetHandler(WrapperDocumentRepository repository) {
+    public SamtykkeGetHandler(SamtykkeRepository repository) {
         this.repository = repository;
     }
 
@@ -29,10 +27,10 @@ public class SamtykkeGetHandler implements Handler {
 
     private void getSamtykkeResources(Event<FintLinks> event) {
         repository
-                .findByOrgIdAndType(event.getOrgId(), SamtykkeResource.class.getCanonicalName())
+                .findAll()
                 .stream()
-                .map(WrapperDocument::getValue)
-                .map(value -> new ObjectMapper().convertValue(value, SamtykkeResource.class))
+                .filter(samtykke -> samtykke.getOrgId().equals(event.getOrgId()))
+                .map(samtykke -> samtykke.getValue())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);

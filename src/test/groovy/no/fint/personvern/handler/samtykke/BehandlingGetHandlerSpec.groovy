@@ -5,6 +5,7 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
 import no.fint.personvern.configuration.MongoConfiguration
+import no.fint.personvern.handler.samtykke.behandling.BehandlingGetHandler
 import no.fint.personvern.repository.WrapperDocument
 import no.fint.personvern.repository.WrapperDocumentRepository
 import org.springframework.beans.factory.annotation.Autowired

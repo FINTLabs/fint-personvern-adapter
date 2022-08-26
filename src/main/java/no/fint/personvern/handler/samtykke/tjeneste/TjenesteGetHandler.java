@@ -1,13 +1,9 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.tjeneste;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
-import no.fint.personvern.repository.WrapperDocument;
-import no.fint.personvern.repository.WrapperDocumentRepository;
 import no.fint.personvern.service.Handler;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +12,9 @@ import java.util.Set;
 
 @Component
 public class TjenesteGetHandler implements Handler {
-    private final WrapperDocumentRepository repository;
+    private final TjenesteRepository repository;
 
-    public TjenesteGetHandler(WrapperDocumentRepository repository) {
+    public TjenesteGetHandler(TjenesteRepository repository) {
         this.repository = repository;
     }
 
@@ -29,10 +25,10 @@ public class TjenesteGetHandler implements Handler {
 
     private void getTjenesteResources(Event<FintLinks> event) {
         repository
-                .findByOrgIdAndType(event.getOrgId(), TjenesteResource.class.getCanonicalName())
+                .findAll()
                 .stream()
-                .map(WrapperDocument::getValue)
-                .map(value -> new ObjectMapper().convertValue(value, TjenesteResource.class))
+                .filter(tjeneste -> tjeneste.getOrgId().equals(event.getOrgId()))
+                .map(tjeneste -> tjeneste.getValue())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);
