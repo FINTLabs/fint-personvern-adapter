@@ -9,6 +9,7 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
 import no.fint.personvern.exception.RowNotFoundException
+import no.fint.personvern.handler.samtykke.behandling.BehandlingEntity
 import no.fint.personvern.handler.samtykke.behandling.BehandlingRepository
 import no.fint.personvern.handler.samtykke.behandling.BehandlingUpdateHandler
 import no.fint.personvern.service.ValidationService
@@ -48,10 +49,10 @@ class BehandlingUpdateHandlerSpec extends Specification {
         then:
         1 * validationService.getProblems(resource) >> []
 
-        def resources = repository.findByOrgIdAndType('test.no', BehandlingResource.canonicalName)
-        resources.size() == 1
-        def mongo = new ObjectMapper().convertValue(resources.first().value, BehandlingResource.class)
-        mongo.systemId.identifikatorverdi == resources.first().id
+        def entity = repository.findAll().first()
+
+        def mongo = entity.resource
+        mongo.systemId.identifikatorverdi == entity.id
         mongo.formal == 'formal'
         mongo.aktiv
 
@@ -65,7 +66,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
     def "Given update event BehandlingResource is updated"() {
         given:
         def resource = newBehandlingResource(true)
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
+        repository.save(BehandlingEntity.builder().id('id').orgId('test.no').resource(resource).build())
 
         resource.aktiv = false
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
@@ -76,10 +77,10 @@ class BehandlingUpdateHandlerSpec extends Specification {
         then:
         1 * validationService.getProblems(resource) >> []
 
-        def resources = repository.findByOrgIdAndType('test.no', BehandlingResource.canonicalName)
-        resources.size() == 1
-        def mongo = new ObjectMapper().convertValue(resources.first().value, BehandlingResource.class)
-        mongo.systemId.identifikatorverdi == resources.first().id
+        def entity = repository.findById('id').get()
+
+        def mongo = entity.resource
+        mongo.systemId.identifikatorverdi == entity.id
         mongo.formal == 'formal'
         !mongo.aktiv
 
@@ -93,7 +94,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
     def "Given update event with non-writable attribute error is returned"() {
         given:
         def resource = newBehandlingResource(true)
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
+        repository.save(BehandlingEntity.builder().id('id').orgId('test.no').resource(resource).build())
 
         resource.formal = 'formal2'
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
@@ -104,10 +105,10 @@ class BehandlingUpdateHandlerSpec extends Specification {
         then:
         1 * validationService.getProblems(resource) >> []
 
-        def resources = repository.findByOrgIdAndType('test.no', BehandlingResource.canonicalName)
-        resources.size() == 1
-        def mongo = new ObjectMapper().convertValue(resources.first().value, BehandlingResource.class)
-        mongo.systemId.identifikatorverdi == resources.first().id
+        def entity = repository.findById('id').get()
+
+        def mongo = entity.resource
+        mongo.systemId.identifikatorverdi == entity.id
         mongo.formal == 'formal'
         mongo.aktiv
 
@@ -117,7 +118,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
     def "Given update event with invalid payload error is returned"() {
         given:
         def resource = newBehandlingResource(true)
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
+        repository.save(BehandlingEntity.builder().id('id').orgId('test.no').resource(resource).build())
 
         resource.formal = null
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id', Operation.UPDATE)
@@ -128,10 +129,10 @@ class BehandlingUpdateHandlerSpec extends Specification {
         then:
         1 * validationService.getProblems(resource) >> [new Problem()]
 
-        def resources = repository.findByOrgIdAndType('test.no', BehandlingResource.canonicalName)
-        resources.size() == 1
-        def mongo = new ObjectMapper().convertValue(resources.first().value, BehandlingResource.class)
-        mongo.systemId.identifikatorverdi == resources.first().id
+        def entity = repository.findById('id').get()
+
+        def mongo = entity.resource
+        mongo.systemId.identifikatorverdi == 'id'
         mongo.formal == 'formal'
         mongo.aktiv
 
@@ -141,7 +142,7 @@ class BehandlingUpdateHandlerSpec extends Specification {
     def "Given update event on non-existent BehandlingsResource exception is thrown"() {
         given:
         def resource = newBehandlingResource(true)
-        repository.save(WrapperDocument.builder().id('id').orgId('test.no').type(BehandlingResource.canonicalName).value(resource).build())
+        repository.save(BehandlingEntity.builder().id('id').orgId('test.no').resource(resource).build())
 
         def event = newBehandlingEvent('test.no', [resource], 'systemid/id-2', Operation.UPDATE)
 
