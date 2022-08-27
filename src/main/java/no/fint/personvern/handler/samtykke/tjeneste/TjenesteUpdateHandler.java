@@ -74,7 +74,7 @@ public class TjenesteUpdateHandler implements Handler {
         TjenesteEntity tjenesteEntity = TjenesteEntity.builder()
                 .id(tjenesteResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(tjenesteResource)
+                .resource(tjenesteResource)
                 .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
@@ -90,7 +90,7 @@ public class TjenesteUpdateHandler implements Handler {
         TjenesteEntity tjenesteEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);
         if (!tjenesteEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        TjenesteResource exsistingTjenesteResource = tjenesteEntity.getValue();
+        TjenesteResource exsistingTjenesteResource = tjenesteEntity.getResource();
 
         if (hasInvalidUpdates(updatedTjenesteResource, exsistingTjenesteResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
@@ -100,7 +100,7 @@ public class TjenesteUpdateHandler implements Handler {
 
         exsistingTjenesteResource.setNavn(updatedTjenesteResource.getNavn());
 
-        tjenesteEntity.setValue(exsistingTjenesteResource);
+        tjenesteEntity.setResource(exsistingTjenesteResource);
         tjenesteEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(tjenesteEntity);
 

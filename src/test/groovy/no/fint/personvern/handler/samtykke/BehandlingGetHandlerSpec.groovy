@@ -15,7 +15,6 @@ import spock.lang.Specification
 import java.time.LocalDateTime
 
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
-@DirtiesContext
 class BehandlingGetHandlerSpec extends Specification {
 
     @Autowired
@@ -27,54 +26,40 @@ class BehandlingGetHandlerSpec extends Specification {
         handler = new BehandlingGetHandler(repository)
     }
 
-    def "Given orgId response contains BehandlingResource for the given orgId"() {
+    def "Given values are correct"() {
         given:
-        repository.save(BehandlingEntity.builder().id('id-1').orgId('test-1.no').value(newBehandlingResource('id-1')).lastModifiedDate(getDate()).build())
-        repository.save(BehandlingEntity.builder().id('id-2').orgId('test-2.no').value(newBehandlingResource('id-2')).lastModifiedDate(getDate()).build())
+        repository.save(newEntity("id-test-1", "org-no", newResource("test-of-id-1", "formal with this record", true)))
+        def event = newEvent('org-no')
 
-        def event = newEvent('test-1.no')
+        when:
+        handler.accept(event)
+        def resource = (BehandlingResource) event.data.get(0)
+
+        then:
+        resource
+        resource.systemId.identifikatorverdi == 'test-of-id-1'
+        resource.formal == 'formal with this record'
+        resource.aktiv == true
+    }
+
+    def "Correct number of rows"() {
+        given:
+        repository.save(newEntity("id1", "org-no", newResource("id1", "formal", true)))
+        repository.save(newEntity("id2", "org-no", newResource("id2", "other", false)))
+        repository.save(newEntity("id3", "org-no", newResource("id3", "test", true)))
+        repository.save(newEntity("id-4", "org-no", newResource("id-4", "formal test", false)))
+        def event = newEvent('org-no')
 
         when:
         handler.accept(event)
 
         then:
-        event.data.size() == 1
-        def resource = event.data.first() as BehandlingResource
-        resource.systemId.identifikatorverdi == 'id-1'
-        resource.formal == 'formal'
-        resource.aktiv
+        event.data.size() == 4
     }
 
-    def "Returned object contains correct values"() {
-
-    }
-
-    def "Return all rows"() {
-
-    }
-
-    def "Add element"() {
+    def "Dont get rows from other orgid"() {
         given:
-        def resource = newResource("Test", "Test", false)
-        /// TODO feiler med resource, fungerer uten.
-        def entity = BehandlingEntity.builder().id("1234").orgId("test-no").value(resource).lastModifiedDate(getDate()).build()
-        repository.save(entity)
-//        def entity = newEntity("1234", "wrong-1.no", newResource("1234", "formal", true))
-//        repository.save(entity)
-        def event = newEvent('correct-1.no')
-
-        when:
-        handler.accept(event)
-
-        then:
-        event.getData().size() == 0
-    }
-
-    def "Dont return rows with wrong orgid"() {
-        given:
-        def entity = newEntity("id1", "org-no", newResource("id1", "formal", true))
-        repository.save(entity)
-
+        repository.save(newEntity("id1", "org-no", newResource("id1", "formal", true)))
         def event = newEvent('correct-1.no')
 
         when:
@@ -90,14 +75,6 @@ class BehandlingGetHandlerSpec extends Specification {
         )
     }
 
-    def newBehandlingResource(String id) {
-        return new BehandlingResource(
-                aktiv: true,
-                formal: 'formal',
-                systemId: new Identifikator(identifikatorverdi: id)
-        )
-    }
-
     def getDate() {
         return LocalDateTime.parse('2021-01-01T00:00:00.00');
     }
@@ -106,7 +83,7 @@ class BehandlingGetHandlerSpec extends Specification {
         return BehandlingEntity.builder()
                 .id(id)
                 .orgId(orgId)
-                .value(resource)
+                .resource(resource)
                 .lastModifiedDate(getDate())
                 .build()
     }

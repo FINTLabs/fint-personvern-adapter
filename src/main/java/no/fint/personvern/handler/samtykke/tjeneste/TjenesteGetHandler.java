@@ -28,7 +28,7 @@ public class TjenesteGetHandler implements Handler {
                 .findAll()
                 .stream()
                 .filter(tjeneste -> tjeneste.getOrgId().equals(event.getOrgId()))
-                .map(tjeneste -> tjeneste.getValue())
+                .map(tjeneste -> tjeneste.getResource())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);

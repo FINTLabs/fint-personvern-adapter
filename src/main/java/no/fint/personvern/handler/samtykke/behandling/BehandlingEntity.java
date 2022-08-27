@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -24,8 +23,8 @@ public class BehandlingEntity {
     private String id;
 
     @Convert(converter = BehandlingConverter.class)
-    @Column(name = "json_input", columnDefinition = "json")
-    private BehandlingResource value;
+    @Column(columnDefinition = "json")
+    private BehandlingResource resource;
 
     private String orgId;
 

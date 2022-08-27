@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
-import no.fint.personvern.handler.samtykke.behandling.BehandlingConverter;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -25,8 +23,8 @@ public class TjenesteEntity {
     private String id;
 
     @Convert(converter = TjenesteConverter.class)
-    @Column(name = "json_input", columnDefinition = "json")
-    private TjenesteResource value;
+    @Column(columnDefinition = "json")
+    private TjenesteResource resource;
 
     private String orgId;
 

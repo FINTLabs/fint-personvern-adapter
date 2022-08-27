@@ -69,7 +69,7 @@ public class BehandlingUpdateHandler implements Handler {
         BehandlingEntity behandlingEntity = BehandlingEntity.builder()
                 .id(behandlingResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(behandlingResource)
+                .resource(behandlingResource)
                 .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
@@ -85,7 +85,7 @@ public class BehandlingUpdateHandler implements Handler {
         BehandlingEntity behandlingEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);//gId(id, event.getOrgId());
         if (!behandlingEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        BehandlingResource existingBehandlingResource = behandlingEntity.getValue();
+        BehandlingResource existingBehandlingResource = behandlingEntity.getResource();
 
         if (hasInvalidUpdates(updatedBehandlingResource, existingBehandlingResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
@@ -95,7 +95,7 @@ public class BehandlingUpdateHandler implements Handler {
 
         existingBehandlingResource.setAktiv(updatedBehandlingResource.getAktiv());
 
-        behandlingEntity.setValue(existingBehandlingResource);
+        behandlingEntity.setResource(existingBehandlingResource);
         behandlingEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(behandlingEntity);
 

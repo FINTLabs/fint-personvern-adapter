@@ -51,9 +51,9 @@ class BehandlingRepositorySpec extends Specification {
         then:
         test.isPresent()
         test.get().id == 'id-1'
-        test.get().value.systemId.identifikatorverdi == "123"
-        test.get().value.formal == "Test"
-        test.get().value.aktiv == true
+        test.get().resource.systemId.identifikatorverdi == "123"
+        test.get().resource.formal == "Test"
+        test.get().resource.aktiv == true
     }
 
     def "Find by id and orgId returns document"() {
@@ -68,15 +68,15 @@ class BehandlingRepositorySpec extends Specification {
         test.isPresent()
         test.get().getId() == 'id-1'
         test.get().getOrgId() == 'org-id-1'
-        test.get().getValue().getFormal() == "Test"
-        test.get().getValue().getAktiv() == false
+        test.get().getResource().getFormal() == "Test"
+        test.get().getResource().getAktiv() == false
     }
 
     def newEntity(String id, String orgId, BehandlingResource resource) {
         return BehandlingEntity.builder()
                 .id(id)
                 .orgId(orgId)
-                .value(resource)
+                .resource(resource)
                 .lastModifiedDate(LocalDateTime.now())
                 .build()
     }

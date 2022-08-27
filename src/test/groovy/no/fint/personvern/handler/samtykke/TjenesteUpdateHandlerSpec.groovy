@@ -49,7 +49,7 @@ class TjenesteUpdateHandlerSpec extends Specification {
 
         def resources = repository.findAll()
         resources.size() == 1
-        def mongo = resources.first().getValue()
+        def mongo = resources.first().getResource()
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.navn == 'navn'
 

@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
-import no.fint.personvern.handler.samtykke.behandling.BehandlingConverter;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -25,8 +23,8 @@ public class SamtykkeEntity {
     private String id;
 
     @Convert(converter = SamtykkeConverter.class)
-    @Column(name = "json_input", columnDefinition = "json")
-    private SamtykkeResource value;
+    @Column(columnDefinition = "json")
+    private SamtykkeResource resource;
 
     private String orgId;
 

@@ -70,7 +70,7 @@ public class SamtykkeUpdateHandler implements Handler {
         SamtykkeEntity samtykkeEntity = SamtykkeEntity.builder()
                 .id(samtykkeResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(samtykkeResource)
+                .resource(samtykkeResource)
                 .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
@@ -86,7 +86,7 @@ public class SamtykkeUpdateHandler implements Handler {
         SamtykkeEntity samtykkeEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);
         if (!samtykkeEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        SamtykkeResource exsistingSamtykkeResource = samtykkeEntity.getValue();
+        SamtykkeResource exsistingSamtykkeResource = samtykkeEntity.getResource();
 
         if (hasInvalidUpdates(updatedSamtykkeResource, exsistingSamtykkeResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
@@ -96,7 +96,7 @@ public class SamtykkeUpdateHandler implements Handler {
 
         exsistingSamtykkeResource.setGyldighetsperiode(updatedSamtykkeResource.getGyldighetsperiode());
 
-        samtykkeEntity.setValue(exsistingSamtykkeResource);
+        samtykkeEntity.setResource(exsistingSamtykkeResource);
         samtykkeEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(samtykkeEntity);
 

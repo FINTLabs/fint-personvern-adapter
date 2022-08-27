@@ -1,11 +1,9 @@
 package no.fint.personvern.handler.samtykke.samtykke;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fint.personvern.service.Handler;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +28,7 @@ public class SamtykkeGetHandler implements Handler {
                 .findAll()
                 .stream()
                 .filter(samtykke -> samtykke.getOrgId().equals(event.getOrgId()))
-                .map(samtykke -> samtykke.getValue())
+                .map(samtykke -> samtykke.getResource())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);

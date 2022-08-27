@@ -29,7 +29,7 @@ public class BehandlingGetHandler implements Handler {
                 .findAll()
                 .stream()
                 .filter(behandling -> behandling.getOrgId().equals(event.getOrgId()))
-                .map(behandling -> behandling.getValue())
+                .map(behandling -> behandling.getResource())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);
