@@ -44,8 +44,6 @@ dependencies {
     implementation 'org.hibernate.validator:hibernate-validator:6.0.19.Final'
 
     implementation('org.springframework.boot:spring-boot-starter-web')
-    implementation('org.springframework.boot:spring-boot-starter-data-mongodb')
-
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.postgresql:postgresql'
@@ -58,20 +56,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    //testImplementation('cglib:cglib-nodep:3.2.10')
-    //testImplementation('org.spockframework:spock-spring:1.1-groovy-2.4')
-    //testImplementation('org.spockframework:spock-core:1.1-groovy-2.4')
-    //testImplementation('org.springframework.boot:spring-boot-starter-test')
-    //testImplementation('de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.2.0')
-    //testImplementation('com.squareup.okhttp3:mockwebserver:4.3.1')
-    //testImplementation('com.squareup.okhttp3:okhttp:4.3.1')
-
     testImplementation 'cglib:cglib-nodep:3.3.0'
     testImplementation 'org.spockframework:spock-spring:2.1-groovy-3.0'
     testImplementation 'org.spockframework:spock-core:2.1-groovy-3.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
 }
 
 test {

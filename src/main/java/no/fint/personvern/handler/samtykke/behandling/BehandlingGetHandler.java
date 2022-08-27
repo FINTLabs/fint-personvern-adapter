@@ -1,11 +1,9 @@
 package no.fint.personvern.handler.samtykke.behandling;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
-import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.personvern.service.Handler;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +12,7 @@ import java.util.Set;
 
 @Component
 public class BehandlingGetHandler implements Handler {
+
     private final BehandlingRepository repository;
 
     public BehandlingGetHandler(BehandlingRepository repository) {

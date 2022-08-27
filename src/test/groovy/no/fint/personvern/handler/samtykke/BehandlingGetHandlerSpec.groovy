@@ -4,23 +4,22 @@ import no.fint.event.model.Event
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
-import no.fint.personvern.configuration.MongoConfiguration
+import no.fint.personvern.handler.samtykke.behandling.BehandlingEntity
 import no.fint.personvern.handler.samtykke.behandling.BehandlingGetHandler
-import no.fint.personvern.repository.WrapperDocument
-import no.fint.personvern.repository.WrapperDocumentRepository
+import no.fint.personvern.handler.samtykke.behandling.BehandlingRepository
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.TestPropertySource
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.test.annotation.DirtiesContext
 import spock.lang.Specification
 
-@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
-@DataMongoTest
-@Import(MongoConfiguration.class)
+import java.time.LocalDateTime
+
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
+@DirtiesContext
 class BehandlingGetHandlerSpec extends Specification {
 
     @Autowired
-    WrapperDocumentRepository repository
+    BehandlingRepository repository
 
     BehandlingGetHandler handler
 
@@ -28,16 +27,12 @@ class BehandlingGetHandlerSpec extends Specification {
         handler = new BehandlingGetHandler(repository)
     }
 
-    void cleanup() {
-        repository.deleteAll()
-    }
-
     def "Given orgId response contains BehandlingResource for the given orgId"() {
         given:
-        repository.save(WrapperDocument.builder().id('id-1').orgId('test-1.no').type(BehandlingResource.canonicalName).value(newBehandlingResource('id-1')).build())
-        repository.save(WrapperDocument.builder().id('id-2').orgId('test-2.no').type(BehandlingResource.canonicalName).value(newBehandlingResource('id-2')).build())
+        repository.save(BehandlingEntity.builder().id('id-1').orgId('test-1.no').value(newBehandlingResource('id-1')).lastModifiedDate(getDate()).build())
+        repository.save(BehandlingEntity.builder().id('id-2').orgId('test-2.no').value(newBehandlingResource('id-2')).lastModifiedDate(getDate()).build())
 
-        def event = newBehandlingEvent('test-1.no')
+        def event = newEvent('test-1.no')
 
         when:
         handler.accept(event)
@@ -50,7 +45,46 @@ class BehandlingGetHandlerSpec extends Specification {
         resource.aktiv
     }
 
-    def newBehandlingEvent(String orgId) {
+    def "Returned object contains correct values"() {
+
+    }
+
+    def "Return all rows"() {
+
+    }
+
+    def "Add element"() {
+        given:
+        def resource = newResource("Test", "Test", false)
+        /// TODO feiler med resource, fungerer uten.
+        def entity = BehandlingEntity.builder().id("1234").orgId("test-no").value(resource).lastModifiedDate(getDate()).build()
+        repository.save(entity)
+//        def entity = newEntity("1234", "wrong-1.no", newResource("1234", "formal", true))
+//        repository.save(entity)
+        def event = newEvent('correct-1.no')
+
+        when:
+        handler.accept(event)
+
+        then:
+        event.getData().size() == 0
+    }
+
+    def "Dont return rows with wrong orgid"() {
+        given:
+        def entity = newEntity("id1", "org-no", newResource("id1", "formal", true))
+        repository.save(entity)
+
+        def event = newEvent('correct-1.no')
+
+        when:
+        handler.accept(event)
+
+        then:
+        event.data.size() == 0
+    }
+
+    def newEvent(String orgId) {
         return new Event<FintLinks>(
                 orgId: orgId
         )
@@ -62,5 +96,32 @@ class BehandlingGetHandlerSpec extends Specification {
                 formal: 'formal',
                 systemId: new Identifikator(identifikatorverdi: id)
         )
+    }
+
+    def getDate() {
+        return LocalDateTime.parse('2021-01-01T00:00:00.00');
+    }
+
+    def newEntity(String id, String orgId, BehandlingResource resource) {
+        return BehandlingEntity.builder()
+                .id(id)
+                .orgId(orgId)
+                .value(resource)
+                .lastModifiedDate(getDate())
+                .build()
+    }
+
+    def newResource(String systemId, String formal, boolean aktiv) {
+        def resource = new BehandlingResource()
+        resource.setAktiv(aktiv)
+        resource.setFormal(formal)
+        resource.setSystemId(newId(systemId))
+        return resource
+    }
+
+    def newId(String systemId) {
+        def id = new Identifikator()
+        id.setIdentifikatorverdi(systemId)
+        return id;
     }
 }

@@ -13,6 +13,8 @@ import no.fint.personvern.service.Handler;
 import no.fint.personvern.service.ValidationService;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -73,6 +75,7 @@ public class TjenesteUpdateHandler implements Handler {
                 .id(tjenesteResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
                 .value(tjenesteResource)
+                .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
         repository.save(tjenesteEntity);
@@ -98,6 +101,7 @@ public class TjenesteUpdateHandler implements Handler {
         exsistingTjenesteResource.setNavn(updatedTjenesteResource.getNavn());
 
         tjenesteEntity.setValue(exsistingTjenesteResource);
+        tjenesteEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(tjenesteEntity);
 
         event.setData(Collections.singletonList(exsistingTjenesteResource));

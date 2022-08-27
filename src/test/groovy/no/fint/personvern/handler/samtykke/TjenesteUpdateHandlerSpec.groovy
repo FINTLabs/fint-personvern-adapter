@@ -8,25 +8,21 @@ import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.TjenesteResource
-import no.fint.personvern.configuration.MongoConfiguration
 import no.fint.personvern.exception.RowNotFoundException
+import no.fint.personvern.handler.samtykke.tjeneste.TjenesteRepository
 import no.fint.personvern.handler.samtykke.tjeneste.TjenesteUpdateHandler
-import no.fint.personvern.repository.WrapperDocument
-import no.fint.personvern.repository.WrapperDocumentRepository
 import no.fint.personvern.service.ValidationService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.TestPropertySource
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.test.annotation.DirtiesContext
 import spock.lang.Specification
 
-@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
-@DataMongoTest
-@Import(MongoConfiguration.class)
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
+@DirtiesContext
 class TjenesteUpdateHandlerSpec extends Specification {
 
     @Autowired
-    WrapperDocumentRepository repository
+    TjenesteRepository repository
 
     ValidationService validationService = Mock()
 
@@ -37,13 +33,12 @@ class TjenesteUpdateHandlerSpec extends Specification {
     }
 
     void cleanup() {
-        repository.deleteAll()
+        //repository.deleteAll()
     }
 
     def "Given create event new TjenesteResource is created"() {
         given:
         def resource = newTjenesteResource('navn')
-
         def event = newTjenesteEvent('test.no', [resource], null, Operation.CREATE)
 
         when:
@@ -52,9 +47,9 @@ class TjenesteUpdateHandlerSpec extends Specification {
         then:
         1 * validationService.getProblems(resource) >> []
 
-        def resources = repository.findByOrgIdAndType('test.no', TjenesteResource.canonicalName)
+        def resources = repository.findAll()
         resources.size() == 1
-        def mongo = new ObjectMapper().convertValue(resources.first().value, TjenesteResource.class)
+        def mongo = resources.first().getValue()
         mongo.systemId.identifikatorverdi == resources.first().id
         mongo.navn == 'navn'
 

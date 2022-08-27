@@ -15,6 +15,8 @@ import no.fint.personvern.service.Handler;
 import no.fint.personvern.utility.FintUtilities;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
@@ -68,6 +70,7 @@ public class BehandlingUpdateHandler implements Handler {
                 .id(behandlingResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
                 .value(behandlingResource)
+                .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
         repository.save(behandlingEntity);
@@ -93,6 +96,7 @@ public class BehandlingUpdateHandler implements Handler {
         existingBehandlingResource.setAktiv(updatedBehandlingResource.getAktiv());
 
         behandlingEntity.setValue(existingBehandlingResource);
+        behandlingEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(behandlingEntity);
 
         event.setData(Collections.singletonList(existingBehandlingResource));

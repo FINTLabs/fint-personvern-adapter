@@ -8,25 +8,21 @@ import no.fint.event.model.ResponseStatus
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
-import no.fint.personvern.configuration.MongoConfiguration
 import no.fint.personvern.exception.RowNotFoundException
+import no.fint.personvern.handler.samtykke.behandling.BehandlingRepository
 import no.fint.personvern.handler.samtykke.behandling.BehandlingUpdateHandler
-import no.fint.personvern.repository.WrapperDocument
-import no.fint.personvern.repository.WrapperDocumentRepository
 import no.fint.personvern.service.ValidationService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.TestPropertySource
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.test.annotation.DirtiesContext
 import spock.lang.Specification
 
-@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
-@DataMongoTest
-@Import(MongoConfiguration.class)
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
+@DirtiesContext
 class BehandlingUpdateHandlerSpec extends Specification {
 
     @Autowired
-    WrapperDocumentRepository repository
+    BehandlingRepository repository
 
     ValidationService validationService = Mock()
 

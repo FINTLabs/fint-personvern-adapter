@@ -15,6 +15,8 @@ import no.fint.personvern.utility.FintUtilities;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -69,6 +71,7 @@ public class SamtykkeUpdateHandler implements Handler {
                 .id(samtykkeResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
                 .value(samtykkeResource)
+                .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
         repository.save(samtykkeEntity);
@@ -94,6 +97,7 @@ public class SamtykkeUpdateHandler implements Handler {
         exsistingSamtykkeResource.setGyldighetsperiode(updatedSamtykkeResource.getGyldighetsperiode());
 
         samtykkeEntity.setValue(exsistingSamtykkeResource);
+        samtykkeEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         repository.save(samtykkeEntity);
 
         event.setData(Collections.singletonList(exsistingSamtykkeResource));

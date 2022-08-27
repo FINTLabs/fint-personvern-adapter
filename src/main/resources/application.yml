@@ -42,6 +42,8 @@ spring:
           lob:
             non_contextual_creation: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
     datasource:
       driver-class-name: org.postgresql.Driver
     flyway:

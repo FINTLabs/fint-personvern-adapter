@@ -5,25 +5,22 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.felles.kompleksedatatyper.Periode
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource
-import no.fint.personvern.configuration.MongoConfiguration
+import no.fint.personvern.handler.samtykke.samtykke.SamtykkeEntity
 import no.fint.personvern.handler.samtykke.samtykke.SamtykkeGetHandler
-import no.fint.personvern.repository.WrapperDocument
-import no.fint.personvern.repository.WrapperDocumentRepository
+import no.fint.personvern.handler.samtykke.samtykke.SamtykkeRepository
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.TestPropertySource
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.test.annotation.DirtiesContext
 import spock.lang.Specification
 
 import java.time.Instant
 
-@TestPropertySource(properties = "spring.mongodb.embedded.version=3.5.5")
-@DataMongoTest
-@Import(MongoConfiguration.class)
-public class SamtykkeGetHandlerSpec extends Specification {
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
+@DirtiesContext
+class SamtykkeGetHandlerSpec extends Specification {
 
     @Autowired
-    WrapperDocumentRepository repository
+    SamtykkeRepository repository
 
     SamtykkeGetHandler handler
 
@@ -31,19 +28,34 @@ public class SamtykkeGetHandlerSpec extends Specification {
         handler = new SamtykkeGetHandler(repository)
     }
 
-    void cleanup() {
-        repository.deleteAll()
-    }
+//    void cleanup() {
+//        repository.deleteAll()
+//    }
 
     def "Given orgId response contains SamtykkeResource for the given orgId"() {
         given:
-        repository.save(WrapperDocument.builder().id('id-1').orgId('test-1.no').type(SamtykkeResource.canonicalName).value(newSamtykkeResource('id-1')).build())
-        repository.save(WrapperDocument.builder().id('id-2').orgId('test-2.no').type(SamtykkeResource.canonicalName).value(newSamtykkeResource('id-2')).build())
-
-        def event = newSamtykkeEvent('test-1.no')
 
         when:
         handler.accept(event)
+        repository.save(
+                new SamtykkeEntity(
+                       'id-1',
+                        newSamtykkeResource('id-1'),
+                        'test-1.no',
+                       Date.from(Instant.parse('2021-01-01T00:00:00.00Z')))
+        )
+
+
+                repository.save(
+                        SamtykkeEntity
+                                .builder()
+                                .id('id-2')
+                                .orgId('test-2.no')
+                                .value(newSamtykkeResource('id-2'))
+                                .lastModifiedDate(Date.from(Instant.parse('2021-01-01T00:00:00.00Z')))
+                                .build())
+
+        def event = newSamtykkeEvent('test-1.no')
 
         then:
         event.data.size() == 1
@@ -55,16 +67,13 @@ public class SamtykkeGetHandlerSpec extends Specification {
     }
 
     def newSamtykkeEvent(String orgId) {
-        return new Event<FintLinks>(
-                orgId: orgId
-        )
+        return new Event<FintLinks>(orgId: orgId)
     }
 
     def newSamtykkeResource(String id) {
         return new SamtykkeResource(
                 systemId: new Identifikator(identifikatorverdi: id),
                 opprettet: Date.from(Instant.parse('2021-01-01T00:00:00.00Z')),
-                gyldighetsperiode: new Periode(start: Date.from(Instant.parse('2021-01-01T00:00:00.00Z')), slutt: Date.from(Instant.parse('2021-02-01T00:00:00.00Z')))
-        )
+                gyldighetsperiode: new Periode(start: Date.from(Instant.parse('2021-01-01T00:00:00.00Z')), slutt: Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))))
     }
 }
