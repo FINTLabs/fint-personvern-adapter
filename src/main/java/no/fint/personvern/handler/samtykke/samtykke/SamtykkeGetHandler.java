@@ -25,9 +25,8 @@ public class SamtykkeGetHandler implements Handler {
 
     private void getSamtykkeResources(Event<FintLinks> event) {
         repository
-                .findAll()
+                .findByOrgId(event.getOrgId())
                 .stream()
-                .filter(samtykke -> samtykke.getOrgId().equals(event.getOrgId()))
                 .map(samtykke -> samtykke.getResource())
                 .forEach(event::addData);
 

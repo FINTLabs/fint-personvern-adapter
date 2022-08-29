@@ -26,9 +26,8 @@ public class BehandlingGetHandler implements Handler {
 
     private void getBehandlingResources(Event<FintLinks> event) {
         repository
-                .findAll()
+                .findByOrgId(event.getOrgId())
                 .stream()
-                .filter(behandling -> behandling.getOrgId().equals(event.getOrgId()))
                 .map(behandling -> behandling.getResource())
                 .forEach(event::addData);
 

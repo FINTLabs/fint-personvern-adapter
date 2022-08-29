@@ -72,6 +72,21 @@ class BehandlingRepositorySpec extends Specification {
         test.get().getResource().getAktiv() == false
     }
 
+    def "Filter by orgId"() {
+        given:
+        repository.save(newEntity('id-1', 'org-id-1', newResource("Test", "Test", false)))
+        repository.save(newEntity('id-2', 'org-id-2', newResource("Test", "Test", false)))
+        repository.save(newEntity('id-3', 'org-id-2', newResource("Test", "Test", false)))
+        repository.save(newEntity('id-4', 'PRE-org-id-2', newResource("Test", "Test", false)))
+
+        when:
+        def test = repository.findByOrgId("org-id-2")
+
+        then:
+        test.size() == 2
+        test.forEach(b->b.orgId == "org-id-2")
+    }
+
     def newEntity(String id, String orgId, BehandlingResource resource) {
         return BehandlingEntity.builder()
                 .id(id)

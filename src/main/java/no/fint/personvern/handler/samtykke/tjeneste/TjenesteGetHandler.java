@@ -25,9 +25,8 @@ public class TjenesteGetHandler implements Handler {
 
     private void getTjenesteResources(Event<FintLinks> event) {
         repository
-                .findAll()
+                .findByOrgId(event.getOrgId())
                 .stream()
-                .filter(tjeneste -> tjeneste.getOrgId().equals(event.getOrgId()))
                 .map(tjeneste -> tjeneste.getResource())
                 .forEach(event::addData);
 
