@@ -10,6 +10,7 @@ import no.fint.event.model.health.Health;
 import no.fint.event.model.health.HealthStatus;
 import no.fint.model.resource.FintLinks;
 import no.fint.personvern.SupportedActions;
+import no.fint.personvern.handler.samtykke.tjeneste.TjenesteRepository;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class EventHandlerService {
 
     @Autowired
     private Collection<Handler> handlers;
+
+    @Autowired
+    private TjenesteRepository tjenesteRepository;
 
     private Map<String, Handler> actionsHandlerMap;
 
@@ -87,11 +91,12 @@ public class EventHandlerService {
     }
 
     private boolean healthCheck() {
-//        try {
-//            mongoTemplate.getDb().runCommand(new BasicDBObject("ping", "1"));
-//        } catch (MongoException e) {
-//            return false;
-//        }
+        try {
+            tjenesteRepository.count();
+        } catch (Exception e) {
+            return false;
+        }
+
         return true;
     }
 
