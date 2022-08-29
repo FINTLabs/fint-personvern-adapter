@@ -24,6 +24,10 @@ configurations {
     }
 }
 
+jar {
+    enabled = false
+}
+
 dependencies {
     implementation("no.fint:fint-felles-resource-model-java:${apiVersion}")
     implementation("no.fint:fint-personvern-resource-model-java:${apiVersion}")
