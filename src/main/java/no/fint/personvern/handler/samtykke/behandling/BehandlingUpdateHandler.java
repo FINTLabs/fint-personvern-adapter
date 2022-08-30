@@ -1,4 +1,4 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.behandling;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -8,25 +8,26 @@ import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
-import no.fint.personvern.exception.MongoCantFindDocumentException;
+import no.fint.personvern.exception.IllegalOrganizationException;
+import no.fint.personvern.exception.RowNotFoundException;
 import no.fint.personvern.service.ValidationService;
-import no.fint.personvern.repository.WrapperDocument;
 import no.fint.personvern.service.Handler;
-import no.fint.personvern.repository.WrapperDocumentRepository;
 import no.fint.personvern.utility.FintUtilities;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
 @Component
 public class BehandlingUpdateHandler implements Handler {
-    private final WrapperDocumentRepository repository;
+    private final BehandlingRepository repository;
     private final ValidationService validationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public BehandlingUpdateHandler(WrapperDocumentRepository repository, ValidationService validationService) {
+    public BehandlingUpdateHandler(BehandlingRepository repository, ValidationService validationService) {
         this.repository = repository;
         this.validationService = validationService;
     }
@@ -65,43 +66,40 @@ public class BehandlingUpdateHandler implements Handler {
     private void createBehandlingResource(Event<FintLinks> event, BehandlingResource behandlingResource) {
         behandlingResource.setSystemId(FintUtilities.createUuidSystemId());
 
-        WrapperDocument wrapperDocument = WrapperDocument.builder()
+        BehandlingEntity behandlingEntity = BehandlingEntity.builder()
                 .id(behandlingResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(objectMapper.convertValue(behandlingResource, Object.class))
-                .type(BehandlingResource.class.getCanonicalName())
+                .resource(behandlingResource)
+                .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
-        repository.insert(wrapperDocument);
+        repository.save(behandlingEntity);
 
         event.setData(Collections.singletonList(behandlingResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
-    private void updateBehandlingResource(Event<FintLinks> event, BehandlingResource behandlingResource) {
+    private void updateBehandlingResource(Event<FintLinks> event, BehandlingResource updatedBehandlingResource) {
         String id = event.getQuery().split("/")[1];
 
-        WrapperDocument wrapperDocument = repository.findByIdAndOrgId(id, event.getOrgId());
+        BehandlingEntity behandlingEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);//gId(id, event.getOrgId());
+        if (!behandlingEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        if (wrapperDocument == null) {
-            throw new MongoCantFindDocumentException();
-        }
+        BehandlingResource existingBehandlingResource = behandlingEntity.getResource();
 
-        BehandlingResource value = objectMapper.convertValue(wrapperDocument.getValue(), BehandlingResource.class);
-
-        if (hasInvalidUpdates(behandlingResource, value)) {
+        if (hasInvalidUpdates(updatedBehandlingResource, existingBehandlingResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Payload contains updates to non-writeable attributes");
             return;
         }
 
-        value.setAktiv(behandlingResource.getAktiv());
+        existingBehandlingResource.setAktiv(updatedBehandlingResource.getAktiv());
 
-        wrapperDocument.setValue(objectMapper.convertValue(value, Object.class));
+        behandlingEntity.setResource(existingBehandlingResource);
+        behandlingEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+        repository.save(behandlingEntity);
 
-        repository.save(wrapperDocument);
-
-        event.setData(Collections.singletonList(value));
+        event.setData(Collections.singletonList(existingBehandlingResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 

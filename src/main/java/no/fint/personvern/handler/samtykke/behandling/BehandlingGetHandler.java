@@ -1,14 +1,10 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.behandling;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
 import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
-import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.personvern.service.Handler;
-import no.fint.personvern.repository.WrapperDocument;
-import no.fint.personvern.repository.WrapperDocumentRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -16,9 +12,10 @@ import java.util.Set;
 
 @Component
 public class BehandlingGetHandler implements Handler {
-    private final WrapperDocumentRepository repository;
 
-    public BehandlingGetHandler(WrapperDocumentRepository repository) {
+    private final BehandlingRepository repository;
+
+    public BehandlingGetHandler(BehandlingRepository repository) {
         this.repository = repository;
     }
 
@@ -29,10 +26,9 @@ public class BehandlingGetHandler implements Handler {
 
     private void getBehandlingResources(Event<FintLinks> event) {
         repository
-                .findByOrgIdAndType(event.getOrgId(), BehandlingResource.class.getCanonicalName())
+                .findByOrgId(event.getOrgId())
                 .stream()
-                .map(WrapperDocument::getValue)
-                .map(value -> new ObjectMapper().convertValue(value, BehandlingResource.class))
+                .map(behandling -> behandling.getResource())
                 .forEach(event::addData);
 
         event.setResponseStatus(ResponseStatus.ACCEPTED);

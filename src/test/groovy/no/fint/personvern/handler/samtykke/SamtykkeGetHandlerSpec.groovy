@@ -5,22 +5,22 @@ import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.felles.kompleksedatatyper.Periode
 import no.fint.model.resource.FintLinks
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource
-import no.fint.personvern.configuration.MongoConfiguration
-import no.fint.personvern.repository.WrapperDocument
-import no.fint.personvern.repository.WrapperDocumentRepository
+import no.fint.personvern.handler.samtykke.behandling.BehandlingGetHandler
+import no.fint.personvern.handler.samtykke.samtykke.SamtykkeEntity
+import no.fint.personvern.handler.samtykke.samtykke.SamtykkeGetHandler
+import no.fint.personvern.handler.samtykke.samtykke.SamtykkeRepository
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
-import org.springframework.context.annotation.Import
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import spock.lang.Specification
 
 import java.time.Instant
+import java.time.LocalDateTime
 
-@DataMongoTest
-@Import(MongoConfiguration.class)
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=none")
 class SamtykkeGetHandlerSpec extends Specification {
 
     @Autowired
-    WrapperDocumentRepository repository
+    SamtykkeRepository repository
 
     SamtykkeGetHandler handler
 
@@ -28,40 +28,90 @@ class SamtykkeGetHandlerSpec extends Specification {
         handler = new SamtykkeGetHandler(repository)
     }
 
-    void cleanup() {
-        repository.deleteAll()
+    def "Given values are correct"() {
+        given:
+        repository.save(newEntity("id-test-1", "org-no", newResource("test-of-id-1", getDate(), getPeriode())))
+        def event = newEvent('org-no')
+
+        when:
+        handler.accept(event)
+        def resource = (SamtykkeResource) event.data.get(0)
+
+        then:
+        resource
+        resource.systemId.identifikatorverdi == 'test-of-id-1'
+        resource.opprettet == getDate()
+        resource.getGyldighetsperiode() == getPeriode()
     }
 
-    def "Given orgId response contains SamtykkeResource for the given orgId"() {
+    def "Correct number of rows"() {
         given:
-        repository.save(WrapperDocument.builder().id('id-1').orgId('test-1.no').type(SamtykkeResource.canonicalName).value(newSamtykkeResource('id-1')).build())
-        repository.save(WrapperDocument.builder().id('id-2').orgId('test-2.no').type(SamtykkeResource.canonicalName).value(newSamtykkeResource('id-2')).build())
-
-        def event = newSamtykkeEvent('test-1.no')
+        repository.save(newEntity("id1", "org-no", newResource("id1", getDate(), getPeriode())))
+        repository.save(newEntity("id2", "org-no", newResource("id2", getDate(), getPeriode())))
+        repository.save(newEntity("id3", "org-no", newResource("id3", getDate(), getPeriode())))
+        repository.save(newEntity("id-4", "org-no", newResource("id-4", getDate(), getPeriode())))
+        def event = newEvent('org-no')
 
         when:
         handler.accept(event)
 
         then:
-        event.data.size() == 1
-        def resource = event.data.first() as SamtykkeResource
-        resource.systemId.identifikatorverdi == 'id-1'
-        resource.opprettet == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        resource.gyldighetsperiode.start == Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
-        resource.gyldighetsperiode.slutt == Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        event.data.size() == 4
     }
 
-    def newSamtykkeEvent(String orgId) {
+    def "Dont get rows from other orgid"() {
+        given:
+        repository.save(newEntity("id1", "org-no", newResource("id1", getDate(), getPeriode())))
+        def event = newEvent('correct-1.no')
+
+        when:
+        handler.accept(event)
+
+        then:
+        event.data.size() == 0
+    }
+
+    def newEvent(String orgId) {
         return new Event<FintLinks>(
                 orgId: orgId
         )
     }
 
-    def newSamtykkeResource(String id) {
-        return new SamtykkeResource(
-                systemId: new Identifikator(identifikatorverdi: id),
-                opprettet: Date.from(Instant.parse('2021-01-01T00:00:00.00Z')),
-                gyldighetsperiode: new Periode(start: Date.from(Instant.parse('2021-01-01T00:00:00.00Z')), slutt: Date.from(Instant.parse('2021-02-01T00:00:00.00Z')))
-        )
+    def getLocalDateTime() {
+        return LocalDateTime.parse('2021-01-01T00:00:00.00');
+    }
+
+    def newEntity(String id, String orgId, SamtykkeResource resource) {
+        return SamtykkeEntity.builder()
+                .id(id)
+                .orgId(orgId)
+                .resource(resource)
+                .lastModifiedDate(getLocalDateTime())
+                .build()
+    }
+
+    def newResource(String systemId, Date opprettet, Periode gyldighetsperiode) {
+        def resource = new SamtykkeResource()
+        resource.setSystemId(newId(systemId))
+        resource.setOpprettet(opprettet)
+        resource.setGyldighetsperiode(gyldighetsperiode)
+        return resource
+    }
+
+    def newId(String systemId) {
+        def id = new Identifikator()
+        id.setIdentifikatorverdi(systemId)
+        return id;
+    }
+
+    def getDate() {
+        return Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
+    }
+
+    def getPeriode() {
+        def periode = new Periode()
+        periode.start = Date.from(Instant.parse('2021-01-01T00:00:00.00Z'))
+        periode.slutt = Date.from(Instant.parse('2021-02-01T00:00:00.00Z'))
+        return periode
     }
 }

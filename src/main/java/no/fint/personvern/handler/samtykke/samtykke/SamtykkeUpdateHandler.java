@@ -1,4 +1,4 @@
-package no.fint.personvern.handler.samtykke;
+package no.fint.personvern.handler.samtykke.samtykke;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.fint.event.model.Event;
@@ -7,26 +7,27 @@ import no.fint.event.model.ResponseStatus;
 import no.fint.model.personvern.samtykke.SamtykkeActions;
 import no.fint.model.resource.FintLinks;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
-import no.fint.personvern.exception.MongoCantFindDocumentException;
+import no.fint.personvern.exception.IllegalOrganizationException;
+import no.fint.personvern.exception.RowNotFoundException;
 import no.fint.personvern.service.Handler;
 import no.fint.personvern.service.ValidationService;
 import no.fint.personvern.utility.FintUtilities;
-import no.fint.personvern.repository.WrapperDocument;
-import no.fint.personvern.repository.WrapperDocumentRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Component
 public class SamtykkeUpdateHandler implements Handler {
-    private final WrapperDocumentRepository repository;
+    private final SamtykkeRepository repository;
     private final ValidationService validationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public SamtykkeUpdateHandler(WrapperDocumentRepository repository, ValidationService validationService) {
+    public SamtykkeUpdateHandler(SamtykkeRepository repository, ValidationService validationService) {
         this.repository = repository;
         this.validationService = validationService;
     }
@@ -66,43 +67,40 @@ public class SamtykkeUpdateHandler implements Handler {
         samtykkeResource.setSystemId(FintUtilities.createUuidSystemId());
         samtykkeResource.setOpprettet(new Date());
 
-        WrapperDocument wrapperDocument = WrapperDocument.builder()
+        SamtykkeEntity samtykkeEntity = SamtykkeEntity.builder()
                 .id(samtykkeResource.getSystemId().getIdentifikatorverdi())
                 .orgId(event.getOrgId())
-                .value(objectMapper.convertValue(samtykkeResource, Object.class))
-                .type(SamtykkeResource.class.getCanonicalName())
+                .resource(samtykkeResource)
+                .lastModifiedDate(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
 
-        repository.insert(wrapperDocument);
+        repository.save(samtykkeEntity);
 
         event.setData(Collections.singletonList(samtykkeResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
-    private void updateSamtykkeResource(Event<FintLinks> event, SamtykkeResource samtykkeResource) {
+    private void updateSamtykkeResource(Event<FintLinks> event, SamtykkeResource updatedSamtykkeResource) {
         String id = event.getQuery().split("/")[1];
 
-        WrapperDocument wrapperDocument = repository.findByIdAndOrgId(id, event.getOrgId());
+        SamtykkeEntity samtykkeEntity = repository.findById(id).orElseThrow(RowNotFoundException::new);
+        if (!samtykkeEntity.getOrgId().equals(event.getOrgId())) throw new IllegalOrganizationException();
 
-        if (wrapperDocument == null) {
-            throw new MongoCantFindDocumentException();
-        }
+        SamtykkeResource exsistingSamtykkeResource = samtykkeEntity.getResource();
 
-        SamtykkeResource value = objectMapper.convertValue(wrapperDocument.getValue(), SamtykkeResource.class);
-
-        if (hasInvalidUpdates(samtykkeResource, value)) {
+        if (hasInvalidUpdates(updatedSamtykkeResource, exsistingSamtykkeResource)) {
             event.setResponseStatus(ResponseStatus.REJECTED);
             event.setMessage("Payload contains updates to non-writeable attributes");
             return;
         }
 
-        value.setGyldighetsperiode(samtykkeResource.getGyldighetsperiode());
+        exsistingSamtykkeResource.setGyldighetsperiode(updatedSamtykkeResource.getGyldighetsperiode());
 
-        wrapperDocument.setValue(objectMapper.convertValue(samtykkeResource, Object.class));
+        samtykkeEntity.setResource(exsistingSamtykkeResource);
+        samtykkeEntity.setLastModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+        repository.save(samtykkeEntity);
 
-        repository.save(wrapperDocument);
-
-        event.setData(Collections.singletonList(value));
+        event.setData(Collections.singletonList(exsistingSamtykkeResource));
         event.setResponseStatus(ResponseStatus.ACCEPTED);
     }
 
