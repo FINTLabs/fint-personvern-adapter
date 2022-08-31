@@ -29,7 +29,6 @@ public class SamtykkeEntity {
     @Id
     private String id;
 
-    //@Convert(converter = SamtykkeConverter.class)
     @Type(type = "json")
     @Column(columnDefinition = "json")
     private SamtykkeResource resource;

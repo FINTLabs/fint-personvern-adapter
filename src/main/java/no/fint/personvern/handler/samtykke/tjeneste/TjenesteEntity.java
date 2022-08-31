@@ -29,7 +29,6 @@ public class TjenesteEntity {
     @Id
     private String id;
 
-    //@Convert(converter = TjenesteConverter.class)
     @Type(type = "json")
     @Column(columnDefinition = "json")
     private TjenesteResource resource;

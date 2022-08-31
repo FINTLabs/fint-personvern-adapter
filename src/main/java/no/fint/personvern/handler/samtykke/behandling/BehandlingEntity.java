@@ -28,7 +28,6 @@ public class BehandlingEntity {
     @Id
     private String id;
 
-    //@Convert(converter = BehandlingConverter.class)
     @Type(type = "json")
     @Column(columnDefinition = "json")
     private BehandlingResource resource;
