@@ -1,10 +1,14 @@
 package no.fint.personvern.handler.samtykke.tjeneste;
 
+import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -16,13 +20,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@TypeDefs({
+        @TypeDef(name = "json", typeClass = JsonType.class)
+})
 @Entity(name = "Tjeneste")
 public class TjenesteEntity {
 
     @Id
     private String id;
 
-    @Convert(converter = TjenesteConverter.class)
+    //@Convert(converter = TjenesteConverter.class)
+    @Type(type = "json")
     @Column(columnDefinition = "json")
     private TjenesteResource resource;
 
