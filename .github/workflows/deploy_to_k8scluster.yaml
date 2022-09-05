@@ -21,7 +21,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    uses:
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
@@ -82,7 +81,7 @@ jobs:
         uses: azure/k8s-deploy@v3.1
         with:
           manifests: |
-            k8s/rogfk.yaml
+            k8s/api/rogfk.yaml
           images: |
             ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
           namespace: ${{ env.NAMESPACE }}
