@@ -64,6 +64,7 @@ jobs:
         with:
           manifests: |
             k8s/beta/rogfk.yaml
+            k8s/beta/viken.yaml
           images: |
             ${{ env.REGISTRY_NAME }}.azurecr.io/${{steps.get_repo.outputs.REPO}}:${{ github.sha }}
           namespace: ${{ env.NAMESPACE }}
