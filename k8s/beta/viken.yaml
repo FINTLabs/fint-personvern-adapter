@@ -59,8 +59,6 @@ spec:
                 -XX:+ExitOnOutOfMemoryError               
             - {name: springfox.title, value: "Personvern Adapter for Viken"}
             - {name: security.basic.enabled, value: "false"}
-            - {name: spring.data.mongodb.database, value: "personvernBeta"}
-            - {name: spring.data.mongodb.collection, value: "personvernBeta"}
             - {name: fint.metamodell, value: 'https://beta.felleskomponent.no/fint/metamodell/klasse'}
             - {name: fint.adapter.organizations, value: 'viken.no'}
             - {name: fint.adapter.reject-unknown-events, value: 'false'}
