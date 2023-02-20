@@ -20,8 +20,11 @@ public class EventResponseService {
     @Autowired
     private FintAdapterEndpoints endpoints;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+
+    public EventResponseService() {
+        this.restTemplate = new RestTemplate();
+    }
 
     /**
      * Method for posting back the response to the provider.
@@ -34,7 +37,7 @@ public class EventResponseService {
             HttpHeaders headers = new HttpHeaders();
             headers.add(HeaderConstants.ORG_ID, event.getOrgId());
             headers.add(HeaderConstants.CLIENT, event.getClient());
-            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
+            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             String url = endpoints.getProviders().get(component) + endpoints.getResponse();
             log.info("{}: Posting response for {} ...", component, event.getAction());
             ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(event, headers), Void.class);

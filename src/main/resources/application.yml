@@ -1,6 +1,7 @@
 fint:
+  metamodell: https://beta.felleskomponent.no/fint/metamodell/klasse
   adapter:
-    id: https://vigoiks.no/fintlabs-no/utdanning/vurdering
+    id: https://vigoiks.no/fintlabs-no/personvern/samtykke
     password:
     username:
     #base-url: http://localhost:8081
@@ -9,18 +10,6 @@ fint:
     org-id: fintlabs.no
     heartbeat-interval: 1
     capabilities:
-      elevfravar:
-        domain-name: utdanning
-        package-name: vurdering
-        resource-name: elevfravar
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
-      fravarsoversikt:
-        domain-name: utdanning
-        packageName: vurdering
-        resource-name: fravarsoversikt
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
       samtykke:
         domain-name: personvern
         packageName: samtykke

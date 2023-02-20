@@ -51,14 +51,9 @@ public class TjenesteUpdateHandler implements Handler {
         }
 
         switch (event.getOperation()) {
-            case CREATE:
-                createTjenesteResource(event, tjenesteResource);
-                break;
-            case UPDATE:
-                updateTjenesteResource(event, tjenesteResource);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
+            case CREATE -> createTjenesteResource(event, tjenesteResource);
+            case UPDATE -> updateTjenesteResource(event, tjenesteResource);
+            default -> throw new IllegalArgumentException("Invalid operation: " + event.getOperation());
         }
     }
 

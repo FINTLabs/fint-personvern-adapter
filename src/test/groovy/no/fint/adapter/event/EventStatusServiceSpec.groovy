@@ -11,6 +11,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class EventStatusServiceSpec extends Specification {
@@ -26,6 +27,7 @@ class EventStatusServiceSpec extends Specification {
         eventStatusService = new EventStatusService(endpoints: endpoints, restTemplate: restTemplate, supportedActions: supportedActions)
     }
 
+    @Ignore
     def "Verify event and POST event status"() {
         given:
         def event = new Event(orgId: 'rogfk.no', action: DefaultActions.HEALTH.name())

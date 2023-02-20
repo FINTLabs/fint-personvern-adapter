@@ -1,5 +1,6 @@
 package no.fint.personvern.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.adapter.event.EventResponseService;
 import no.fint.adapter.event.EventStatusService;
@@ -12,7 +13,6 @@ import no.fint.model.resource.FintLinks;
 import no.fint.personvern.SupportedActions;
 import no.fint.personvern.handler.samtykke.tjeneste.TjenesteRepository;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -22,26 +22,17 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+@AllArgsConstructor
 @Slf4j
 @Service
 public class EventHandlerService {
-    @Autowired
+
     private EventResponseService eventResponseService;
-
-    @Autowired
     private EventStatusService eventStatusService;
-
-    @Autowired
     private SupportedActions supportedActions;
-
-    @Autowired
     private Collection<Handler> handlers;
-
-    @Autowired
     private TjenesteRepository tjenesteRepository;
-
     private Map<String, Handler> actionsHandlerMap;
-
     private Executor executor;
 
     public void handleEvent(String component, Event event) {

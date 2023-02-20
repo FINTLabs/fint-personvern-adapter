@@ -24,7 +24,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class PersonopplysningHandler implements Handler {
+
     private final RestTemplate restTemplate;
+
+    public PersonopplysningHandler() {
+        this.restTemplate = new RestTemplate();
+    }
 
     @Value("${fint.metamodell}")
     private String metamodellUri;

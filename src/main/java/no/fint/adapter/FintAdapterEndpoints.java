@@ -12,7 +12,6 @@ import java.util.Map;
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "fint.adapter.endpoints")
 public class FintAdapterEndpoints {
-    private String sse;
     private String status;
     private String response;
     private Map<String, String> providers;

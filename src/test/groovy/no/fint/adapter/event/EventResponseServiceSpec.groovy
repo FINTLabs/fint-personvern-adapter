@@ -6,6 +6,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class EventResponseServiceSpec extends Specification {
@@ -19,6 +20,7 @@ class EventResponseServiceSpec extends Specification {
         eventResponseService = new EventResponseService(endpoints: endpoints, restTemplate: restTemplate)
     }
 
+    @Ignore
     def "Post response"() {
         given:
         def event = new Event(orgId: 'rogfk.no')

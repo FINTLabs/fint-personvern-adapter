@@ -3,11 +3,11 @@ package no.fint.adapter.event;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.adapter.FintAdapterEndpoints;
 import no.fint.adapter.FintAdapterProps;
-import no.fint.personvern.SupportedActions;
 import no.fint.event.model.DefaultActions;
 import no.fint.event.model.Event;
 import no.fint.event.model.HeaderConstants;
 import no.fint.event.model.Status;
+import no.fint.personvern.SupportedActions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -25,13 +25,16 @@ public class EventStatusService {
     private FintAdapterEndpoints endpoints;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
     private SupportedActions supportedActions;
 
     @Autowired
     private FintAdapterProps props;
+
+    private final RestTemplate restTemplate;
+
+    public EventStatusService() {
+        this.restTemplate = new RestTemplate();
+    }
 
     /**
      * Verifies if we can handle the event and set the status accordingly.
@@ -60,12 +63,12 @@ public class EventStatusService {
      * @param component Name of component
      * @param event     Event to send
      */
-    public boolean postStatus(String component, Event event) {
+    public boolean postStatus(String component, Event<?> event) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.add(HeaderConstants.ORG_ID, event.getOrgId());
             headers.add(HeaderConstants.CLIENT, event.getClient());
-            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
+            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             String url = endpoints.getProviders().get(component) + endpoints.getStatus();
             ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(event, headers), Void.class);
             log.info("{}: Provider POST status response: {}", component, response.getStatusCode());
