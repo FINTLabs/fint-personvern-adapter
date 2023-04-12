@@ -44,7 +44,7 @@ spring:
             scope: fint-adapter
   datasource:
     hikari:
-      schema: fintlabs_no
+      schema: public
     driver-class-name: org.postgresql.Driver
     url: ${fint.database.url}
     username: ${fint.database.username}
