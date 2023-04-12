@@ -12,9 +12,6 @@ spec:
       containers:
         - image: ghcr.io/fintlabs/fint-personvern-adapter:sha-0000000
           name: fint-personvern-adapter
-          volumeMounts:
-            - name: credentials
-              mountPath: /credentials
           resources:
             limits:
               memory: "2Gi"
