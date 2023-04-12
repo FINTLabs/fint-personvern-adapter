@@ -2,7 +2,7 @@ package no.fintlabs.personvern.repository
 
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
-import no.fintlabs.personvern.samtykke.behandling.BehandlingRepository
+import no.fintlabs.personvern.samtykke.behandling.BehandlingJpaRepository
 import no.fintlabs.personvern.samtykke.behandling.BehandlingEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 class BehandlingRepositorySpec extends Specification {
 
     @Autowired
-    BehandlingRepository repository
+    BehandlingJpaRepository repository
 
     def "Add element"() {
         given:

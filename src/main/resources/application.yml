@@ -15,6 +15,18 @@ fint:
         resource-name: samtykke
         fullSyncIntervalInDays: 7
         deltaSyncInterval: IMMEDIATE
+      behandling:
+        domain-name: personvern
+        packageName: samtykke
+        resource-name: behandling
+        fullSyncIntervalInDays: 7
+        deltaSyncInterval: IMMEDIATE
+      tjeneste:
+        domain-name: personvern
+        packageName: samtykke
+        resource-name: tjeneste
+        fullSyncIntervalInDays: 7
+        deltaSyncInterval: IMMEDIATE
 
 spring:
   security:

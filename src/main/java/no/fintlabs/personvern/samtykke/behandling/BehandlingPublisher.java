@@ -1,7 +1,7 @@
-package no.fintlabs.personvern.samtykke.samtykke;
+package no.fintlabs.personvern.samtykke.behandling;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
+import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.datasync.ResourcePublisher;
 import no.fintlabs.adapter.datasync.ResourceRepository;
@@ -9,15 +9,14 @@ import no.fintlabs.adapter.datasync.SyncData;
 import no.fintlabs.adapter.models.AdapterCapability;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.annotation.PostConstruct;
 
 @Slf4j
 @Service
-public class SamtykkePublisher extends ResourcePublisher<SamtykkeResource, ResourceRepository<SamtykkeResource>> {
+public class BehandlingPublisher extends ResourcePublisher<BehandlingResource, ResourceRepository<BehandlingResource>> {
 
-    public SamtykkePublisher(SamtykkeRepository repository, AdapterProperties adapterProperties) {
+    public BehandlingPublisher(BehandlingRepository repository, AdapterProperties adapterProperties) {
         super(repository, adapterProperties);
     }
 
@@ -38,6 +37,6 @@ public class SamtykkePublisher extends ResourcePublisher<SamtykkeResource, Resou
 
     @Override
     protected AdapterCapability getCapability() {
-        return adapterProperties.getCapabilityByResource("samtykke");
+        return adapterProperties.getCapabilityByResource("behandling");
     }
 }

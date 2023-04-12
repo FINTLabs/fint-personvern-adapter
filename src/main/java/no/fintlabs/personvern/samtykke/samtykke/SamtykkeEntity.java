@@ -2,6 +2,7 @@ package no.fintlabs.personvern.samtykke.samtykke;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.*;
+import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -32,12 +33,12 @@ public class SamtykkeEntity {
 
     private LocalDateTime lastModifiedDate;
 
-    public SamtykkeEntity toEntity(SamtykkeResource samtykkeResource) {
+    public static SamtykkeEntity toEntity(SamtykkeResource samtykkeResource, String orgId) {
         return SamtykkeEntity
                 .builder()
                 .id(samtykkeResource.getSystemId().getIdentifikatorverdi())
                 .resource(samtykkeResource)
-                .orgId("viken.no")
+                .orgId(orgId)
                 .lastModifiedDate(LocalDateTime.now())
                 .build();
     }
