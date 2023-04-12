@@ -46,9 +46,9 @@ spring:
     hikari:
       schema: fintlabs_no
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5436/fint_personvern_adapter
-    username: postgres
-    password: password
+    url: ${fint.database.url}
+    username: ${fint.database.username}
+    password: ${fint.database.password}
   jpa:
     properties:
       hibernate:
