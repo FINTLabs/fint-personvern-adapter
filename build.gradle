@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.6.3'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '2.7.8'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'java'
     id 'groovy'
 }
@@ -29,33 +29,38 @@ jar {
 }
 
 dependencies {
-    implementation("no.fint:fint-felles-resource-model-java:${apiVersion}")
-    implementation("no.fint:fint-personvern-resource-model-java:${apiVersion}")
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-    implementation('org.apache.commons:commons-lang3:3.8.1')
-    implementation('org.glassfish.jersey.core:jersey-common:2.28')
-    implementation('org.glassfish.jersey.core:jersey-client:2.28')
-    implementation('org.jooq:jool-java-8:0.9.14')
-    implementation('org.apache.commons:commons-text:1.9')
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.86.Final:osx-aarch_64'
 
-    implementation('no.fint:fint-sse:1.4.1')
-    implementation('no.fint:fint-event-model:3.0.2')
-    implementation('no.fint:fint-relation-model:1.1.6')
-    implementation('no.fint:fint-model-resource:0.4.1')
-    implementation('no.fintlabs:fint-metamodell-model-java:1.1.0')
+    implementation 'no.fintlabs:fint-core-infra-models:1.1.0-rc-2'
+    implementation 'no.fintlabs:fint-core-adapter-common:0.1.1'
+    implementation "no.fint:fint-felles-resource-model-java:${apiVersion}"
+    implementation "no.fint:fint-personvern-resource-model-java:${apiVersion}"
+
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'org.glassfish.jersey.core:jersey-common:2.34'
+    implementation 'org.glassfish.jersey.core:jersey-client:2.28'
+    implementation 'org.jooq:jool-java-8:0.9.14'
+    implementation 'org.apache.commons:commons-text:1.10.0'
+
+    implementation 'no.fint:fint-event-model:3.0.2'
+    implementation 'no.fint:fint-relation-model:1.1.6'
+    implementation 'no.fint:fint-model-resource:0.4.1'
+    implementation 'no.fintlabs:fint-metamodell-model-java:1.1.0'
 
     implementation 'javax.validation:validation-api:2.0.1.Final'
-    implementation 'org.hibernate.validator:hibernate-validator:6.0.19.Final'
+    implementation 'org.hibernate.validator:hibernate-validator:6.0.21.Final'
     implementation 'com.vladmihalcea:hibernate-types-55:2.18.0'
 
-    implementation('org.springframework.boot:spring-boot-starter-web')
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'com.h2database:h2'
 
-
-    runtimeOnly('org.springframework.boot:spring-boot-actuator')
+    runtimeOnly 'org.springframework.boot:spring-boot-actuator'
 
     implementation "com.google.guava:guava:30.1-jre"
     compileOnly 'org.projectlombok:lombok'

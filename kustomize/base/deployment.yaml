@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fint-personvern-adapter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: ghcr.io/fintlabs/fint-personvern-adapter:sha-0000000
+          name: fint-personvern-adapter
+          volumeMounts:
+            - name: credentials
+              mountPath: /credentials
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "2"
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: fint-personvern-adapter
+            - secretRef:
+                name: fint-personvern-adapter-pg
+            - secretRef:
+                name: fint-personvern-adapter
