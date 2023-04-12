@@ -3,8 +3,6 @@ name: CD
 on:
   repository_dispatch:
     types: [trigger-cd]
-  push:
-    branch: ['CT-116-Support-Core2']
 
 env:
   REGISTRY: ghcr.io
