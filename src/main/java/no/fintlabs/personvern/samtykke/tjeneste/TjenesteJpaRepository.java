@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface TjenesteJpaRepository extends JpaRepository<TjenesteEntity, String> {
-    List<TjenesteEntity> findByOrgId(String orgId);
 
     @Query("SELECT t.resource FROM Tjeneste t")
     List<TjenesteResource> findAllResources();
+
 }

@@ -1,10 +1,8 @@
 package no.fintlabs.personvern.samtykke.behandling;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fintlabs.personvern.samtykke.samtykke.SamtykkeEntity;
@@ -17,13 +15,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@TypeDefs({
-        @TypeDef(name = "json", typeClass = JsonType.class)
-})
+@TypeDefs({@TypeDef(name = "json", typeClass = JsonType.class)})
 @Entity(name = "Behandling")
 public class BehandlingEntity {
 

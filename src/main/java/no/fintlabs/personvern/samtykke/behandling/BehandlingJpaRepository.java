@@ -10,8 +10,8 @@ import java.util.List;
 
 @Repository
 public interface BehandlingJpaRepository extends JpaRepository<BehandlingEntity, String> {
-    List<BehandlingEntity> findByOrgId(String orgId);
 
     @Query("SELECT b.resource FROM Behandling b")
     List<BehandlingResource> findAllResources();
+
 }

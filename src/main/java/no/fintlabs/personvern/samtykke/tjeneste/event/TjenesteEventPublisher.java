@@ -11,18 +11,14 @@ import no.fintlabs.adapter.models.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.tjeneste.TjenesteRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Slf4j
 @Service
 public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
 
-    private final TjenesteResourceValidator validator;
-
-    public TjenesteEventPublisher(AdapterProperties adapterProperties, TjenesteRepository repository, WebClient webClient, ObjectMapper objectMapper, TjenesteResourceValidator validator) {
+    public TjenesteEventPublisher(AdapterProperties adapterProperties, TjenesteRepository repository, WebClient webClient, ObjectMapper objectMapper) {
         super("tjeneste", TjenesteResource.class, webClient, adapterProperties, repository, objectMapper);
-        this.validator = validator;
     }
 
     @Override
@@ -34,8 +30,6 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, TjenesteResource tjenesteResource) {
         ResponseFintEvent<TjenesteResource> response = createResponse(requestFintEvent);
-
-        if (resourceNotValid(tjenesteResource, response)) return;
 
         try {
             TjenesteResource updatedResource = repository.saveResources(tjenesteResource, requestFintEvent);
@@ -52,19 +46,5 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
     protected SyncPageEntry<TjenesteResource> createSyncPageEntry(TjenesteResource resource) {
         String identificationValue = resource.getSystemId().getIdentifikatorverdi();
         return SyncPageEntry.of(identificationValue, resource);
-    }
-
-    private boolean resourceNotValid(TjenesteResource tjenesteResource, ResponseFintEvent<TjenesteResource> response) {
-
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(tjenesteResource, "tjenesteResource");
-        validator.validate(tjenesteResource, bindingResult);
-
-        if (bindingResult.hasErrors()) {
-            response.setRejected(true);
-            response.setRejectReason(bindingResult.toString());
-            submit(response);
-        }
-
-        return bindingResult.hasErrors();
     }
 }

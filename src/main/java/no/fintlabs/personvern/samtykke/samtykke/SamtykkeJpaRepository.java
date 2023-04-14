@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface SamtykkeJpaRepository extends JpaRepository<SamtykkeEntity, String> {
-    List<SamtykkeEntity> findByOrgId(String orgId);
 
     @Query("SELECT s.resource FROM Samtykke s")
     List<SamtykkeResource> findAllResources();
+
 }
 

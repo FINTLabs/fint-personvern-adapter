@@ -11,18 +11,15 @@ import no.fintlabs.adapter.models.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.behandling.BehandlingRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Slf4j
 @Service
 public class BehandlingEventPublisher extends EventPublisher<BehandlingResource> {
 
-    private final BehandlingResourceValidator validator;
 
-    public BehandlingEventPublisher(AdapterProperties adapterProperties, BehandlingRepository repository, WebClient webClient, ObjectMapper objectMapper, BehandlingResourceValidator validator) {
+    public BehandlingEventPublisher(AdapterProperties adapterProperties, BehandlingRepository repository, WebClient webClient, ObjectMapper objectMapper) {
         super("behandling", BehandlingResource.class, webClient, adapterProperties, repository, objectMapper);
-        this.validator = validator;
     }
 
     @Override
@@ -34,8 +31,6 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, BehandlingResource behandlingResource) {
         ResponseFintEvent<BehandlingResource> response = createResponse(requestFintEvent);
-
-        if (resourceNotValid(behandlingResource, response)) return;
 
         try {
             BehandlingResource updatedResource = repository.saveResources(behandlingResource, requestFintEvent);
@@ -52,19 +47,5 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
     protected SyncPageEntry<BehandlingResource> createSyncPageEntry(BehandlingResource resource) {
         String identificationValue = resource.getSystemId().getIdentifikatorverdi();
         return SyncPageEntry.of(identificationValue, resource);
-    }
-
-    private boolean resourceNotValid(BehandlingResource behandlingResource, ResponseFintEvent<BehandlingResource> response) {
-
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(behandlingResource, "behandlingResource");
-        validator.validate(behandlingResource, bindingResult);
-
-        if (bindingResult.hasErrors()) {
-            response.setRejected(true);
-            response.setRejectReason(bindingResult.toString());
-            submit(response);
-        }
-
-        return bindingResult.hasErrors();
     }
 }
