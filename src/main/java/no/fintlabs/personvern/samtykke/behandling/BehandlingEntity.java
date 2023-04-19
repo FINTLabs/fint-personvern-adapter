@@ -2,10 +2,7 @@ package no.fintlabs.personvern.samtykke.behandling;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
-import no.fintlabs.personvern.samtykke.samtykke.SamtykkeEntity;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;

@@ -2,7 +2,6 @@ package no.fintlabs.personvern.samtykke.samtykke;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.*;
-import no.fint.model.felles.kompleksedatatyper.Identifikator;
 import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;

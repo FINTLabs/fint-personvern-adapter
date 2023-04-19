@@ -14,7 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class SamtykkeSubscriber extends ResourceSubscriber<SamtykkeResource, SamtykkePublisher> {
 
-    protected SamtykkeSubscriber(WebClient webClient, AdapterProperties props, SamtykkePublisher publisher, ValidatorService validatorService) {
+    protected SamtykkeSubscriber(WebClient webClient, AdapterProperties props, SamtykkePublisher publisher, ValidatorService<SamtykkeResource> validatorService) {
         super(webClient, props, publisher, validatorService);
     }
 

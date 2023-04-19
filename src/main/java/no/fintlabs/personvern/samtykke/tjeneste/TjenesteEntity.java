@@ -2,15 +2,12 @@ package no.fintlabs.personvern.samtykke.tjeneste;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.*;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
-import no.fintlabs.personvern.samtykke.samtykke.SamtykkeEntity;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.time.LocalDateTime;
