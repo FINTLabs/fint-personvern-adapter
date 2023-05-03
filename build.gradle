@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.7.8'
-    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'org.springframework.boot' version '2.7.11'
+    id 'io.spring.dependency-management' version '1.1.0'
     id 'java'
     id 'groovy'
 }
@@ -36,8 +36,8 @@ dependencies {
 
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.86.Final:osx-aarch_64'
 
-    implementation 'no.fintlabs:fint-core-infra-models:1.1.0-rc-4'
-    implementation 'no.fintlabs:fint-core-adapter-common:0.1.1'
+    implementation 'no.fintlabs:fint-core-infra-models:1.1.1'
+    implementation 'no.fintlabs:fint-core-adapter-common:0.1.2'
     implementation "no.fint:fint-personvern-resource-model-java:${apiVersion}"
     implementation 'no.fint:fint-model-resource:0.4.1'
 
