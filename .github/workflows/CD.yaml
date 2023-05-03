@@ -53,7 +53,7 @@ jobs:
     strategy:
       matrix:
         org:
-#          - fintlabs-no
+          - fintlabs-no
           - rogfk-no
 #          - viken-no
 #          - visma-com
