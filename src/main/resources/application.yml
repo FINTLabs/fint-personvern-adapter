@@ -42,21 +42,6 @@ spring:
             client-secret:
             provider: fint-idp
             scope: fint-adapter
-  datasource:
-    hikari:
-      schema: public
-    driver-class-name: org.postgresql.Driver
-    url: ${fint.database.url}
-    username: ${fint.database.username}
-    password: ${fint.database.password}
-  jpa:
-    properties:
-      hibernate:
-        jdbc:
-          lob:
-            non_contextual_creation: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: update
-    datasource:
-      driver-class-name: org.postgresql.Driver
+  profiles:
+    include:
+      - db
