@@ -43,21 +43,23 @@ spring:
             provider: fint-idp
             scope: fint-adapter openid
 
-  datasource:
-    hikari:
-      schema: public
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5436/fint_personvern_adapter
-    username: postgres
-    password: password
   jpa:
     properties:
       hibernate:
         jdbc:
+          time_zone: UTC
           lob:
             non_contextual_creation: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        enable_lazy_load_no_trans: true
     hibernate:
-      ddl-auto: update
-    datasource:
-      driver-class-name: org.postgresql.Driver
+      ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://localhost:5432/test
+    username: postgres
+    password: postgres
+    hikari:
+      schema: personvern_adapter
+  flyway:
+    locations: classpath:db/migration/
+    lock-retry-count: 300
