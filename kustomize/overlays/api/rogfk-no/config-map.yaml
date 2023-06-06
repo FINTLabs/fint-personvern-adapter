@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fint-personvern-adapter
+data:
+  fint.adapter.base-url: 'https://api.felleskomponent.no'
+  fint.adapter.org-id: 'rogfk.no'
+  fint.adapter.heartbeat-interval: '1'
+  fint.adapter.id: 'https://vigoiks.no/rogfk-no/personvern/samtykke/'
