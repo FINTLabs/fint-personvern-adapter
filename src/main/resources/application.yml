@@ -13,19 +13,19 @@ fint:
         domain-name: personvern
         packageName: samtykke
         resource-name: samtykke
-        fullSyncIntervalInDays: 7
+        fullSyncIntervalInDays: 1
         deltaSyncInterval: IMMEDIATE
       behandling:
         domain-name: personvern
         packageName: samtykke
         resource-name: behandling
-        fullSyncIntervalInDays: 7
+        fullSyncIntervalInDays: 1
         deltaSyncInterval: IMMEDIATE
       tjeneste:
         domain-name: personvern
         packageName: samtykke
         resource-name: tjeneste
-        fullSyncIntervalInDays: 7
+        fullSyncIntervalInDays: 1
         deltaSyncInterval: IMMEDIATE
 
 spring:
