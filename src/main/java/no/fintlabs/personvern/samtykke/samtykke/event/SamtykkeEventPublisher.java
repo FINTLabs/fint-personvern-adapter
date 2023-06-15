@@ -29,7 +29,7 @@ public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
     }
 
     @Override
-    @Scheduled(initialDelayString = "9000", fixedDelayString = "60000")
+    @Scheduled(initialDelayString = "9000", fixedDelayString = "1000")
     public void doCheckForNewEvents() {
         checkForNewEvents();
     }
