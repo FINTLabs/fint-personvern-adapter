@@ -40,8 +40,7 @@ public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
 
         try {
             if (requestFintEvent.getOperationType() == OperationType.CREATE) {
-                samtykkeResource.setSystemId(fintUtils.createNewSystemId());
-                samtykkeResource.setOpprettet(new Date());
+                if (samtykkeResource.getOpprettet() == null) samtykkeResource.setOpprettet(new Date());
             }
             SamtykkeResource updatedResource = repository.saveResources(samtykkeResource, requestFintEvent);
             response.setValue(createSyncPageEntry(updatedResource));

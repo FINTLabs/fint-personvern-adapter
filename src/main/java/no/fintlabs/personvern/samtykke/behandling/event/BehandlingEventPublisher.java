@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.events.EventPublisher;
-import no.fintlabs.adapter.models.OperationType;
 import no.fintlabs.adapter.models.RequestFintEvent;
 import no.fintlabs.adapter.models.ResponseFintEvent;
 import no.fintlabs.adapter.models.SyncPageEntry;
@@ -37,9 +36,6 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
         ResponseFintEvent<BehandlingResource> response = createResponse(requestFintEvent);
 
         try {
-            if (requestFintEvent.getOperationType() == OperationType.CREATE) {
-                behandlingResource.setSystemId(fintUtils.createNewSystemId());
-            }
             BehandlingResource updatedResource = repository.saveResources(behandlingResource, requestFintEvent);
             response.setValue(createSyncPageEntry(updatedResource));
         } catch (Exception exception) {
