@@ -15,6 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Date;
+
 @Slf4j
 @Service
 public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
@@ -39,6 +41,7 @@ public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
         try {
             if (requestFintEvent.getOperationType() == OperationType.CREATE) {
                 samtykkeResource.setSystemId(fintUtils.createNewSystemId());
+                samtykkeResource.setOpprettet(new Date());
             }
             SamtykkeResource updatedResource = repository.saveResources(samtykkeResource, requestFintEvent);
             response.setValue(createSyncPageEntry(updatedResource));
