@@ -1,7 +1,6 @@
 # Personvern Adapter
 
-| spring.data.mongodb.database | personvern | |
+This adapter is persisting data for Personvern (Behandling, Samtykke and Tjeneste). The service is rewritten into using FINT 2 and FLAIS.   
+
 | fint.metamodell.uri | https://beta.felleskomponent.no/fint/metamodell/klasse | |
 | fint.adapter.organizations |  | |
-| fint.adapter.sse-expiration | 1200000 | |
-| fint.adapter.reject-unknown-events | true | |
