@@ -25,6 +25,7 @@ fint:
         fullSyncIntervalInDays: 1
         deltaSyncInterval: IMMEDIATE
 
+spring:
   profiles:
     include:
       - db
