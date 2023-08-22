@@ -1,0 +1,19 @@
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-credentials
+  namespace: orgDash
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_orgDash
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: orgDot
+spec:
+  orgId: orgDot
+  note: En autogenerert adapter for FINT
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke

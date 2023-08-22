@@ -1,0 +1,19 @@
+fint:
+  adapter:
+    password: ${fint.core.oauth2.password}
+    username: ${fint.core.oauth2.username}
+
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          fint-idp:
+            token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token
+        registration:
+          fint:
+            authorization-grant-type: password
+            client-id: ${fint.core.oauth2.client-id}
+            client-secret: ${fint.core.oauth2.client-secret}
+            provider: fint-idp
+            scope: fint-adapter

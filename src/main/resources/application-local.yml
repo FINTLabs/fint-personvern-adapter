@@ -1,10 +1,7 @@
 fint:
   adapter:
     id: https://vigoiks.no/fintlabs-no/personvern/samtykke-henrik
-    password:
-    username:
-#    base-url: http://localhost:8081
-    base-url: https://beta.felleskomponent.no
+    base-url: http://localhost:8081
     registration-id: fint
     org-id: fintlabs.no
     heartbeat-interval: 1
@@ -27,21 +24,6 @@ fint:
         resource-name: tjeneste
         fullSyncIntervalInDays: 7
         deltaSyncInterval: IMMEDIATE
-
-spring:
-  security:
-    oauth2:
-      client:
-        provider:
-          fint-idp:
-            token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer
-        registration:
-          fint:
-            authorization-grant-type: password
-            client-id:
-            client-secret:
-            provider: fint-idp
-            scope: fint-adapter openid
 
   jpa:
     properties:
