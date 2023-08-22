@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - flais.yaml
   - fint-adapter.yaml
+  - postgres.yaml

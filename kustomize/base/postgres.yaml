@@ -1,0 +1,6 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGUser
+metadata:
+  name: fint-personvern-adapter-pg
+spec:
+  database: fint-core
