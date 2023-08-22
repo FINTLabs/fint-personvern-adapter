@@ -16,6 +16,8 @@ spec:
   imagePullPolicy: Always
   orgId: orgDot
   image: ghcr.io/fintlabs/fint-personvern-adapter:sha-0000000
+  database:
+    database: fint-core
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx512M'
@@ -26,8 +28,6 @@ spec:
   envFrom:
     - secretRef:
         name: personvern-adapter-credentials
-    - secretRef:
-        name: fint-personvern-adapter-pg
   resources:
     limits:
       memory: "512Mi"
