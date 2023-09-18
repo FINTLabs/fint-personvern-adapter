@@ -22,7 +22,7 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
     }
 
     @Override
-    @Scheduled(initialDelayString = "9000", fixedDelayString = "60000")
+    @Scheduled(initialDelayString = "9000", fixedDelayString = "1000")
     public void doCheckForNewEvents() {
         checkForNewEvents();
     }

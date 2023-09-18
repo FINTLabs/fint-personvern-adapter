@@ -26,7 +26,7 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
     }
 
     @Override
-    @Scheduled(initialDelayString = "9000", fixedDelayString = "60000")
+    @Scheduled(initialDelayString = "9000", fixedDelayString = "1000")
     public void doCheckForNewEvents() {
         checkForNewEvents();
     }
