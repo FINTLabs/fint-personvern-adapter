@@ -22,7 +22,7 @@ patches:
         value: "trondelagfylke.no"
       - op: replace
         path: "/spec/env/1/value"
-        value: "https://beta.felleskomponent.no"
+        value: "https://api.felleskomponent.no"
       - op: replace
         path: "/spec/env/2/value"
         value: "trondelagfylke.no"
