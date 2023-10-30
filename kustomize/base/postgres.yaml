@@ -2,5 +2,13 @@ apiVersion: "fintlabs.no/v1alpha1"
 kind: PGUser
 metadata:
   name: fint-personvern-adapter-pg
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_orgDash
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: orgDot
 spec:
   database: fint-core

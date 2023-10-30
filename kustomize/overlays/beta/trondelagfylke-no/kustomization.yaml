@@ -40,3 +40,14 @@ patches:
     target:
       kind: FintAdapter
       name: personvern-adapter-credentials
+
+  - patch: |-
+      - op: replace
+        path: "/metadata/labels/fintlabs.no~1org-id"
+        value: "fint-personvern-adapter_trondelagfylke_no"
+      - op: replace
+        path: "/metadata/labels/fintlabs.no~1org-id"
+        value: "trondelagfylke.no"
+    target:
+      kind: PGUser
+      name: fint-personvern-adapter-pg

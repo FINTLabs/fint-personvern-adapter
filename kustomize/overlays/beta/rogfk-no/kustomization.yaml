@@ -40,3 +40,14 @@ patches:
     target:
       kind: FintAdapter
       name: personvern-adapter-credentials
+
+  - patch: |-
+      - op: replace
+        path: "/metadata/labels/app.kubernetes.io~1instance"
+        value: "fint-personvern-adapter_rogfk_no"
+      - op: replace
+        path: "/metadata/labels/fintlabs.no~1org-id"
+        value: "rogfk.no"
+    target:
+      kind: PGUser
+      name: fint-personvern-adapter-pg
