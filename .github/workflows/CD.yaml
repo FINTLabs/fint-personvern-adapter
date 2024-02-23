@@ -54,7 +54,7 @@ jobs:
     strategy:
       matrix:
         org:
-#          - fintlabs-no
+          - fintlabs-no
           - rogfk-no
           - trondelagfylke-no
 #          - viken-no
