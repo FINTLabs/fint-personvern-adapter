@@ -26,6 +26,9 @@ patches:
       - op: replace
         path: "/spec/env/2/value"
         value: "trondelagfylke.no"
+      - op: replace
+        path: "/spec/env/3/value"
+        value: "https://vigoiks.no/trondelagfylke-no/personvern/samtykke"
     target:
       kind: Application
       name: fint-personvern-adapter

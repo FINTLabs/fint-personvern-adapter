@@ -23,6 +23,8 @@ spec:
       value: 'https://beta.felleskomponent.no'
     - name: fint.adapter.org-id
       value: 'orgDot'
+    - name: fint.adapter.id
+      value: https://vigoiks.no/fintlabs-no/personvern/samtykke
   envFrom:
     - secretRef:
         name: personvern-adapter-credentials

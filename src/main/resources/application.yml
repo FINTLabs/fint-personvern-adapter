@@ -1,6 +1,6 @@
 fint:
   adapter:
-    id: https://vigoiks.no/fintlabs-no/utdanning/vurdering
+    id: https://vigoiks.no/fintlabs-no/personvern/samtykke
     base-url: https://alpha.felleskomponent.no
     registration-id: fint
     org-id: fintlabs.no
