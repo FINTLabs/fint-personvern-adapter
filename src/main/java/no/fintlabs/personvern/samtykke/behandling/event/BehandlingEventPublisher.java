@@ -9,7 +9,7 @@ import no.fintlabs.adapter.models.RequestFintEvent;
 import no.fintlabs.adapter.models.ResponseFintEvent;
 import no.fintlabs.adapter.models.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.behandling.BehandlingRepository;
-import no.fintlabs.utils.FintUtils;
+import no.fintlabs.ResourceVerifierService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,11 +18,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class BehandlingEventPublisher extends EventPublisher<BehandlingResource> {
 
-    private final FintUtils fintUtils;
+    private final ResourceVerifierService resourceVerifyerService;
 
-    public BehandlingEventPublisher(AdapterProperties adapterProperties, BehandlingRepository repository, WebClient webClient, ObjectMapper objectMapper, FintUtils fintUtils) {
+    public BehandlingEventPublisher(AdapterProperties adapterProperties, BehandlingRepository repository, WebClient webClient, ObjectMapper objectMapper, ResourceVerifierService resourceVerifyerService) {
         super("behandling", BehandlingResource.class, webClient, adapterProperties, repository, objectMapper);
-        this.fintUtils = fintUtils;
+        this.resourceVerifyerService = resourceVerifyerService;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, BehandlingResource behandlingResource) {
         ResponseFintEvent<BehandlingResource> response = createResponse(requestFintEvent);
-
+        if (resourceVerifyerService.verifyBehandlingResource(behandlingResource)){
         try {
             BehandlingResource updatedResource = repository.saveResources(behandlingResource, requestFintEvent);
             response.setValue(createSyncPageEntry(updatedResource));
@@ -42,6 +42,11 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
             response.setFailed(true);
             response.setErrorMessage(exception.getMessage());
             log.error("Error in repository.saveResource", exception);
+        }
+        } else {
+            response.setRejected(true);
+            response.setRejectReason("Fields in behandlingResource cannot be null or empty");
+            log.warn("BehandlingsResourve not veryfied");
         }
 
         submit(response);

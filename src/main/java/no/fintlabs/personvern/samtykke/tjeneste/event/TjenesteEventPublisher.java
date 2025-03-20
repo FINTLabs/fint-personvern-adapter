@@ -3,6 +3,7 @@ package no.fintlabs.personvern.samtykke.tjeneste.event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.fintlabs.ResourceVerifierService;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.events.EventPublisher;
 import no.fintlabs.adapter.models.RequestFintEvent;
@@ -17,8 +18,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
 
-    public TjenesteEventPublisher(AdapterProperties adapterProperties, TjenesteRepository repository, WebClient webClient, ObjectMapper objectMapper) {
+    private final ResourceVerifierService verifierService;
+
+    public TjenesteEventPublisher(AdapterProperties adapterProperties, TjenesteRepository repository, WebClient webClient, ObjectMapper objectMapper, ResourceVerifierService verifierService) {
         super("tjeneste", TjenesteResource.class, webClient, adapterProperties, repository, objectMapper);
+        this.verifierService = verifierService;
     }
 
     @Override
@@ -30,14 +34,18 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, TjenesteResource tjenesteResource) {
         ResponseFintEvent<TjenesteResource> response = createResponse(requestFintEvent);
-
-        try {
-            TjenesteResource updatedResource = repository.saveResources(tjenesteResource, requestFintEvent);
-            response.setValue(createSyncPageEntry(updatedResource));
-        } catch (Exception exception) {
-            response.setFailed(true);
-            response.setErrorMessage(exception.getMessage());
-            log.error("Error in repository.saveResource", exception);
+        if (verifierService.verifyTjenesteResource(tjenesteResource)) {
+            try {
+                TjenesteResource updatedResource = repository.saveResources(tjenesteResource, requestFintEvent);
+                response.setValue(createSyncPageEntry(updatedResource));
+            } catch (Exception exception) {
+                response.setFailed(true);
+                response.setErrorMessage(exception.getMessage());
+                log.error("Error in repository.saveResource", exception);
+            }
+        } else {
+            response.setRejected(true);
+            response.setRejectReason("Fields in tjenesteResource cannot be null or empty");
         }
 
         submit(response);

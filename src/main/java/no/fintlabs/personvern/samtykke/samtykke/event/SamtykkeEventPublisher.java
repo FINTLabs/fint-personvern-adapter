@@ -10,7 +10,7 @@ import no.fintlabs.adapter.models.RequestFintEvent;
 import no.fintlabs.adapter.models.ResponseFintEvent;
 import no.fintlabs.adapter.models.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.samtykke.SamtykkeRepository;
-import no.fintlabs.utils.FintUtils;
+import no.fintlabs.ResourceVerifierService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,11 +21,11 @@ import java.util.Date;
 @Service
 public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
 
-    private final FintUtils fintUtils;
+    private final ResourceVerifierService verifier;
 
-    public SamtykkeEventPublisher(AdapterProperties adapterProperties, SamtykkeRepository repository, WebClient webClient, ObjectMapper objectMapper, FintUtils fintUtils) {
+    public SamtykkeEventPublisher(AdapterProperties adapterProperties, SamtykkeRepository repository, WebClient webClient, ObjectMapper objectMapper, ResourceVerifierService resourceVerifyerService) {
         super("samtykke", SamtykkeResource.class, webClient, adapterProperties, repository, objectMapper);
-        this.fintUtils = fintUtils;
+        this.verifier = resourceVerifyerService;
     }
 
     @Override
@@ -37,17 +37,22 @@ public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, SamtykkeResource samtykkeResource) {
         ResponseFintEvent<SamtykkeResource> response = createResponse(requestFintEvent);
-
-        try {
-            if (requestFintEvent.getOperationType() == OperationType.CREATE) {
-                if (samtykkeResource.getOpprettet() == null) samtykkeResource.setOpprettet(new Date());
+        if (verifier.verifySamtykkeResource(samtykkeResource)) {
+            try {
+                if (requestFintEvent.getOperationType() == OperationType.CREATE) {
+                    if (samtykkeResource.getOpprettet() == null) samtykkeResource.setOpprettet(new Date());
+                }
+                SamtykkeResource updatedResource = repository.saveResources(samtykkeResource, requestFintEvent);
+                response.setValue(createSyncPageEntry(updatedResource));
+            } catch (Exception exception) {
+                response.setFailed(true);
+                response.setErrorMessage(exception.getMessage());
+                log.error("Error in repository.saveResource", exception);
             }
-            SamtykkeResource updatedResource = repository.saveResources(samtykkeResource, requestFintEvent);
-            response.setValue(createSyncPageEntry(updatedResource));
-        } catch (Exception exception) {
-            response.setFailed(true);
-            response.setErrorMessage(exception.getMessage());
-            log.error("Error in repository.saveResource", exception);
+        } else {
+            response.setRejected(true);
+            response.setRejectReason("Fields in samtykkeResource cannot be null or empty");
+            log.warn("SamtykkeResource not verified");
         }
 
         submit(response);
