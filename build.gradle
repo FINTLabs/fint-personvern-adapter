@@ -55,6 +55,8 @@ dependencies {
     runtimeOnly 'org.spockframework:spock-spring:2.1-groovy-3.0'
     testImplementation 'org.spockframework:spock-core:2.1-groovy-3.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+
 }
 
 test {
