@@ -28,3 +28,5 @@ fint:
         resource-name: tjeneste
         fullSyncIntervalInDays: 7
         deltaSyncInterval: IMMEDIATE
+server:
+  port: 8083
