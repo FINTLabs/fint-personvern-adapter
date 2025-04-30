@@ -28,21 +28,3 @@ fint:
         resource-name: tjeneste
         fullSyncIntervalInDays: 7
         deltaSyncInterval: IMMEDIATE
-
-  jpa:
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
-          lob:
-            non_contextual_creation: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        enable_lazy_load_no_trans: true
-    hibernate:
-      ddl-auto: none
-  datasource:
-    hikari:
-      schema: personvern_adapter
-  flyway:
-    locations: classpath:db/migration/
-    lock-retry-count: 300
