@@ -37,6 +37,7 @@ public class SamtykkeEventPublisher extends EventPublisher<SamtykkeResource> {
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, SamtykkeResource samtykkeResource) {
         ResponseFintEvent response = createResponse(requestFintEvent);
+        response.setValue(new SyncPageEntry());
         if (verifier.verifySamtykkeResource(samtykkeResource)) {
             try {
                 if (requestFintEvent.getOperationType() == OperationType.CREATE) {
