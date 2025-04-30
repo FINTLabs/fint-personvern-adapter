@@ -1,4 +1,8 @@
 fint:
+  database:
+    url: jdbc:postgresql://localhost:5432/test
+    username: postgres
+    password: postgres
   adapter:
     id: https://vigoiks.no/fintlabs-no/personvern/samtykke-henrik
     base-url: http://localhost:8081
@@ -37,9 +41,6 @@ fint:
     hibernate:
       ddl-auto: none
   datasource:
-    url: jdbc:postgresql://localhost:5432/test
-    username: postgres
-    password: postgres
     hikari:
       schema: personvern_adapter
   flyway:
