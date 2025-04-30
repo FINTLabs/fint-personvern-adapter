@@ -2,7 +2,7 @@ package no.fintlabs
 
 import no.fint.model.felles.kompleksedatatyper.Identifikator
 import no.fint.model.resource.personvern.samtykke.BehandlingResource
-import no.fintlabs.adapter.models.RequestFintEvent
+import no.fintlabs.adapter.models.event.RequestFintEvent
 import no.fintlabs.personvern.samtykke.behandling.BehandlingJpaRepository
 import no.fintlabs.personvern.samtykke.behandling.BehandlingRepository
 import org.springframework.beans.factory.annotation.Autowired

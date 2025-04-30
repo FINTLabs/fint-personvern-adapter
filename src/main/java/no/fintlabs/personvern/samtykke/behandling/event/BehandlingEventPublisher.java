@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.events.EventPublisher;
-import no.fintlabs.adapter.models.RequestFintEvent;
-import no.fintlabs.adapter.models.ResponseFintEvent;
-import no.fintlabs.adapter.models.SyncPageEntry;
+import no.fintlabs.adapter.models.event.RequestFintEvent;
+import no.fintlabs.adapter.models.event.ResponseFintEvent;
+import no.fintlabs.adapter.models.sync.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.behandling.BehandlingRepository;
 import no.fintlabs.ResourceVerifierService;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,7 +33,7 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
 
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, BehandlingResource behandlingResource) {
-        ResponseFintEvent<BehandlingResource> response = createResponse(requestFintEvent);
+        ResponseFintEvent response = createResponse(requestFintEvent);
         if (resourceVerifyerService.verifyBehandlingResource(behandlingResource)){
         try {
             BehandlingResource updatedResource = repository.saveResources(behandlingResource, requestFintEvent);
@@ -52,7 +52,7 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
         submit(response);
     }
 
-    protected SyncPageEntry<BehandlingResource> createSyncPageEntry(BehandlingResource resource) {
+    protected SyncPageEntry createSyncPageEntry(BehandlingResource resource) {
         String identificationValue = resource.getSystemId().getIdentifikatorverdi();
         return SyncPageEntry.of(identificationValue, resource);
     }
