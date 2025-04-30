@@ -10,7 +10,7 @@ import no.fintlabs.adapter.models.AdapterCapability;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @Slf4j
 @Service

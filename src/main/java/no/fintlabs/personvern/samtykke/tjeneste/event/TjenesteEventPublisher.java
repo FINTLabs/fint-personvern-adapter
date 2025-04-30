@@ -6,9 +6,9 @@ import no.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fintlabs.ResourceVerifierService;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.events.EventPublisher;
-import no.fintlabs.adapter.models.RequestFintEvent;
-import no.fintlabs.adapter.models.ResponseFintEvent;
-import no.fintlabs.adapter.models.SyncPageEntry;
+import no.fintlabs.adapter.models.event.RequestFintEvent;
+import no.fintlabs.adapter.models.event.ResponseFintEvent;
+import no.fintlabs.adapter.models.sync.SyncPageEntry;
 import no.fintlabs.personvern.samtykke.tjeneste.TjenesteRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
 
     @Override
     protected void handleEvent(RequestFintEvent requestFintEvent, TjenesteResource tjenesteResource) {
-        ResponseFintEvent<TjenesteResource> response = createResponse(requestFintEvent);
+        ResponseFintEvent response = createResponse(requestFintEvent);
         if (verifierService.verifyTjenesteResource(tjenesteResource)) {
             try {
                 TjenesteResource updatedResource = repository.saveResources(tjenesteResource, requestFintEvent);
@@ -51,7 +51,7 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
         submit(response);
     }
 
-    protected SyncPageEntry<TjenesteResource> createSyncPageEntry(TjenesteResource resource) {
+    protected SyncPageEntry createSyncPageEntry(TjenesteResource resource) {
         String identificationValue = resource.getSystemId().getIdentifikatorverdi();
         return SyncPageEntry.of(identificationValue, resource);
     }
