@@ -57,6 +57,7 @@ jobs:
           - fintlabs-no
           - rogfk-no
           - trondelagfylke-no
+          - agderfk-no
 #          - viken-no
 #          - visma-com
         cluster:

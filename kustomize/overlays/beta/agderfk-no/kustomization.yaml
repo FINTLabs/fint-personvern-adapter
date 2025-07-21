@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: agderfk-no
+resources:
+  - ../../../base
+commonLabels:
+  app.kubernetes.io/name: fint-personvern-adapter
+  app.kubernetes.io/instance: fint-personvern-adapter_agderfk_no
+  app.kubernetes.io/version: latest
+  app.kubernetes.io/component: adapter
+  app.kubernetes.io/part-of: fint-core
+  fintlabs.no/team: core
+  fintlabs.no/org-id: agderfk.no
+
+patches:
+  - patch: |-
+      - op: replace
+        path: "/metadata/labels/app.kubernetes.io~1instance"
+        value: "fint-personvern-adapter_agderfk_no"
+      - op: replace
+        path: "/spec/orgId"
+        value: "agderfk.no"
+      - op: replace
+        path: "/spec/env/1/value"
+        value: "https://beta.felleskomponent.no"
+      - op: replace
+        path: "/spec/env/2/value"
+        value: "agderfk.no"
+      - op: replace
+        path: "/spec/env/3/value"
+        value: "https://vigoiks.no/agderfk-no/personvern/samtykke"
+    target:
+      kind: Application
+      name: fint-personvern-adapter
+
+  - patch: |-
+      - op: replace
+        path: "/metadata/labels/app.kubernetes.io~1instance"
+        value: "fint-personvern-adapter_agderfk_no"
+      - op: replace
+        path: "/spec/orgId"
+        value: "agderfk.no"
+    target:
+      kind: FintAdapter
+      name: personvern-adapter-credentials
+
+  - patch: |-
+      - op: replace
+        path: "/metadata/labels/app.kubernetes.io~1instance"
+        value: "fint-personvern-adapter_agderfk_no"
+      - op: replace
+        path: "/metadata/labels/fintlabs.no~1org-id"
+        value: "agderfk.no"
+    target:
+      kind: PGUser
+      name: fint-personvern-adapter-pg
