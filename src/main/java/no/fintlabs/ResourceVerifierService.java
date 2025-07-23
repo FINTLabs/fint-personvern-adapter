@@ -36,7 +36,8 @@ public class ResourceVerifierService {
                 checkIfSystemIdIsNotNull(resource.getSystemId()) &&
                 hasLinks(List.of(
                         resource.getBehandlingsgrunnlag(),
-                        resource.getTjeneste()));
+                        resource.getTjeneste(),
+                        resource.getPersonopplysning()));
     }
 
     public boolean verifyTjenesteResource(TjenesteResource resource) {
