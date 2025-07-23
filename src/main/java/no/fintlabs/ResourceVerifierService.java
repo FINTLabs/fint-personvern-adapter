@@ -42,8 +42,7 @@ public class ResourceVerifierService {
     public boolean verifyTjenesteResource(TjenesteResource resource) {
         return resource != null &&
                 StringUtils.hasText(resource.getNavn()) &&
-                checkIfSystemIdIsNotNull(resource.getSystemId()) &&
-                hasLinks(List.of(resource.getBehandling()));
+                checkIfSystemIdIsNotNull(resource.getSystemId());
     }
 
 

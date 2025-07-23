@@ -46,6 +46,7 @@ public class TjenesteEventPublisher extends EventPublisher<TjenesteResource> {
         } else {
             response.setRejected(true);
             response.setRejectReason("Fields in tjenesteResource cannot be null or empty");
+            log.error("Fields in tjenesteResource cannot be null or empty");
         }
 
         submit(response);
