@@ -56,6 +56,7 @@ class ResourceVerifierServiceTest {
 
         resource.addBehandlingsgrunnlag(new Link("api.felleskomponent.no"));
         resource.addTjeneste(new Link("api.felleskomponent.no"));
+        resource.addPersonopplysning(new Link("api.felleskomponent.no"));
 
         assertTrue(verifier.verifyBehandlingResource(resource));
     }
@@ -86,6 +87,7 @@ class ResourceVerifierServiceTest {
 
         resource.addBehandlingsgrunnlag(new Link());
         resource.addTjeneste(new Link());
+        resource.addPersonopplysning(new Link());
 
         assertFalse(verifier.verifyBehandlingResource(resource));
     }
