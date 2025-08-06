@@ -46,7 +46,7 @@ public class BehandlingEventPublisher extends EventPublisher<BehandlingResource>
         } else {
             response.setRejected(true);
             response.setRejectReason("Fields in behandlingResource cannot be null or empty");
-            log.warn("BehandlingsResourve not veryfied");
+            log.warn("BehandlingsResource not veryfied");
         }
 
         submit(response);
