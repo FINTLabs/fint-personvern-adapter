@@ -1,15 +1,14 @@
 package no.fintlabs.personvern.samtykke.behandling;
 
-import com.vladmihalcea.hibernate.type.json.JsonType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.*;
 import no.fint.model.resource.personvern.samtykke.BehandlingResource;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,14 +16,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@TypeDefs({@TypeDef(name = "json", typeClass = JsonType.class)})
 @Entity(name = "Behandling")
 public class BehandlingEntity {
 
     @Id
     private String id;
 
-    @Type(type = "json")
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
     private BehandlingResource resource;
 

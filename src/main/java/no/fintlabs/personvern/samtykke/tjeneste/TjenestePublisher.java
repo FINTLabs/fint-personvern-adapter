@@ -1,5 +1,6 @@
 package no.fintlabs.personvern.samtykke.tjeneste;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fintlabs.adapter.config.AdapterProperties;
@@ -10,7 +11,6 @@ import no.fintlabs.adapter.models.AdapterCapability;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 
 @Slf4j
 @Service
