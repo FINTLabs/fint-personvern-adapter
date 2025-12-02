@@ -19,7 +19,7 @@ public class BehandlingEventSubscriber extends EventSubscriber<BehandlingResourc
 
     @Override
     protected void responsePostingEvent(ResponseEntity<Void> response, ResponseFintEvent responseFintEvent) {
-        log.info("Posting response for event {} returned {}.", responseFintEvent.getCorrId(), response.getStatusCode());
+        log.info("Posting response for event {} returned {}.", responseFintEvent.getCorrId(), response.getStatusCode().value());
     }
 
 }
