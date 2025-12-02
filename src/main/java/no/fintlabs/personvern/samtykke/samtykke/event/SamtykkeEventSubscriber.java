@@ -19,7 +19,7 @@ public class SamtykkeEventSubscriber extends EventSubscriber<SamtykkeResource, S
 
     @Override
     protected void responsePostingEvent(ResponseEntity<Void> response, ResponseFintEvent responseFintEvent) {
-        log.info("Posting response for event {} returned {}.", responseFintEvent.getCorrId(), response.getStatusCode());
+        log.info("Posting response for event {} returned {}.", responseFintEvent.getCorrId(), response.getStatusCode().value());
     }
 
 }
