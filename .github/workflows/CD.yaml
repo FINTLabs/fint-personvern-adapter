@@ -1,9 +1,11 @@
 name: CD
 
 on:
-  repository_dispatch:
-    types: [trigger-cd]
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      cluster:
+        required: true
+        type: string
 
 env:
   REGISTRY: ghcr.io
