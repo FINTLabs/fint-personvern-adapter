@@ -1,7 +1,7 @@
 package no.fintlabs.personvern.samtykke.samtykke;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
+import no.novari.fint.model.resource.personvern.samtykke.SamtykkeResource;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.datasync.ResourceSubscriber;
 import no.fintlabs.adapter.models.AdapterCapability;

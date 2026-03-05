@@ -1,12 +1,12 @@
 package no.fintlabs;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.felles.kompleksedatatyper.Identifikator;
-import no.fint.model.felles.kompleksedatatyper.Periode;
-import no.fint.model.resource.Link;
-import no.fint.model.resource.personvern.samtykke.BehandlingResource;
-import no.fint.model.resource.personvern.samtykke.SamtykkeResource;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.novari.fint.model.felles.kompleksedatatyper.Identifikator;
+import no.novari.fint.model.felles.kompleksedatatyper.Periode;
+import no.novari.fint.model.resource.Link;
+import no.novari.fint.model.resource.personvern.samtykke.BehandlingResource;
+import no.novari.fint.model.resource.personvern.samtykke.SamtykkeResource;
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 

@@ -1,7 +1,7 @@
 package no.fintlabs.personvern.samtykke.tjeneste;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fintlabs.adapter.events.WriteableResourceRepository;
 import no.fintlabs.adapter.models.event.RequestFintEvent;
 import org.springframework.stereotype.Repository;
