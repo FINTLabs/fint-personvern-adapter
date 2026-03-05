@@ -1,6 +1,6 @@
 package no.fintlabs.personvern.samtykke.tjeneste;
 
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

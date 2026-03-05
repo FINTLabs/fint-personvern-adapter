@@ -1,7 +1,7 @@
 package no.fintlabs
 
-import no.fint.model.felles.kompleksedatatyper.Identifikator
-import no.fint.model.resource.personvern.samtykke.BehandlingResource
+import no.novari.fint.model.felles.kompleksedatatyper.Identifikator
+import no.novari.fint.model.resource.personvern.samtykke.BehandlingResource
 import no.fintlabs.personvern.samtykke.behandling.BehandlingEntity
 import spock.lang.Specification
 
