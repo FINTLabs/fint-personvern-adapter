@@ -36,10 +36,10 @@ dependencies {
 
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.86.Final:osx-aarch_64'
 
-    implementation 'no.fintlabs:fint-core-infra-models:2.1.0-rc-5'
-    implementation 'no.fintlabs:fint-core-adapter-common:0.1.6-rc-8'
-    implementation "no.fint:fint-personvern-resource-model-java:3.20.0"
-    implementation 'no.fint:fint-model-resource:0.4.1'
+    implementation 'no.fintlabs:fint-core-infra-models:3.0.1-rc-1'
+    implementation 'no.fintlabs:fint-core-adapter-common:0.1.6-rc-9'
+    implementation "no.novari:fint-personvern-resource-model-java:${apiVersion}"
+    implementation 'no.novari:fint-model-resource:1.0.1'
 
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.3'
 

@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.*;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 

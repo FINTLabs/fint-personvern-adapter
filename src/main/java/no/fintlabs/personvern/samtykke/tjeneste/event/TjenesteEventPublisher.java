@@ -2,7 +2,7 @@ package no.fintlabs.personvern.samtykke.tjeneste.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import no.fint.model.resource.personvern.samtykke.TjenesteResource;
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource;
 import no.fintlabs.ResourceVerifierService;
 import no.fintlabs.adapter.config.AdapterProperties;
 import no.fintlabs.adapter.events.EventPublisher;
