@@ -32,10 +32,10 @@ spec:
          name: fint-personvern-adapter-pg
   resources:
     limits:
-      memory: "512Mi"
+      memory: "1Gi"
       cpu: "250m"
     requests:
-      memory: "128Mi"
+      memory: "1Gi"
       cpu: "100m"
   restartPolicy: Always
   replicas: 1
