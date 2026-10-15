@@ -68,6 +68,27 @@ class AdapterPropertiesBindingTest {
     }
 
     @Test
+    fun `tenants in the environment also bind from dotted property names`() {
+        // The form the 1Password item uses: the same style as fint.core.oauth2.client-id in existing secrets.
+        val properties = bind(
+            "fint.adapter.tenants.rogfk.orgs" to "rogfk.no",
+            "fint.adapter.tenants.rogfk.username" to "rogfk-user",
+            "fint.adapter.tenants.rogfk.password" to "pw",
+            "fint.adapter.tenants.rogfk.client-id" to "c",
+            "fint.adapter.tenants.rogfk.client-secret" to "s",
+            "fint.adapter.tenants.trondelagfylke.orgs" to "trondelagfylke.no",
+            "fint.adapter.tenants.trondelagfylke.username" to "trondelag-user",
+            "fint.adapter.tenants.trondelagfylke.password" to "pw",
+            "fint.adapter.tenants.trondelagfylke.client-id" to "c",
+            "fint.adapter.tenants.trondelagfylke.client-secret" to "s",
+        )
+
+        assertEquals(setOf("rogfk", "trondelagfylke"), properties.tenants.keys)
+        assertEquals("c", properties.tenants.getValue("rogfk").clientId)
+        assertEquals(listOf("trondelagfylke.no"), properties.tenants.getValue("trondelagfylke").orgs)
+    }
+
+    @Test
     fun `a tenant in yaml is merged with, not replaced by, tenants from the environment`() {
         val properties = bind(
             "FINT_ADAPTER_TENANTS_NOVARI_ORGS" to "novari.no",

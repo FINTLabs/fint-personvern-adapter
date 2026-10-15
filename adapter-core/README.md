@@ -75,9 +75,9 @@ credential, because the gateway answers with the pending events of every org the
 for, and each answer carries the event's own orgId. The credential's token must list every configured org
 among its assets, and all orgs of one credential must belong to the same main org (one gateway).
 
-Tenants given through the environment (`FINT_ADAPTER_TENANTS_NOVARI_ORGS=novari.no,side.novari.no`,
-`FINT_ADAPTER_TENANTS_NOVARI_USERNAME`, ...) replace the tenants in YAML entirely; Spring Boot drops the dashes
-of `client-id` in environment variable names and lowercases the name.
+Tenants given through the environment, as `fint.adapter.tenants.rogfk.orgs=rogfk.no`,
+`fint.adapter.tenants.rogfk.username`, ... or the uppercase form `FINT_ADAPTER_TENANTS_ROGFK_USERNAME`, are
+merged with any tenants in YAML by name.
 
 ## Beans you can replace
 

@@ -9,7 +9,7 @@ fint:
     # Resources are the ResourceSource beans; per-resource settings are optional, e.g.
     # capabilities.samtykke.full-sync-interval-in-days: 7
     # Tenants (credentials and the orgs they serve) are not configured here: they come from the environment as
-    # FINT_ADAPTER_TENANTS_<NAME>_ORGS/USERNAME/PASSWORD/CLIENTID/CLIENTSECRET, see README. Entries given in
+    # fint.adapter.tenants.<name>.orgs/username/password/client-id/client-secret, see README. Entries given in
     # YAML would be merged with them, not replaced.
 
 spring:
