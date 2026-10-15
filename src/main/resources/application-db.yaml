@@ -21,4 +21,5 @@ spring:
     locations: classpath:db/migration/
     lock-retry-count: 300
     placeholders:
-      defaultOrgId: ${fint.adapter.tenants[0].orgs[0]}
+      # Only used by V3 for rows without org_id, which exist only in the old per-org databases.
+      defaultOrgId: ${fint.adapter.org-id:unknown}

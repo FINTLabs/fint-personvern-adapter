@@ -26,7 +26,7 @@ list:
 ```
 psql "$FINT_CORE_DB" \
   -v old_schema=fint_personvern_kodeverk_adapter_pg \
-  -v new_schema=fint_personvern_adapter_pg \
+  -v new_schema=<schema of the fint-personvern-adapter-db user> \
   -v orgs="'rogfk.no','trondelagfylke.no'" \
   -f scripts/migrate-personopplysning.sql
 ```

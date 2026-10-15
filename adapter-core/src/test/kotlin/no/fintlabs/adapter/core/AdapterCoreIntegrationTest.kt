@@ -32,18 +32,16 @@ import kotlin.test.assertTrue
         "fint.adapter.full-sync-initial-delay=200ms",
         "fint.adapter.full-sync-interval=1h",
         "fint.adapter.page-size=2",
-        "fint.adapter.tenants[0].orgs=novari.no,side.novari.no",
-        "fint.adapter.tenants[0].id=https://vigoiks.no/novari-no/personvern",
-        "fint.adapter.tenants[0].username=novari-user",
-        "fint.adapter.tenants[0].password=pw",
-        "fint.adapter.tenants[0].client-id=c",
-        "fint.adapter.tenants[0].client-secret=s",
-        "fint.adapter.tenants[1].orgs=rogfk.no",
-        "fint.adapter.tenants[1].id=https://vigoiks.no/rogfk-no/personvern",
-        "fint.adapter.tenants[1].username=rogfk-user",
-        "fint.adapter.tenants[1].password=pw",
-        "fint.adapter.tenants[1].client-id=c",
-        "fint.adapter.tenants[1].client-secret=s",
+        "fint.adapter.tenants.novari.orgs=novari.no,side.novari.no",
+        "fint.adapter.tenants.novari.username=novari-user",
+        "fint.adapter.tenants.novari.password=pw",
+        "fint.adapter.tenants.novari.client-id=c",
+        "fint.adapter.tenants.novari.client-secret=s",
+        "fint.adapter.tenants.rogfk.orgs=rogfk.no",
+        "fint.adapter.tenants.rogfk.username=rogfk-user",
+        "fint.adapter.tenants.rogfk.password=pw",
+        "fint.adapter.tenants.rogfk.client-id=c",
+        "fint.adapter.tenants.rogfk.client-secret=s",
     ],
 )
 class AdapterCoreIntegrationTest(
@@ -60,6 +58,7 @@ class AdapterCoreIntegrationTest(
         assertEquals(2, registrations.count { it.bearer == "token-for-novari-user" })
         assertTrue(registrations.any { it.body.contains("\"orgId\":\"side.novari.no\"") && it.body.contains("\"username\":\"novari-user\"") })
         assertTrue(registrations.any { it.body.contains("\"orgId\":\"rogfk.no\"") && it.bearer == "token-for-rogfk-user" })
+        assertTrue(registrations.any { it.body.contains("\"adapterId\":\"https://vigoiks.no/novari-no/personvern\"") }, "adapter id derived from the first org and the domain")
         assertTrue(registrations.all { it.body.contains("\"eventCapabilities\":[{") && it.body.contains("\"resourceName\":\"behandling\"") && it.body.contains("\"CREATE\"") && !it.body.contains("\"DELETE\"") }, "handlers' operations become event capabilities")
 
         val pages = gateway.calls("POST", "/provider/personvern/samtykke/behandling")

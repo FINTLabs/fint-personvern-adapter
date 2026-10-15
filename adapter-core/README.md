@@ -55,15 +55,16 @@ fint:
       behandling:
         full-sync-interval-in-days: 1   # default 1; also what the contract promises
         delta-sync-interval: IMMEDIATE  # reported only; delta sync is not implemented
-    tenants:                        # one entry per adapter credential
-      - orgs: [novari.no, side.novari.no, test.novari.no]   # every org this credential serves
-        id: https://vigoiks.no/novari-no/personvern
+    tenants:                        # one entry per adapter credential, keyed by a name used in logs
+      novari:
+        orgs: [novari.no, side.novari.no, test.novari.no]   # every org this credential serves
         username: ...
         password: ...
         client-id: ...
         client-secret: ...
-      - orgs: [rogfk.no]
-        id: https://vigoiks.no/rogfk-no/personvern
+        # id: defaults to <id-prefix>/<first org>/<domain>, e.g. https://vigoiks.no/novari-no/personvern
+      rogfk:
+        orgs: [rogfk.no]
         username: ...
         ...
 ```
@@ -74,9 +75,9 @@ credential, because the gateway answers with the pending events of every org the
 for, and each answer carries the event's own orgId. The credential's token must list every configured org
 among its assets, and all orgs of one credential must belong to the same main org (one gateway).
 
-A tenant list given through the environment (`FINT_ADAPTER_TENANTS_0_ORGS=novari.no,side.novari.no`,
-`..._CLIENTID`, ...) replaces the list in YAML entirely; Spring Boot drops the dashes of `client-id` in
-environment variable names.
+Tenants given through the environment, as `fint.adapter.tenants.rogfk.orgs=rogfk.no`,
+`fint.adapter.tenants.rogfk.username`, ... or the uppercase form `FINT_ADAPTER_TENANTS_ROGFK_USERNAME`, are
+merged with any tenants in YAML by name.
 
 ## Beans you can replace
 

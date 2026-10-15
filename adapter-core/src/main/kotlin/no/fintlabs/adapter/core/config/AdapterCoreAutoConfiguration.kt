@@ -60,12 +60,14 @@ class AdapterCoreAutoConfiguration {
     @ConditionalOnMissingBean
     fun tenantRegistry(
         properties: AdapterProperties,
+        bindings: ResourceBindings,
         tokenClient: PasswordGrantTokenClient,
         adapterClientHttpConnector: ClientHttpConnector,
         webClientBuilder: WebClient.Builder,
     ): TenantRegistry = TenantRegistry(
-        properties.enabledTenants.map { tenant ->
+        properties.enabledTenants.map { (name, tenant) ->
             TenantClient(
+                name,
                 tenant,
                 webClientBuilder.clone()
                     .baseUrl(properties.baseUrl)
@@ -73,6 +75,7 @@ class AdapterCoreAutoConfiguration {
                     .codecs { it.defaultCodecs().maxInMemorySize(-1) }
                     .filter(tokenClient.bearerFilter(tenant))
                     .build(),
+                tenant.id ?: bindings.defaultAdapterId(properties.idPrefix, tenant.orgs.first()),
             )
         },
     )

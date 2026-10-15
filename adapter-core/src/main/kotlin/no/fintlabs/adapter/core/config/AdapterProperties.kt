@@ -51,19 +51,23 @@ data class AdapterProperties(
     /** Optional per-resource settings keyed by resource name, e.g. `behandling`. Each key must match a ResourceSource bean. */
     val capabilities: Map<String, @Valid CapabilityProperties> = emptyMap(),
 
-    /** One entry per adapter credential, each serving one or more orgs. */
+    /** Prefix of a tenant's default adapter id: `<id-prefix>/<first org, dots as dashes>/<domain>`. */
+    @field:NotBlank
+    val idPrefix: String = "https://vigoiks.no",
+
+    /** One entry per adapter credential, keyed by a free name used in logs (e.g. `novari`), each serving one or more orgs. */
     @field:NotEmpty
-    val tenants: List<@Valid TenantProperties> = emptyList(),
+    val tenants: Map<String, @Valid TenantProperties> = emptyMap(),
 ) {
     val heartbeatIntervalInMinutes: Int
         get() = heartbeatInterval.toMinutes().toInt().coerceAtLeast(1)
 
-    val enabledTenants: List<TenantProperties>
-        get() = tenants.filter { it.enabled }
+    val enabledTenants: Map<String, TenantProperties>
+        get() = tenants.filterValues { it.enabled }
 
     /** Every org served, across tenants; duplicates mean two credentials would register for the same org. */
     val orgs: List<String>
-        get() = enabledTenants.flatMap { it.orgs }
+        get() = enabledTenants.values.flatMap { it.orgs }
 
     fun fullSyncIntervalFor(settings: CapabilityProperties): Duration =
         fullSyncInterval ?: Duration.ofDays(settings.fullSyncIntervalInDays.toLong())
@@ -86,9 +90,8 @@ data class TenantProperties(
     @field:NotEmpty
     val orgs: List<@NotBlank String>,
 
-    /** Adapter id registered with the gateway, e.g. `https://vigoiks.no/novari-no/personvern`. */
-    @field:NotBlank
-    val id: String,
+    /** Adapter id registered with the gateway. Defaults to `<id-prefix>/<first org>/<domain>`, e.g. `https://vigoiks.no/novari-no/personvern`. */
+    val id: String? = null,
 
     @field:NotBlank
     val username: String,
@@ -107,5 +110,5 @@ data class TenantProperties(
     /** A disabled tenant is kept in config but neither registered nor synced. */
     val enabled: Boolean = true,
 ) {
-    override fun toString(): String = "Tenant(orgs=$orgs, id=$id, username=$username)"
+    override fun toString(): String = "Tenant(orgs=$orgs, username=$username)"
 }

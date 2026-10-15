@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 
 class ResourceBindingsTest {
 
-    private val properties = AdapterProperties(baseUrl = "http://gateway", tenants = listOf(TenantProperties(listOf("rogfk.no"), "id", "u", "p", "c", "s")))
+    private val properties = AdapterProperties(baseUrl = "http://gateway", tenants = mapOf("rogfk" to TenantProperties(listOf("rogfk.no"), null, "u", "p", "c", "s")))
 
     /** A bean that is both source and handler, declaring nothing but the type parameter. */
     class BehandlingAdapter : ResourceSource<BehandlingResource>, EventHandler<BehandlingResource> {
@@ -58,6 +58,14 @@ class ResourceBindingsTest {
         assertEquals("behandling", eventCapability.resourceName)
         assertEquals(setOf(OperationType.CREATE, OperationType.UPDATE), eventCapability.operations)
         assertNull(bindings.single { it.ref.resourceName == "behandlingsgrunnlag" }.handler)
+    }
+
+    @Test
+    fun `the default adapter id is built from the org and the served domain`() {
+        val adapter = BehandlingAdapter()
+        val bindings = ResourceBindings.of(properties, listOf(adapter, BehandlingsgrunnlagSource()), listOf(adapter))
+
+        assertEquals("https://vigoiks.no/side-novari-no/personvern", bindings.defaultAdapterId("https://vigoiks.no", "side.novari.no"))
     }
 
     @Test

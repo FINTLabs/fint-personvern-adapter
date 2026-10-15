@@ -24,7 +24,8 @@ class IntegrationTest(
 
     @Test
     fun `context starts with both credentials and all their orgs`() {
-        assertEquals(listOf(listOf("novari.no", "side.novari.no"), listOf("rogfk.no")), registry.tenants.map { it.orgs })
+        assertEquals(mapOf("novari" to listOf("novari.no", "side.novari.no"), "rogfk" to listOf("rogfk.no")), registry.tenants.associate { it.name to it.orgs })
+        assertEquals("https://vigoiks.no/novari-no/personvern", registry.byOrgId("side.novari.no")!!.adapterId)
     }
 
     companion object {
@@ -41,14 +42,12 @@ class IntegrationTest(
             registry.add("spring.datasource.hikari.schema") { "public" }
             registry.add("fint.adapter.base-url") { "http://localhost:1" }
             registry.add("fint.adapter.token-uri") { "http://localhost:1/token" }
-            listOf("novari.no,side.novari.no", "rogfk.no").forEachIndexed { i, orgs ->
-                val main = orgs.substringBefore(',')
-                registry.add("fint.adapter.tenants[$i].orgs") { orgs }
-                registry.add("fint.adapter.tenants[$i].id") { "https://vigoiks.no/${main.replace('.', '-')}/personvern" }
-                registry.add("fint.adapter.tenants[$i].username") { "$main-user" }
-                registry.add("fint.adapter.tenants[$i].password") { "pw" }
-                registry.add("fint.adapter.tenants[$i].client-id") { "c" }
-                registry.add("fint.adapter.tenants[$i].client-secret") { "s" }
+            mapOf("novari" to "novari.no,side.novari.no", "rogfk" to "rogfk.no").forEach { (name, orgs) ->
+                registry.add("fint.adapter.tenants.$name.orgs") { orgs }
+                registry.add("fint.adapter.tenants.$name.username") { "$name-user" }
+                registry.add("fint.adapter.tenants.$name.password") { "pw" }
+                registry.add("fint.adapter.tenants.$name.client-id") { "c" }
+                registry.add("fint.adapter.tenants.$name.client-secret") { "s" }
             }
         }
     }
