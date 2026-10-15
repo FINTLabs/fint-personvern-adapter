@@ -2,6 +2,7 @@ package no.fintlabs.adapter.core.config
 
 import io.netty.channel.ChannelOption
 import no.fintlabs.adapter.core.AdapterScheduler
+import no.fintlabs.adapter.core.ResourceBindings
 import no.fintlabs.adapter.core.TenantClient
 import no.fintlabs.adapter.core.TenantRegistry
 import no.fintlabs.adapter.core.auth.PasswordGrantTokenClient
@@ -76,6 +77,12 @@ class AdapterCoreAutoConfiguration {
         },
     )
 
+    /** Built once at startup; fails the context on inconsistent sources, handlers or capability overrides. */
+    @Bean
+    @ConditionalOnMissingBean
+    fun resourceBindings(properties: AdapterProperties, sources: List<ResourceSource<*>>, handlers: List<EventHandler<*>>): ResourceBindings =
+        ResourceBindings.of(properties, sources, handlers)
+
     @Bean
     @ConditionalOnMissingBean
     fun syncPageValidator() = SyncPageValidator()
@@ -86,11 +93,11 @@ class AdapterCoreAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun eventService(properties: AdapterProperties, objectMapper: ObjectMapper) = EventService(properties, objectMapper)
+    fun eventService(objectMapper: ObjectMapper) = EventService(objectMapper)
 
     @Bean
     @ConditionalOnMissingBean
-    fun registrationService(properties: AdapterProperties, registry: TenantRegistry, handlers: List<EventHandler<*>>) = RegistrationService(properties, registry, handlers)
+    fun registrationService(properties: AdapterProperties, registry: TenantRegistry, bindings: ResourceBindings) = RegistrationService(properties, registry, bindings)
 
     @Bean
     @ConditionalOnMissingBean
@@ -109,12 +116,11 @@ class AdapterCoreAutoConfiguration {
     fun adapterScheduler(
         properties: AdapterProperties,
         registry: TenantRegistry,
+        bindings: ResourceBindings,
         registrationService: RegistrationService,
         heartbeatService: HeartbeatService,
         fullSyncService: FullSyncService,
         eventService: EventService,
-        sources: List<ResourceSource<*>>,
-        handlers: List<EventHandler<*>>,
         adapterTaskScheduler: TaskScheduler,
-    ) = AdapterScheduler(properties, registry, registrationService, heartbeatService, fullSyncService, eventService, sources, handlers, adapterTaskScheduler)
+    ) = AdapterScheduler(properties, registry, bindings, registrationService, heartbeatService, fullSyncService, eventService, adapterTaskScheduler)
 }

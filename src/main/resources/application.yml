@@ -6,37 +6,8 @@ fint:
     event-poll-interval: 1s
     full-sync-initial-delay: 10s
     page-size: 100
-    capabilities:
-      samtykke:
-        domain-name: personvern
-        package-name: samtykke
-        resource-name: samtykke
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
-      behandling:
-        domain-name: personvern
-        package-name: samtykke
-        resource-name: behandling
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
-      tjeneste:
-        domain-name: personvern
-        package-name: samtykke
-        resource-name: tjeneste
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
-      behandlingsgrunnlag:
-        domain-name: personvern
-        package-name: kodeverk
-        resource-name: behandlingsgrunnlag
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
-      personopplysning:
-        domain-name: personvern
-        package-name: kodeverk
-        resource-name: personopplysning
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
+    # Resources are the ResourceSource beans; per-resource settings are optional, e.g.
+    # capabilities.samtykke.full-sync-interval-in-days: 7
     # Default: a single credential serving one org, from the keys a FintAdapter secret provides. A deployment
     # with several credentials replaces the whole list through FINT_ADAPTER_TENANTS_<n>_* environment variables.
     tenants:

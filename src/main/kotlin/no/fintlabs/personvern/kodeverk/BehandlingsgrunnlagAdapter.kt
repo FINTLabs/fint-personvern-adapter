@@ -15,11 +15,6 @@ import java.util.Date
 @Component
 class BehandlingsgrunnlagAdapter : ResourceSource<BehandlingsgrunnlagResource> {
 
-    override val resourceName = "behandlingsgrunnlag"
-    override val resourceType = BehandlingsgrunnlagResource::class.java
-
-    override fun identifier(resource: BehandlingsgrunnlagResource): String = resource.systemId.identifikatorverdi
-
     override fun resources(orgId: String): List<BehandlingsgrunnlagResource> = BEHANDLINGSGRUNNLAG.map { (kode, navn) ->
         BehandlingsgrunnlagResource().apply {
             systemId = Identifikator().apply { identifikatorverdi = kode }

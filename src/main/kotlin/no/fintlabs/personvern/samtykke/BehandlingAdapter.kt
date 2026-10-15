@@ -14,11 +14,6 @@ class BehandlingAdapter(
     private val verifier: ResourceVerifierService,
 ) : ResourceSource<BehandlingResource>, EventHandler<BehandlingResource> {
 
-    override val resourceName = "behandling"
-    override val resourceType = BehandlingResource::class.java
-
-    override fun identifier(resource: BehandlingResource): String = resource.systemId.identifikatorverdi
-
     override fun resources(orgId: String): List<BehandlingResource> = repository.findAllResourcesByOrgId(orgId)
 
     override fun handle(event: RequestFintEvent, resource: BehandlingResource): EventResult<BehandlingResource> {

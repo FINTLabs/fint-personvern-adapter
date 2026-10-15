@@ -16,11 +16,6 @@ class SamtykkeAdapter(
     private val verifier: ResourceVerifierService,
 ) : ResourceSource<SamtykkeResource>, EventHandler<SamtykkeResource> {
 
-    override val resourceName = "samtykke"
-    override val resourceType = SamtykkeResource::class.java
-
-    override fun identifier(resource: SamtykkeResource): String = resource.systemId.identifikatorverdi
-
     override fun resources(orgId: String): List<SamtykkeResource> = repository.findAllResourcesByOrgId(orgId)
 
     /** A create is stored as-is (with `opprettet` defaulted to now); updates must pass verification. */

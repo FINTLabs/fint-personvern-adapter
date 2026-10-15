@@ -14,11 +14,6 @@ class PersonopplysningAdapter(
     private val repository: PersonopplysningJpaRepository,
 ) : ResourceSource<PersonopplysningResource>, EventHandler<PersonopplysningResource> {
 
-    override val resourceName = "personopplysning"
-    override val resourceType = PersonopplysningResource::class.java
-
-    override fun identifier(resource: PersonopplysningResource): String = resource.systemId.identifikatorverdi
-
     override fun resources(orgId: String): List<PersonopplysningResource> = repository.findAllByKeyOrgId(orgId).map { it.toResource() }
 
     /** An update of a personopplysning this org does not have is rejected; a create upserts. */

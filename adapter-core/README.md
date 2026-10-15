@@ -10,10 +10,33 @@ Tenant-aware runtime for a FINT adapter. Configuration decides *what* and *when*
 | `ResourceSource<T>`                             | Full-sync data for one resource, per org                    | one per capability |
 | `EventHandler<T>`                               | Answer events for one resource                              | optional |
 
-Both carry `resourceName` (the key under `fint.adapter.capabilities`), `resourceType` and `identifier(resource)`.
-An `EventHandler` also declares `operations` (default CREATE and UPDATE); they are registered as the contract's
-event capabilities, so the gateway only serves those operations. A capability without a `ResourceSource`, or a
-bean without a capability, fails startup.
+The type parameter is a generated FINT resource class (`no.novari.fint.model.resource.<domain>.<package>.<Name>Resource`).
+Everything else is derived from it and only overridden when a resource breaks the convention:
+
+| Member            | Default                                                      |
+|-------------------|--------------------------------------------------------------|
+| `resourceType`    | the type parameter                                           |
+| `ref`             | domain/package from the class's package, name from the class |
+| `identifier(r)`   | the `systemId` value                                         |
+| `operations`      | CREATE and UPDATE (`EventHandler` only)                      |
+
+A `ResourceSource` makes the resource part of the contract; an `EventHandler` adds its `operations` as the
+contract's event capabilities, so the gateway only serves those. At startup the beans are bound to their
+resources and the context fails on a handler without a source, two sources for one resource, a resource the
+FINT information model (`no.novari:fint-core-information-model`) does not know, or a `capabilities` entry
+for a resource no bean serves.
+
+```kotlin
+@Component
+class BehandlingAdapter(private val repository: BehandlingJpaRepository) :
+    ResourceSource<BehandlingResource>, EventHandler<BehandlingResource> {
+
+    override fun resources(orgId: String) = repository.findAllResourcesByOrgId(orgId)
+
+    override fun handle(event: RequestFintEvent, resource: BehandlingResource) =
+        EventResult.Saved(repository.save(BehandlingEntity.toEntity(resource, event.orgId)).resource)
+}
+```
 
 ## Configuration
 
@@ -28,13 +51,10 @@ fint:
     full-sync-interval:             # optional override of every capability's fullSyncIntervalInDays
     page-size: 100
     debug: false                    # validate sync pages and log problems
-    capabilities:
+    capabilities:                   # optional, per resource name
       behandling:
-        domain-name: personvern
-        package-name: samtykke
-        resource-name: behandling
-        full-sync-interval-in-days: 1
-        delta-sync-interval: IMMEDIATE
+        full-sync-interval-in-days: 1   # default 1; also what the contract promises
+        delta-sync-interval: IMMEDIATE  # reported only; delta sync is not implemented
     tenants:                        # one entry per adapter credential
       - orgs: [novari.no, side.novari.no, test.novari.no]   # every org this credential serves
         id: https://vigoiks.no/novari-no/personvern

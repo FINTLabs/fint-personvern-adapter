@@ -1,13 +1,12 @@
 package no.fintlabs.adapter.core.register
 
+import no.fintlabs.adapter.core.ResourceBindings
 import no.fintlabs.adapter.core.TenantClient
 import no.fintlabs.adapter.core.TenantRegistry
 import no.fintlabs.adapter.core.config.AdapterProperties
 import no.fintlabs.adapter.core.describe
-import no.fintlabs.adapter.core.event.EventHandler
 import no.fintlabs.adapter.core.logger
 import no.fintlabs.adapter.models.AdapterContract
-import no.fintlabs.adapter.models.EventCapability
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
@@ -15,13 +14,13 @@ import java.time.Duration
 
 /**
  * Registers one contract per (credential, org) with the gateway, which keys contracts on username + orgId.
- * The contract lists every configured capability for sync and, for each [EventHandler], the operations it
- * answers as event capabilities.
+ * The contract lists every bound resource for sync and, for each resource with an event handler, the
+ * operations it answers as event capabilities.
  */
 class RegistrationService(
     private val properties: AdapterProperties,
     private val registry: TenantRegistry,
-    private val handlers: List<EventHandler<*>>,
+    private val bindings: ResourceBindings,
 ) {
     private val log = logger<RegistrationService>()
 
@@ -57,18 +56,8 @@ class RegistrationService(
         .orgId(orgId)
         .username(client.username)
         .heartbeatIntervalInMinutes(properties.heartbeatIntervalInMinutes)
-        .capabilities(properties.capabilities.values.toHashSet())
-        .eventCapabilities(eventCapabilities())
+        .capabilities(bindings.capabilities)
+        .eventCapabilities(bindings.eventCapabilities)
         .time(System.currentTimeMillis())
         .build()
-
-    fun eventCapabilities(): Set<EventCapability> = handlers.map { handler ->
-        val capability = properties.capability(handler.resourceName)
-        EventCapability.builder()
-            .domainName(capability.domainName)
-            .packageName(capability.packageName)
-            .resourceName(capability.resourceName)
-            .operations(handler.operations.toHashSet())
-            .build()
-    }.toHashSet()
 }

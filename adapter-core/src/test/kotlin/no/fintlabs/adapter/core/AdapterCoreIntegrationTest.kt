@@ -4,6 +4,8 @@ import no.fintlabs.adapter.core.event.EventHandler
 import no.fintlabs.adapter.core.event.EventResult
 import no.fintlabs.adapter.core.sync.ResourceSource
 import no.fintlabs.adapter.models.event.RequestFintEvent
+import no.novari.fint.model.felles.kompleksedatatyper.Identifikator
+import no.novari.fint.model.resource.personvern.samtykke.BehandlingResource
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -30,11 +32,6 @@ import kotlin.test.assertTrue
         "fint.adapter.full-sync-initial-delay=200ms",
         "fint.adapter.full-sync-interval=1h",
         "fint.adapter.page-size=2",
-        "fint.adapter.capabilities.behandling.domain-name=personvern",
-        "fint.adapter.capabilities.behandling.package-name=samtykke",
-        "fint.adapter.capabilities.behandling.resource-name=behandling",
-        "fint.adapter.capabilities.behandling.full-sync-interval-in-days=1",
-        "fint.adapter.capabilities.behandling.delta-sync-interval=IMMEDIATE",
         "fint.adapter.tenants[0].orgs=novari.no,side.novari.no",
         "fint.adapter.tenants[0].id=https://vigoiks.no/novari-no/personvern",
         "fint.adapter.tenants[0].username=novari-user",
@@ -71,7 +68,7 @@ class AdapterCoreIntegrationTest(
         assertEquals(4, pages.count { it.bearer == "token-for-novari-user" })
         assertTrue(pages.all { it.body.contains("\"totalPages\":2") && it.body.contains("\"totalSize\":3") })
 
-        gateway.queueEvent("token-for-novari-user", """{"corrId":"corr-1","orgId":"side.novari.no","operationType":"CREATE","value":"\"new-one\""}""")
+        gateway.queueEvent("token-for-novari-user", """{"corrId":"corr-1","orgId":"side.novari.no","operationType":"CREATE","value":"{\"systemId\":{\"identifikatorverdi\":\"new-one\"}}"}""")
         await().atMost(Duration.ofSeconds(10)).untilAsserted {
             assertEquals(1, gateway.calls("POST", "/provider/event").size)
         }
@@ -95,16 +92,16 @@ class AdapterCoreIntegrationTest(
         fun behandlingStub() = BehandlingStub()
     }
 
-    class BehandlingStub : ResourceSource<String>, EventHandler<String> {
+    /** Only the type parameter says which resource this is; ref, type and identifier are derived. */
+    class BehandlingStub : ResourceSource<BehandlingResource>, EventHandler<BehandlingResource> {
         val handled = CopyOnWriteArrayList<Pair<String, String>>()
-        override val resourceName = "behandling"
-        override val resourceType = String::class.java
-        override fun identifier(resource: String) = resource
-        override fun resources(orgId: String) = listOf("$orgId-1", "$orgId-2", "$orgId-3")
-        override fun handle(event: RequestFintEvent, resource: String): EventResult<String> {
-            handled += event.orgId to resource
+        override fun resources(orgId: String) = (1..3).map { behandling("$orgId-$it") }
+        override fun handle(event: RequestFintEvent, resource: BehandlingResource): EventResult<BehandlingResource> {
+            handled += event.orgId to resource.systemId.identifikatorverdi
             return EventResult.Saved(resource)
         }
+
+        private fun behandling(id: String) = BehandlingResource().apply { systemId = Identifikator().apply { identifikatorverdi = id } }
     }
 
     companion object {

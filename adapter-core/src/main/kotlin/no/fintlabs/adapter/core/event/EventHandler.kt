@@ -3,11 +3,12 @@ package no.fintlabs.adapter.core.event
 import no.fintlabs.adapter.core.sync.ResourceDefinition
 import no.fintlabs.adapter.models.event.RequestFintEvent
 import no.fintlabs.adapter.operation.OperationType
+import no.novari.fint.model.resource.FintResource
 
 /**
- * Answers write events for one resource. Optional: a capability without a handler is full-sync only.
+ * Answers write events for one resource. Optional: a resource without a handler is full-sync only.
  */
-interface EventHandler<T : Any> : ResourceDefinition<T> {
+interface EventHandler<T : FintResource> : ResourceDefinition<T> {
     /**
      * The operations this handler answers. They are registered as the contract's event capabilities, so the
      * gateway only serves these; anything else (DELETE, VALIDATE, READ) is never seen by [handle].

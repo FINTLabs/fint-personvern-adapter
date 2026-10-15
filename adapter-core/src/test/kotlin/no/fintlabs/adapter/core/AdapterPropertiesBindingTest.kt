@@ -16,11 +16,7 @@ class AdapterPropertiesBindingTest {
 
     private val defaults = mapOf(
         "fint.adapter.base-url" to "http://gateway",
-        "fint.adapter.capabilities.behandling.domain-name" to "personvern",
-        "fint.adapter.capabilities.behandling.package-name" to "samtykke",
-        "fint.adapter.capabilities.behandling.resource-name" to "behandling",
-        "fint.adapter.capabilities.behandling.full-sync-interval-in-days" to "1",
-        "fint.adapter.capabilities.behandling.delta-sync-interval" to "IMMEDIATE",
+        "fint.adapter.capabilities.behandling.full-sync-interval-in-days" to "7",
         "fint.adapter.heartbeat-interval" to "2m",
         "fint.adapter.tenants[0].orgs" to "fintlabs.no",
         "fint.adapter.tenants[0].id" to "https://vigoiks.no/fintlabs-no/personvern",
@@ -44,7 +40,7 @@ class AdapterPropertiesBindingTest {
 
         assertEquals(2, properties.heartbeatIntervalInMinutes)
         assertEquals(listOf(listOf("fintlabs.no")), properties.tenants.map { it.orgs })
-        assertEquals("/personvern/samtykke/behandling", properties.capability("behandling").entityUri)
+        assertEquals(7, properties.capabilities.getValue("behandling").fullSyncIntervalInDays)
     }
 
     @Test

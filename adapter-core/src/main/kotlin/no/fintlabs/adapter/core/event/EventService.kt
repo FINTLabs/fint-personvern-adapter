@@ -1,13 +1,13 @@
 package no.fintlabs.adapter.core.event
 
+import no.fintlabs.adapter.core.ResourceBinding
 import no.fintlabs.adapter.core.TenantClient
-import no.fintlabs.adapter.core.config.AdapterProperties
 import no.fintlabs.adapter.core.describe
 import no.fintlabs.adapter.core.logger
-import no.fintlabs.adapter.models.AdapterCapability
 import no.fintlabs.adapter.models.event.RequestFintEvent
 import no.fintlabs.adapter.models.event.ResponseFintEvent
 import no.fintlabs.adapter.models.sync.SyncPageEntry
+import no.novari.fint.model.resource.FintResource
 import org.springframework.core.ParameterizedTypeReference
 import tools.jackson.databind.ObjectMapper
 
@@ -17,28 +17,27 @@ import tools.jackson.databind.ObjectMapper
  * per credential, not per org, and the answer carries the event's own orgId.
  */
 class EventService(
-    private val properties: AdapterProperties,
     private val objectMapper: ObjectMapper,
 ) {
     private val log = logger<EventService>()
 
-    fun <T : Any> poll(client: TenantClient, handler: EventHandler<T>) {
-        val capability = properties.capability(handler.resourceName)
-        val events = fetch(client, capability)
+    fun <T : FintResource> poll(client: TenantClient, binding: ResourceBinding<T>) {
+        val handler = binding.handler ?: return
+        val events = fetch(client, binding)
         if (events.isEmpty()) return
-        log.info("Received {} events for {} as {}", events.size, capability.entityUri, client.username)
+        log.info("Received {} events for {} as {}", events.size, binding.ref, client.username)
         events.forEach { event ->
             if (event.orgId !in client.orgs) log.warn("Event {} is for {}, which {} is not configured to serve", event.corrId, event.orgId, client)
-            post(client, event, response(client, event, handler, handle(event, handler)))
+            post(client, event, response(client, event, binding, handle(event, binding, handler)))
         }
     }
 
-    fun <T : Any> handle(event: RequestFintEvent, handler: EventHandler<T>): EventResult<T> {
+    fun <T : FintResource> handle(event: RequestFintEvent, binding: ResourceBinding<T>, handler: EventHandler<T>): EventResult<T> {
         val resource = try {
-            objectMapper.readValue(event.value, handler.resourceType)
+            objectMapper.readValue(event.value, binding.resourceType)
         } catch (e: Exception) {
-            log.warn("Event {} carries a value that is not a {}: {}", event.corrId, handler.resourceType.simpleName, e.message)
-            return EventResult.Failed("Could not read ${handler.resourceType.simpleName}: ${e.message}")
+            log.warn("Event {} carries a value that is not a {}: {}", event.corrId, binding.resourceType.simpleName, e.message)
+            return EventResult.Failed("Could not read ${binding.resourceType.simpleName}: ${e.message}")
         }
         return try {
             handler.handle(event, resource)
@@ -48,7 +47,7 @@ class EventService(
         }
     }
 
-    fun <T : Any> response(client: TenantClient, event: RequestFintEvent, handler: EventHandler<T>, result: EventResult<T>): ResponseFintEvent {
+    fun <T : FintResource> response(client: TenantClient, event: RequestFintEvent, binding: ResourceBinding<T>, result: EventResult<T>): ResponseFintEvent {
         val response = ResponseFintEvent.builder()
             .corrId(event.corrId)
             .orgId(event.orgId)
@@ -58,7 +57,7 @@ class EventService(
             .value(SyncPageEntry())
             .build()
         when (result) {
-            is EventResult.Saved -> response.value = SyncPageEntry.of(handler.identifier(result.resource), result.resource)
+            is EventResult.Saved -> response.value = SyncPageEntry.of(binding.identifier(result.resource), result.resource)
             is EventResult.Rejected -> {
                 response.isRejected = true
                 response.rejectReason = result.reason
@@ -71,15 +70,15 @@ class EventService(
         return response
     }
 
-    private fun fetch(client: TenantClient, capability: AdapterCapability): List<RequestFintEvent> =
+    private fun fetch(client: TenantClient, binding: ResourceBinding<*>): List<RequestFintEvent> =
         try {
             client.webClient.get()
-                .uri("/provider/event${capability.entityUri}")
+                .uri("/provider/event${binding.ref.entityUri}")
                 .retrieve()
                 .bodyToMono(EVENT_LIST)
                 .block() ?: emptyList()
         } catch (e: Exception) {
-            log.error("Checking events for {} as {} failed: {}", capability.entityUri, client.username, e.describe())
+            log.error("Checking events for {} as {} failed: {}", binding.ref, client.username, e.describe())
             emptyList()
         }
 

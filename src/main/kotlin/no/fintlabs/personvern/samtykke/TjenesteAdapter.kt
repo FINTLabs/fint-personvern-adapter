@@ -14,11 +14,6 @@ class TjenesteAdapter(
     private val verifier: ResourceVerifierService,
 ) : ResourceSource<TjenesteResource>, EventHandler<TjenesteResource> {
 
-    override val resourceName = "tjeneste"
-    override val resourceType = TjenesteResource::class.java
-
-    override fun identifier(resource: TjenesteResource): String = resource.systemId.identifikatorverdi
-
     override fun resources(orgId: String): List<TjenesteResource> = repository.findAllResourcesByOrgId(orgId)
 
     override fun handle(event: RequestFintEvent, resource: TjenesteResource): EventResult<TjenesteResource> {
