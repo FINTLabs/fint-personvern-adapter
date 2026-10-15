@@ -1,44 +1,24 @@
 fint:
   adapter:
-    id: https://vigoiks.no/fintlabs-no/personvern/samtykke
     base-url: https://alpha.felleskomponent.no
-    registration-id: fint
-    org-id: fintlabs.no
-    heartbeat-interval-in-minutes: 1
-    capabilities:
-      samtykke:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: samtykke
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      behandling:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: behandling
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      tjeneste:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: tjeneste
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      behandlingsgrunnlag:
-        domain-name: personvern
-        packageName: kodeverk
-        resource-name: behandlingsgrunnlag
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      personopplysning:
-        domain-name: personvern
-        packageName: kodeverk
-        resource-name: personopplysning
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+    token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token
+    heartbeat-interval: 1m
+    event-poll-interval: 1s
+    full-sync-initial-delay: 10s
+    page-size: 100
+    # Resources are the ResourceSource beans; per-resource settings are optional, e.g.
+    # capabilities.samtykke.full-sync-interval-in-days: 7
+    # Default: a single credential serving one org, from the keys a FintAdapter secret provides. A deployment
+    # with several credentials replaces the whole list through FINT_ADAPTER_TENANTS_<n>_* environment variables.
+    tenants:
+      - orgs: ${fint.adapter.org-id:fintlabs.no}
+        id: ${fint.adapter.id:https://vigoiks.no/fintlabs-no/personvern}
+        username: ${fint.core.oauth2.username:}
+        password: ${fint.core.oauth2.password:}
+        client-id: ${fint.core.oauth2.client-id:}
+        client-secret: ${fint.core.oauth2.client-secret:}
 
 spring:
   profiles:
     include:
       - db
-      - oauth

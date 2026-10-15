@@ -4,41 +4,21 @@ fint:
     username: postgres
     password: postgres
   adapter:
-    id: https://vigoiks.no/fintlabs-no/personvern/samtykke-henrik
     base-url: http://localhost:8081
-    registration-id: fint
-    org-id: fintlabs.no
-    heartbeat-interval-in-minutes: 1
-    capabilities:
-      samtykke:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: samtykke
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
-      behandling:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: behandling
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
-      tjeneste:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: tjeneste
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
-      behandlingsgrunnlag:
-        domain-name: personvern
-        packageName: kodeverk
-        resource-name: behandlingsgrunnlag
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
-      personopplysning:
-        domain-name: personvern
-        packageName: kodeverk
-        resource-name: personopplysning
-        fullSyncIntervalInDays: 7
-        deltaSyncInterval: IMMEDIATE
+    full-sync-interval: 10m
+    debug: true
+    tenants:
+      - orgs: ${FINT_ORGS:fintlabs.no}
+        id: https://vigoiks.no/fintlabs-no/personvern-local
+        username: ${FINT_USERNAME:test}
+        password: ${FINT_PASSWORD:test}
+        client-id: ${FINT_CLIENT_ID:test}
+        client-secret: ${FINT_CLIENT_SECRET:test}
+
+spring:
+  datasource:
+    hikari:
+      schema: public
+
 server:
   port: 8083
