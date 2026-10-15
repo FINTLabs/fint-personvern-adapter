@@ -8,7 +8,7 @@ fint:
     base-url: http://localhost:8081
     registration-id: fint
     org-id: fintlabs.no
-    heartbeat-interval: 1
+    heartbeat-interval-in-minutes: 1
     capabilities:
       samtykke:
         domain-name: personvern

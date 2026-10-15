@@ -1,6 +1,5 @@
 package no.fintlabs.integration;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -9,10 +8,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Disabled("Disabled until further development due to limited time")
 @SpringBootTest
 @Testcontainers
-public class IntegrationTest {
+class IntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
@@ -22,27 +20,17 @@ public class IntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("fint.database.url", postgres::getJdbcUrl);
         registry.add("fint.database.username", postgres::getUsername);
         registry.add("fint.database.password", postgres::getPassword);
-
+        // Keep the test off the network: registration and token requests fail fast against localhost.
+        registry.add("fint.adapter.base-url", () -> "http://localhost:1");
+        registry.add("spring.security.oauth2.client.provider.fint-idp.token-uri", () -> "http://localhost:1/token");
     }
 
-
     /**
-     * This simple test gives some coverage by verifying that the application and the beans can start up correctly.
-     * However, no assertions are made to verify that the data is actually processed correctly, so ideally we should
-     * have more specific tests for that.
-     * This has proven difficult to implement due to the asynchronous nature of the data processing which makes the
-     * tests fail when trying to use @SpyBean and ArgumentCaptor to verify interactions with the publishers.
-     * -
-     * When using @SpyBean on a Publisher(like we do in utdanning-larling-adapter), the test fails with
-     * 'Cannot invoke "java.util.concurrent.locks.ReentrantLock.lock()" because "lock" is null'.
-     * When following the flow with the debugger, it seems that the constructor of BehandlingPublisher is called
-     * on a different instance than the one subscribe() is called on, causing the lock to be null when subscribe() is
-     * called.
+     * Verifies that the full application context starts against a real Postgres (Flyway + JPA + adapter beans).
+     * Sync and event flows are asynchronous and are not asserted here.
      */
     @Test
     void contextLoads() {
