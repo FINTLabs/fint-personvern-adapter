@@ -17,12 +17,13 @@ Flyway (`src/main/resources/db/migration`).
 
 ## Multi-tenant
 
-One instance serves any number of orgs. Each org is a *tenant* with its own adapter credential under
-`fint.adapter.tenants`; data is keyed by `(org_id, id)` in every table. By default a single tenant is built
-from the `fint.core.oauth2.*` secret keys and `fint.adapter.org-id` / `fint.adapter.id`, which is what a per-org
-deployment provides. A deployment with several tenants sets the whole list through
-`FINT_ADAPTER_TENANTS_<n>_ORGID`, `_ID`, `_USERNAME`, `_PASSWORD`, `_CLIENTID`, `_CLIENTSECRET`
-(Spring Boot drops the dashes of `org-id` and friends in environment variable names).
+One instance serves any number of orgs. A *tenant* under `fint.adapter.tenants` is one adapter credential and
+the orgs it serves (a main org and its sub-orgs, or just one org); data is keyed by `(org_id, id)` in every
+table. By default a single tenant is built from the `fint.core.oauth2.*` secret keys and `fint.adapter.org-id`
+/ `fint.adapter.id`, which is what a per-org deployment provides. A deployment with several credentials sets
+the whole list through `FINT_ADAPTER_TENANTS_<n>_ORGS` (comma-separated), `_ID`, `_USERNAME`, `_PASSWORD`,
+`_CLIENTID`, `_CLIENTSECRET` (Spring Boot drops the dashes of `client-id` and friends in environment variable
+names).
 
 Full sync runs every `full-sync-interval-in-days` of each capability (default one day), heartbeat every
 minute, event polling every second.

@@ -8,10 +8,12 @@ Tenant-aware runtime for a FINT adapter. Configuration decides *what* and *when*
 | Bean type                                       | Purpose                                                     | Required |
 |-------------------------------------------------|-------------------------------------------------------------|----------|
 | `ResourceSource<T>`                             | Full-sync data for one resource, per org                    | one per capability |
-| `EventHandler<T>`                               | Answer create/update/delete events for one resource         | optional |
+| `EventHandler<T>`                               | Answer events for one resource                              | optional |
 
 Both carry `resourceName` (the key under `fint.adapter.capabilities`), `resourceType` and `identifier(resource)`.
-A capability without a `ResourceSource`, or a bean without a capability, fails startup.
+An `EventHandler` also declares `operations` (default CREATE and UPDATE); they are registered as the contract's
+event capabilities, so the gateway only serves those operations. A capability without a `ResourceSource`, or a
+bean without a capability, fails startup.
 
 ## Configuration
 
@@ -34,18 +36,27 @@ fint:
         full-sync-interval-in-days: 1
         delta-sync-interval: IMMEDIATE
     tenants:                        # one entry per adapter credential
-      - org-id: rogfk.no
-        id: https://vigoiks.no/rogfk-no/personvern
+      - orgs: [novari.no, side.novari.no, test.novari.no]   # every org this credential serves
+        id: https://vigoiks.no/novari-no/personvern
         username: ...
         password: ...
         client-id: ...
         client-secret: ...
+      - orgs: [rogfk.no]
+        id: https://vigoiks.no/rogfk-no/personvern
+        username: ...
+        ...
 ```
 
-Every tenant registers its own contract (the gateway keys contracts on username + orgId), sends its own
-heartbeat, is full-synced for every capability, and has its events polled and answered with the event's orgId.
-A tenant list given through the environment (`FINT_ADAPTER_TENANTS_0_ORGID`, `..._CLIENTID`, ...) replaces the
-list in YAML entirely; Spring Boot drops the dashes of `org-id` in environment variable names.
+A tenant is one credential. For each of its orgs it registers a contract (the gateway keys contracts on
+username + orgId), sends a heartbeat and is full-synced for every capability. Events are polled once per
+credential, because the gateway answers with the pending events of every org the credential has a contract
+for, and each answer carries the event's own orgId. The credential's token must list every configured org
+among its assets, and all orgs of one credential must belong to the same main org (one gateway).
+
+A tenant list given through the environment (`FINT_ADAPTER_TENANTS_0_ORGS=novari.no,side.novari.no`,
+`..._CLIENTID`, ...) replaces the list in YAML entirely; Spring Boot drops the dashes of `client-id` in
+environment variable names.
 
 ## Beans you can replace
 

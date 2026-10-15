@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class FullSyncServiceTest {
 
     private val capability = AdapterCapability("personvern", "samtykke", "behandling", 1, AdapterCapability.DeltaSyncInterval.IMMEDIATE)
-    private val tenant = TenantProperties("rogfk.no", "https://vigoiks.no/rogfk-no/personvern", "user", "pass", "client", "secret")
+    private val tenant = TenantProperties(listOf("rogfk.no"), "https://vigoiks.no/rogfk-no/personvern", "user", "pass", "client", "secret")
     private val properties = AdapterProperties(baseUrl = "http://gateway", pageSize = 3, capabilities = mapOf("behandling" to capability), tenants = listOf(tenant))
     private val client = TenantClient(tenant, WebClient.create())
     private val service = FullSyncService(properties, SyncPageValidator())
@@ -29,7 +29,7 @@ class FullSyncServiceTest {
 
     @Test
     fun `splits resources into pages with consistent metadata`() {
-        val pages = service.pages(client, capability, source, listOf("a", "b", "c", "d", "e", "f", "g"), SyncType.FULL)
+        val pages = service.pages(client, "rogfk.no", capability, source, listOf("a", "b", "c", "d", "e", "f", "g"), SyncType.FULL)
 
         assertEquals(3, pages.size)
         assertEquals(listOf(3, 3, 1), pages.map { it.resources.size })
@@ -44,7 +44,7 @@ class FullSyncServiceTest {
 
     @Test
     fun `no resources means no pages`() {
-        assertEquals(0, service.pages(client, capability, source, emptyList(), SyncType.FULL).size)
+        assertEquals(0, service.pages(client, "rogfk.no", capability, source, emptyList(), SyncType.FULL).size)
     }
 
     @Test

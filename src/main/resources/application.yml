@@ -37,10 +37,10 @@ fint:
         resource-name: personopplysning
         full-sync-interval-in-days: 1
         delta-sync-interval: IMMEDIATE
-    # Default: a single tenant from the credentials a FintAdapter secret provides. A deployment with several
-    # tenants replaces the whole list through FINT_ADAPTER_TENANTS_<n>_* environment variables.
+    # Default: a single credential serving one org, from the keys a FintAdapter secret provides. A deployment
+    # with several credentials replaces the whole list through FINT_ADAPTER_TENANTS_<n>_* environment variables.
     tenants:
-      - org-id: ${fint.adapter.org-id:fintlabs.no}
+      - orgs: ${fint.adapter.org-id:fintlabs.no}
         id: ${fint.adapter.id:https://vigoiks.no/fintlabs-no/personvern}
         username: ${fint.core.oauth2.username:}
         password: ${fint.core.oauth2.password:}

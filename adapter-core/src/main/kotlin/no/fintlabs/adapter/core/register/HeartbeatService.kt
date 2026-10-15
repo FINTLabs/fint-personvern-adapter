@@ -7,7 +7,7 @@ import no.fintlabs.adapter.core.logger
 import no.fintlabs.adapter.models.AdapterHeartbeat
 
 /**
- * Sends a heartbeat per registered tenant; an unregistered tenant is registered again instead.
+ * Sends a heartbeat per registered (credential, org); an org without a contract is registered again instead.
  */
 class HeartbeatService(
     private val registry: TenantRegistry,
@@ -15,18 +15,18 @@ class HeartbeatService(
 ) {
     private val log = logger<HeartbeatService>()
 
-    fun beatAll() = registry.forEach { beat(it) }
+    fun beatAll() = registry.forEach { client -> client.orgs.forEach { beat(client, it) } }
 
-    fun beat(client: TenantClient) {
-        if (!client.registered) {
-            log.info("{} is not registered yet, registering instead of sending heartbeat", client)
-            registrationService.register(client).subscribe()
+    fun beat(client: TenantClient, orgId: String) {
+        if (!client.isRegistered(orgId)) {
+            log.info("{} has no contract for {} yet, registering instead of sending heartbeat", client, orgId)
+            registrationService.register(client, orgId).subscribe()
             return
         }
         val heartbeat = AdapterHeartbeat.builder()
             .adapterId(client.adapterId)
             .username(client.username)
-            .orgId(client.orgId)
+            .orgId(orgId)
             .time(System.currentTimeMillis())
             .build()
         client.webClient.post()
@@ -35,8 +35,8 @@ class HeartbeatService(
             .retrieve()
             .bodyToMono(String::class.java)
             .subscribe(
-                { log.debug("Heartbeat for {} answered: {}", client, it) },
-                { log.error("Heartbeat for {} failed: {}", client, it.describe()) },
+                { log.debug("Heartbeat for {} ({}) answered: {}", client, orgId, it) },
+                { log.error("Heartbeat for {} ({}) failed: {}", client, orgId, it.describe()) },
             )
     }
 }

@@ -52,7 +52,7 @@ data class AdapterProperties(
     @field:NotEmpty
     val capabilities: Map<String, AdapterCapability> = emptyMap(),
 
-    /** One entry per adapter credential. Each tenant registers its own contract with the gateway. */
+    /** One entry per adapter credential, each serving one or more orgs. */
     @field:NotEmpty
     val tenants: List<@Valid TenantProperties> = emptyList(),
 ) {
@@ -65,16 +65,25 @@ data class AdapterProperties(
     fun capability(resourceName: String): AdapterCapability =
         capabilities[resourceName] ?: throw IllegalStateException("No capability configured for resource '$resourceName' under fint.adapter.capabilities")
 
+    /** Every org served, across tenants; duplicates mean two credentials would register for the same org. */
+    val orgs: List<String>
+        get() = enabledTenants.flatMap { it.orgs }
+
     fun fullSyncIntervalFor(capability: AdapterCapability): Duration =
         fullSyncInterval ?: Duration.ofDays(capability.fullSyncIntervalInDays.toLong().coerceAtLeast(1))
 }
 
+/**
+ * One adapter credential and the orgs it serves. A credential for `novari.no` may serve sub-orgs such as
+ * `side.novari.no` as well: one contract is registered per org, while events are polled once per credential
+ * (the gateway serves every org the credential has a contract for in one answer).
+ */
 data class TenantProperties(
-    /** The org this credential serves, e.g. `rogfk.no`. Goes into contracts, sync pages and event answers. */
-    @field:NotBlank
-    val orgId: String,
+    /** Orgs this credential serves, e.g. `[novari.no, side.novari.no]`. Each gets its own contract and sync. */
+    @field:NotEmpty
+    val orgs: List<@NotBlank String>,
 
-    /** Adapter id registered with the gateway, e.g. `https://vigoiks.no/rogfk-no/personvern`. */
+    /** Adapter id registered with the gateway, e.g. `https://vigoiks.no/novari-no/personvern`. */
     @field:NotBlank
     val id: String,
 
@@ -95,5 +104,5 @@ data class TenantProperties(
     /** A disabled tenant is kept in config but neither registered nor synced. */
     val enabled: Boolean = true,
 ) {
-    override fun toString(): String = "Tenant(orgId=$orgId, id=$id, username=$username)"
+    override fun toString(): String = "Tenant(orgs=$orgs, id=$id, username=$username)"
 }

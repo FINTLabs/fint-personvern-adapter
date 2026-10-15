@@ -45,7 +45,7 @@ class AdapterScheduler(
             val interval = properties.fullSyncIntervalFor(properties.capability(source.resourceName))
             log.info("Full sync of {} every {}", source.resourceName, interval)
             futures += taskScheduler.scheduleAtFixedRate(
-                task("full sync of ${source.resourceName}") { registry.forEach { client -> fullSyncService.sync(client, source) } },
+                task("full sync of ${source.resourceName}") { registry.forEach { client -> client.orgs.forEach { org -> fullSyncService.sync(client, org, source) } } },
                 now.plus(properties.fullSyncInitialDelay),
                 interval,
             )
@@ -54,7 +54,7 @@ class AdapterScheduler(
         registry.forEach { client ->
             handlers.forEach { handler ->
                 futures += taskScheduler.scheduleWithFixedDelay(
-                    task("event poll of ${handler.resourceName} for ${client.orgId}") { eventService.poll(client, handler) },
+                    task("event poll of ${handler.resourceName} as ${client.username}") { eventService.poll(client, handler) },
                     now.plus(properties.fullSyncInitialDelay),
                     properties.eventPollInterval,
                 )
@@ -86,6 +86,8 @@ class AdapterScheduler(
         val duplicates = sourced.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
         require(duplicates.isEmpty()) { "More than one ResourceSource bean for: $duplicates" }
         require(registry.tenants.isNotEmpty()) { "No enabled tenants under fint.adapter.tenants" }
+        val orgTwice = properties.orgs.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+        require(orgTwice.isEmpty()) { "Orgs served by more than one tenant: $orgTwice" }
     }
 
     private fun task(name: String, body: () -> Unit) = Runnable {

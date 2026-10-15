@@ -12,7 +12,9 @@ import org.springframework.core.ParameterizedTypeReference
 import tools.jackson.databind.ObjectMapper
 
 /**
- * Polls the gateway for pending events of one resource and answers them through the [EventHandler].
+ * Polls the gateway for pending events of one resource as one credential and answers them through the
+ * [EventHandler]. One poll returns the events of every org the credential has a contract for, so polling is
+ * per credential, not per org, and the answer carries the event's own orgId.
  */
 class EventService(
     private val properties: AdapterProperties,
@@ -24,8 +26,11 @@ class EventService(
         val capability = properties.capability(handler.resourceName)
         val events = fetch(client, capability)
         if (events.isEmpty()) return
-        log.info("Received {} events for {} ({})", events.size, capability.entityUri, client.orgId)
-        events.forEach { event -> post(client, event, response(client, event, handler, handle(event, handler))) }
+        log.info("Received {} events for {} as {}", events.size, capability.entityUri, client.username)
+        events.forEach { event ->
+            if (event.orgId !in client.orgs) log.warn("Event {} is for {}, which {} is not configured to serve", event.corrId, event.orgId, client)
+            post(client, event, response(client, event, handler, handle(event, handler)))
+        }
     }
 
     fun <T : Any> handle(event: RequestFintEvent, handler: EventHandler<T>): EventResult<T> {
@@ -74,7 +79,7 @@ class EventService(
                 .bodyToMono(EVENT_LIST)
                 .block() ?: emptyList()
         } catch (e: Exception) {
-            log.error("Checking events for {} ({}) failed: {}", capability.entityUri, client.orgId, e.describe())
+            log.error("Checking events for {} as {} failed: {}", capability.entityUri, client.username, e.describe())
             emptyList()
         }
 

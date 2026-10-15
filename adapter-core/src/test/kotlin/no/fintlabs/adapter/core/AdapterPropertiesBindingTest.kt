@@ -22,7 +22,7 @@ class AdapterPropertiesBindingTest {
         "fint.adapter.capabilities.behandling.full-sync-interval-in-days" to "1",
         "fint.adapter.capabilities.behandling.delta-sync-interval" to "IMMEDIATE",
         "fint.adapter.heartbeat-interval" to "2m",
-        "fint.adapter.tenants[0].org-id" to "fintlabs.no",
+        "fint.adapter.tenants[0].orgs" to "fintlabs.no",
         "fint.adapter.tenants[0].id" to "https://vigoiks.no/fintlabs-no/personvern",
         "fint.adapter.tenants[0].username" to "default-user",
         "fint.adapter.tenants[0].password" to "pw",
@@ -43,21 +43,21 @@ class AdapterPropertiesBindingTest {
         val properties = bind()
 
         assertEquals(2, properties.heartbeatIntervalInMinutes)
-        assertEquals(listOf("fintlabs.no"), properties.tenants.map { it.orgId })
+        assertEquals(listOf(listOf("fintlabs.no")), properties.tenants.map { it.orgs })
         assertEquals("/personvern/samtykke/behandling", properties.capability("behandling").entityUri)
     }
 
     @Test
     fun `a tenant list in the environment replaces the default list entirely`() {
-        // Dashes are dropped in environment variable names: org-id becomes ORGID.
+        // Dashes are dropped in environment variable names (client-id becomes CLIENTID); a list binds from a comma-separated value.
         val properties = bind(
-            "FINT_ADAPTER_TENANTS_0_ORGID" to "rogfk.no",
-            "FINT_ADAPTER_TENANTS_0_ID" to "https://vigoiks.no/rogfk-no/personvern",
-            "FINT_ADAPTER_TENANTS_0_USERNAME" to "rogfk-user",
+            "FINT_ADAPTER_TENANTS_0_ORGS" to "novari.no,side.novari.no,test.novari.no",
+            "FINT_ADAPTER_TENANTS_0_ID" to "https://vigoiks.no/novari-no/personvern",
+            "FINT_ADAPTER_TENANTS_0_USERNAME" to "novari-user",
             "FINT_ADAPTER_TENANTS_0_PASSWORD" to "pw",
             "FINT_ADAPTER_TENANTS_0_CLIENTID" to "c",
             "FINT_ADAPTER_TENANTS_0_CLIENTSECRET" to "s",
-            "FINT_ADAPTER_TENANTS_1_ORGID" to "agderfk.no",
+            "FINT_ADAPTER_TENANTS_1_ORGS" to "agderfk.no",
             "FINT_ADAPTER_TENANTS_1_ID" to "https://vigoiks.no/agderfk-no/personvern",
             "FINT_ADAPTER_TENANTS_1_USERNAME" to "agderfk-user",
             "FINT_ADAPTER_TENANTS_1_PASSWORD" to "pw",
@@ -65,7 +65,8 @@ class AdapterPropertiesBindingTest {
             "FINT_ADAPTER_TENANTS_1_CLIENTSECRET" to "s",
         )
 
-        assertEquals(listOf("rogfk.no", "agderfk.no"), properties.tenants.map { it.orgId })
-        assertEquals(listOf("rogfk-user", "agderfk-user"), properties.tenants.map { it.username })
+        assertEquals(listOf(listOf("novari.no", "side.novari.no", "test.novari.no"), listOf("agderfk.no")), properties.tenants.map { it.orgs })
+        assertEquals(listOf("novari-user", "agderfk-user"), properties.tenants.map { it.username })
+        assertEquals(listOf("novari.no", "side.novari.no", "test.novari.no", "agderfk.no"), properties.orgs)
     }
 }

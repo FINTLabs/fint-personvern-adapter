@@ -15,7 +15,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 @DataJpaTest(
     properties = [
         "spring.datasource.hikari.schema=public",
-        "fint.adapter.tenants[0].org-id=test.no",
+        "fint.adapter.tenants[0].orgs=test.no",
     ],
 )
 @ImportAutoConfiguration(FlywayAutoConfiguration::class)

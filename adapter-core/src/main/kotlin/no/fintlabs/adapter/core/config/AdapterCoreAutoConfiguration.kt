@@ -90,7 +90,7 @@ class AdapterCoreAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun registrationService(properties: AdapterProperties, registry: TenantRegistry) = RegistrationService(properties, registry)
+    fun registrationService(properties: AdapterProperties, registry: TenantRegistry, handlers: List<EventHandler<*>>) = RegistrationService(properties, registry, handlers)
 
     @Bean
     @ConditionalOnMissingBean

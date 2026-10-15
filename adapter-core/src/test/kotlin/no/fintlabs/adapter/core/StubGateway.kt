@@ -14,7 +14,8 @@ class StubGateway : AutoCloseable {
 
     val calls = ConcurrentLinkedQueue<Call>()
     val tokenRequests = AtomicInteger()
-    private val pendingEvents = ConcurrentLinkedQueue<String>()
+    /** Pending events keyed by the bearer token of the credential that holds the contract for them. */
+    private val pendingEvents = ConcurrentLinkedQueue<Pair<String, String>>()
 
     private val server: HttpServer = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
         createContext("/token") { exchange ->
@@ -28,8 +29,11 @@ class StubGateway : AutoCloseable {
             val bearer = exchange.requestHeaders.getFirst("Authorization")?.removePrefix("Bearer ")
             calls += Call(exchange.requestMethod, exchange.requestURI.path, bearer, body)
             when {
-                exchange.requestMethod == "GET" && exchange.requestURI.path.startsWith("/provider/event/") ->
-                    respond(exchange, 200, "[" + generateSequence { pendingEvents.poll() }.joinToString(",") + "]")
+                exchange.requestMethod == "GET" && exchange.requestURI.path.startsWith("/provider/event/") -> {
+                    val mine = pendingEvents.filter { it.first == bearer }
+                    pendingEvents.removeAll(mine.toSet())
+                    respond(exchange, 200, "[" + mine.joinToString(",") { it.second } + "]")
+                }
                 else -> respond(exchange, 200, "")
             }
         }
@@ -39,7 +43,8 @@ class StubGateway : AutoCloseable {
     val baseUrl = "http://127.0.0.1:${server.address.port}"
     val tokenUri = "$baseUrl/token"
 
-    fun queueEvent(json: String) = pendingEvents.add(json)
+    /** Like the gateway, an event is only served to the credential that has the contract for its org. */
+    fun queueEvent(bearer: String, json: String) = pendingEvents.add(bearer to json)
 
     fun calls(method: String, path: String) = calls.filter { it.method == method && it.path == path }
 

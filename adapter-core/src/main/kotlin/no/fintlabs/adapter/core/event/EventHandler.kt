@@ -2,11 +2,19 @@ package no.fintlabs.adapter.core.event
 
 import no.fintlabs.adapter.core.sync.ResourceDefinition
 import no.fintlabs.adapter.models.event.RequestFintEvent
+import no.fintlabs.adapter.operation.OperationType
 
 /**
  * Answers write events for one resource. Optional: a capability without a handler is full-sync only.
  */
 interface EventHandler<T : Any> : ResourceDefinition<T> {
+    /**
+     * The operations this handler answers. They are registered as the contract's event capabilities, so the
+     * gateway only serves these; anything else (DELETE, VALIDATE, READ) is never seen by [handle].
+     */
+    val operations: Set<OperationType>
+        get() = setOf(OperationType.CREATE, OperationType.UPDATE)
+
     /** The org the event is for is in [RequestFintEvent.getOrgId]. Throwing is reported as [EventResult.Failed]. */
     fun handle(event: RequestFintEvent, resource: T): EventResult<T>
 }

@@ -4,51 +4,71 @@ import no.fintlabs.adapter.core.TenantClient
 import no.fintlabs.adapter.core.TenantRegistry
 import no.fintlabs.adapter.core.config.AdapterProperties
 import no.fintlabs.adapter.core.describe
+import no.fintlabs.adapter.core.event.EventHandler
 import no.fintlabs.adapter.core.logger
 import no.fintlabs.adapter.models.AdapterContract
+import no.fintlabs.adapter.models.EventCapability
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 import java.time.Duration
 
 /**
- * Registers one contract per tenant with the gateway. The gateway keys contracts on (username, orgId), so each
- * tenant's contract is independent of the others.
+ * Registers one contract per (credential, org) with the gateway, which keys contracts on username + orgId.
+ * The contract lists every configured capability for sync and, for each [EventHandler], the operations it
+ * answers as event capabilities.
  */
 class RegistrationService(
     private val properties: AdapterProperties,
     private val registry: TenantRegistry,
+    private val handlers: List<EventHandler<*>>,
 ) {
     private val log = logger<RegistrationService>()
 
-    fun registerAll() = registry.forEach { register(it).subscribe() }
+    fun registerAll() = registry.forEach { client -> registerAllOrgs(client).subscribe() }
+
+    fun registerAllOrgs(client: TenantClient): Flux<Boolean> = Flux.fromIterable(client.orgs).concatMap { register(client, it) }
 
     /** Completes with whether the gateway accepted the contract; never errors. */
-    fun register(client: TenantClient): Mono<Boolean> =
+    fun register(client: TenantClient, orgId: String): Mono<Boolean> =
         client.webClient.post()
             .uri("/provider/register")
-            .bodyValue(contract(client))
+            .bodyValue(contract(client, orgId))
             .retrieve()
             .toBodilessEntity()
             .retryWhen(
                 Retry.fixedDelay(3, Duration.ofSeconds(5))
-                    .doBeforeRetry { log.warn("Registration of {} failed, retrying: {}", client, it.failure().describe()) },
+                    .doBeforeRetry { log.warn("Registration of {} for {} failed, retrying: {}", client, orgId, it.failure().describe()) },
             )
             .map { response ->
-                client.registered = response.statusCode.is2xxSuccessful
-                if (client.registered) log.info("Registered {} ({})", client, response.statusCode) else log.error("Registration of {} returned {}", client, response.statusCode)
-                client.registered
+                val ok = response.statusCode.is2xxSuccessful
+                client.setRegistered(orgId, ok)
+                if (ok) log.info("Registered {} for {} ({})", client, orgId, response.statusCode) else log.error("Registration of {} for {} returned {}", client, orgId, response.statusCode)
+                ok
             }
             .onErrorResume { error ->
-                log.error("Registration of {} failed after retries: {}", client, error.describe())
+                client.setRegistered(orgId, false)
+                log.error("Registration of {} for {} failed after retries: {}", client, orgId, error.describe())
                 Mono.just(false)
             }
 
-    fun contract(client: TenantClient): AdapterContract = AdapterContract.builder()
+    fun contract(client: TenantClient, orgId: String): AdapterContract = AdapterContract.builder()
         .adapterId(client.adapterId)
-        .orgId(client.orgId)
+        .orgId(orgId)
         .username(client.username)
         .heartbeatIntervalInMinutes(properties.heartbeatIntervalInMinutes)
         .capabilities(properties.capabilities.values.toHashSet())
+        .eventCapabilities(eventCapabilities())
         .time(System.currentTimeMillis())
         .build()
+
+    fun eventCapabilities(): Set<EventCapability> = handlers.map { handler ->
+        val capability = properties.capability(handler.resourceName)
+        EventCapability.builder()
+            .domainName(capability.domainName)
+            .packageName(capability.packageName)
+            .resourceName(capability.resourceName)
+            .operations(handler.operations.toHashSet())
+            .build()
+    }.toHashSet()
 }

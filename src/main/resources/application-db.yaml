@@ -21,4 +21,4 @@ spring:
     locations: classpath:db/migration/
     lock-retry-count: 300
     placeholders:
-      defaultOrgId: ${fint.adapter.tenants[0].org-id}
+      defaultOrgId: ${fint.adapter.tenants[0].orgs[0]}
