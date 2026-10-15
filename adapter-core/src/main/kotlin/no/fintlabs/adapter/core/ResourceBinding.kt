@@ -45,6 +45,10 @@ class ResourceBindings(
     val bindings: List<ResourceBinding<*>>,
 ) : Iterable<ResourceBinding<*>> by bindings {
 
+    /** `<prefix>/<org with dots as dashes>/<domain(s) served>`, e.g. `https://vigoiks.no/novari-no/personvern`. */
+    fun defaultAdapterId(prefix: String, orgId: String): String =
+        "${prefix.trimEnd('/')}/${orgId.replace('.', '-')}/${bindings.map { it.ref.domainName }.distinct().sorted().joinToString("-")}"
+
     val capabilities: Set<AdapterCapability> get() = bindings.map { it.capability }.toHashSet()
     val eventCapabilities: Set<EventCapability> get() = bindings.mapNotNull { it.eventCapability }.toHashSet()
 

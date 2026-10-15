@@ -10,29 +10,29 @@ import kotlin.test.assertTrue
 class AdapterPropertiesValidationTest {
 
     private val validator = Validation.buildDefaultValidatorFactory().validator
-    private val tenant = TenantProperties(listOf("rogfk.no"), "https://vigoiks.no/rogfk-no/personvern", "user", "pass", "client", "secret")
+    private val tenant = TenantProperties(listOf("rogfk.no"), null, "user", "pass", "client", "secret")
 
     @Test
     fun `a complete configuration is valid`() {
-        val properties = AdapterProperties(baseUrl = "http://gateway", tenants = listOf(tenant))
+        val properties = AdapterProperties(baseUrl = "http://gateway", tenants = mapOf("rogfk" to tenant))
 
         assertTrue(validator.validate(properties).isEmpty())
     }
 
     @Test
     fun `tenants are validated one by one`() {
-        val properties = AdapterProperties(baseUrl = "http://gateway", tenants = listOf(tenant, tenant.copy(username = " ")))
+        val properties = AdapterProperties(baseUrl = "http://gateway", tenants = mapOf("rogfk" to tenant, "broken" to tenant.copy(username = " ")))
 
         val violations = validator.validate(properties)
 
-        assertEquals(listOf("tenants[1].username"), violations.map { it.propertyPath.toString() })
+        assertEquals(listOf("tenants[broken].username"), violations.map { it.propertyPath.toString() })
     }
 
     @Test
     fun `a tenant needs at least one org`() {
-        val violations = validator.validate(AdapterProperties(baseUrl = "http://gateway", tenants = listOf(tenant.copy(orgs = emptyList()))))
+        val violations = validator.validate(AdapterProperties(baseUrl = "http://gateway", tenants = mapOf("rogfk" to tenant.copy(orgs = emptyList()))))
 
-        assertEquals(listOf("tenants[0].orgs"), violations.map { it.propertyPath.toString() })
+        assertEquals(listOf("tenants[rogfk].orgs"), violations.map { it.propertyPath.toString() })
     }
 
     @Test
@@ -44,6 +44,6 @@ class AdapterPropertiesValidationTest {
 
     @Test
     fun `secrets stay out of toString`() {
-        assertEquals("Tenant(orgs=[rogfk.no], id=https://vigoiks.no/rogfk-no/personvern, username=user)", tenant.toString())
+        assertEquals("Tenant(orgs=[rogfk.no], username=user)", tenant.toString())
     }
 }

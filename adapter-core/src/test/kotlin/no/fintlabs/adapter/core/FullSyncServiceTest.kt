@@ -17,9 +17,9 @@ import kotlin.test.assertTrue
 
 class FullSyncServiceTest {
 
-    private val tenant = TenantProperties(listOf("rogfk.no"), "https://vigoiks.no/rogfk-no/personvern", "user", "pass", "client", "secret")
-    private val properties = AdapterProperties(baseUrl = "http://gateway", pageSize = 3, tenants = listOf(tenant))
-    private val client = TenantClient(tenant, WebClient.create())
+    private val tenant = TenantProperties(listOf("rogfk.no"), null, "user", "pass", "client", "secret")
+    private val properties = AdapterProperties(baseUrl = "http://gateway", pageSize = 3, tenants = mapOf("rogfk" to tenant))
+    private val client = TenantClient("rogfk", tenant, WebClient.create(), "https://vigoiks.no/rogfk-no/personvern")
     private val service = FullSyncService(properties, SyncPageValidator())
 
     private val source = object : ResourceSource<BehandlingResource> {
@@ -40,7 +40,7 @@ class FullSyncServiceTest {
         assertEquals(listOf(3, 3, 1), pages.map { it.resources.size })
         assertEquals(listOf(1L, 2L, 3L), pages.map { it.metadata.page })
         assertTrue(pages.all { it.metadata.totalPages == 3L && it.metadata.totalSize == 7L })
-        assertTrue(pages.all { it.metadata.orgId == "rogfk.no" && it.metadata.adapterId == tenant.id })
+        assertTrue(pages.all { it.metadata.orgId == "rogfk.no" && it.metadata.adapterId == "https://vigoiks.no/rogfk-no/personvern" })
         assertTrue(pages.all { it.metadata.uriRef == "/personvern/samtykke/behandling" })
         assertEquals(1, pages.map { it.metadata.corrId }.toSet().size)
         assertEquals("g", pages.last().resources.single().identifier, "identifier defaults to the systemId value")
