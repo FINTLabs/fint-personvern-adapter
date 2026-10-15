@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: fintlabs-no
 resources:
   - ../../base
-  - fint-adapters.yaml
 patches:
   - path: application-env.yaml
     target:
