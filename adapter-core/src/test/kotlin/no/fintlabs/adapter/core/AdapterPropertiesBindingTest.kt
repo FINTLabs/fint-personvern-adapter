@@ -66,4 +66,18 @@ class AdapterPropertiesBindingTest {
         assertEquals(listOf("novari-user", "agderfk-user"), properties.tenants.values.map { it.username })
         assertEquals(listOf("novari.no", "side.novari.no", "test.novari.no", "agderfk.no"), properties.orgs)
     }
+
+    @Test
+    fun `a tenant in yaml is merged with, not replaced by, tenants from the environment`() {
+        val properties = bind(
+            "FINT_ADAPTER_TENANTS_NOVARI_ORGS" to "novari.no",
+            "FINT_ADAPTER_TENANTS_NOVARI_USERNAME" to "novari-user",
+            "FINT_ADAPTER_TENANTS_NOVARI_PASSWORD" to "pw",
+            "FINT_ADAPTER_TENANTS_NOVARI_CLIENTID" to "c",
+            "FINT_ADAPTER_TENANTS_NOVARI_CLIENTSECRET" to "s",
+            yaml = yamlTenant,
+        )
+
+        assertEquals(setOf("default", "novari"), properties.tenants.keys, "which is why application.yml must not define a placeholder tenant")
+    }
 }
