@@ -25,7 +25,7 @@ data class AdapterProperties(
 
     /** OAuth2 token endpoint used for the password grant. */
     @field:NotBlank
-    val tokenUri: String = "https://idp.felleskomponent.no/nidp/oauth/nam/token",
+    val tokenUri: String = "https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api",
 
     /** Number of resources per sync page. */
     @field:Min(1)

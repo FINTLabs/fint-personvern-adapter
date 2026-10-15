@@ -44,7 +44,7 @@ class BehandlingAdapter(private val repository: BehandlingJpaRepository) :
 fint:
   adapter:
     base-url: https://api.felleskomponent.no
-    token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token
+    token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api
     heartbeat-interval: 1m          # also what is promised in the contract
     event-poll-interval: 1s
     full-sync-initial-delay: 10s
