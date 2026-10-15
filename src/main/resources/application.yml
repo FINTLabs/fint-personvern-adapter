@@ -24,6 +24,18 @@ fint:
         resource-name: tjeneste
         fullSyncIntervalInDays: 1
         deltaSyncInterval: IMMEDIATE
+      behandlingsgrunnlag:
+        domain-name: personvern
+        packageName: kodeverk
+        resource-name: behandlingsgrunnlag
+        fullSyncIntervalInDays: 1
+        deltaSyncInterval: IMMEDIATE
+      personopplysning:
+        domain-name: personvern
+        packageName: kodeverk
+        resource-name: personopplysning
+        fullSyncIntervalInDays: 1
+        deltaSyncInterval: IMMEDIATE
 
 spring:
   profiles:
