@@ -1,147 +1,145 @@
 name: CD
 
+# develop deploys to beta, main deploys to api (production), like fint-core.
+# Alpha, or a re-deploy of any environment, is started by hand.
 on:
-  workflow_call:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
     inputs:
-      cluster:
+      environment:
+        description: 'Environment to deploy the current branch to'
         required: true
-        type: string
+        type: choice
+        options: [alpha, beta, api]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ghcr.io/fintlabs/fint-personvern-adapter
+  NAMESPACE: fintlabs-no
 
 jobs:
-  build-and-push:
-    name: Build and push Docker image
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - name: Map branch to environment
+        id: env
+        run: |
+          if [ -n "${{ inputs.environment }}" ]; then
+            echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "$GITHUB_REF_NAME" in
+            main)    echo "environment=api"  >> "$GITHUB_OUTPUT" ;;
+            develop) echo "environment=beta" >> "$GITHUB_OUTPUT" ;;
+            *) echo "no environment for branch $GITHUB_REF_NAME"; exit 1 ;;
+          esac
+
+      - name: Resolve image tag
+        id: image
+        run: echo "image=${IMAGE_NAME}:sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    outputs:
-      tags: ${{ steps.meta.outputs.tags }}
+    env:
+      IMAGE: ${{ needs.setup.outputs.image }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
+      - uses: docker/login-action@v4
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        uses: docker/metadata-action@v6
-        id: meta
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: type=sha,enable=true,priority=100,prefix=shaF-,suffix=,format=short
+      - name: Check whether ${{ env.IMAGE }} already exists
+        id: exists
+        run: |
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$IMAGE already in registry, skipping build"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Build and push Docker image
+      - uses: actions/checkout@v6
+        if: steps.exists.outputs.exists == 'false'
+
+      - name: Build and push
+        if: steps.exists.outputs.exists == 'false'
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
-  # Conditionally set which namespaces to deploy to, based on which cluster we're deploying to
-  init:
+  deploy:
+    needs: [setup, build]
     runs-on: ubuntu-latest
-    outputs:
-      targets: ${{ steps.set-matrix.outputs.targets }}
-    steps:
-      - name: Set targets matrix
-        id: set-matrix
-        shell: bash
-        run: |
-          cluster="${{ inputs.cluster }}"
-          
-          if [[ "$cluster" == "aks-api-fint-2022-02-08" ]]; then
-            targets='["agderfk-no", "rogfk-no", "vestfoldfylke-no", "trondelagfylke-no", "fintlabs-no"]'
-          elif [[ "$cluster" == "aks-beta-fint-2021-11-23" ]]; then
-            targets='["agderfk-no", "rogfk-no", "vestfoldfylke-no", "trondelagfylke-no", "fintlabs-no"]'
-          elif [[ "$cluster" == "aks-alpha-fint-2021-11-18" ]]; then
-            targets='["fintlabs-no"]'
-          else
-            echo "Unknown cluster: $cluster" >&2
-            exit 1
-          fi
-          
-          echo "targets=$targets" >> "$GITHUB_OUTPUT"
-          echo "Computed targets for $env: $targets"
-
-  deploy-to-aks:
-    name: deploy for ${{ matrix.org }} to ${{ matrix.cluster }}
-    runs-on: ubuntu-latest
-    needs:
-      - build-and-push
-      - init
     permissions:
       contents: read
-      packages: write
-    strategy:
-      matrix:
-        org:
-          ${{ fromJSON(needs.init.outputs.targets) }}
-        cluster:
-          - ${{ inputs.cluster }}
-
+    environment: ${{ needs.setup.outputs.environment }}
+    env:
+      ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+      IMAGE: ${{ needs.setup.outputs.image }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6
 
-      - name: Get environment
-        uses: actions/github-script@v8
-        id: environment
-        with:
-          script: return '${{ inputs.cluster }}'.split('-')[1]
-          result-encoding: string
-
-      - name: Get resource group name
-        uses: actions/github-script@v8
-        id: resource-group
-        with:
-          script: return 'rg-aks-${{ steps.environment.outputs.result }}'
-          result-encoding: string
-
-      - name: Update image tag
+      - name: Resolve cluster and resource group
+        id: aks
         run: |
-          sed -i "s|image: ghcr.io/fintlabs/fint-personvern-adapter:.*|image: ${{ needs.build-and-push.outputs.tags }}|" kustomize/base/flais.yaml
+          case "$ENVIRONMENT" in
+            alpha) echo "cluster=aks-alpha-fint-2021-11-18" >> "$GITHUB_OUTPUT" ;;
+            beta)  echo "cluster=aks-beta-fint-2021-11-23"  >> "$GITHUB_OUTPUT" ;;
+            api)   echo "cluster=aks-api-fint-2022-02-08"   >> "$GITHUB_OUTPUT" ;;
+            *) echo "unknown environment $ENVIRONMENT"; exit 1 ;;
+          esac
+          echo "resource-group=rg-aks-$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+      - name: Set image in the base manifest
+        run: |
+          sed -i "s|image: ghcr.io/fintlabs/fint-personvern-adapter:.*|image: ${IMAGE}|" kustomize/base/flais.yaml
 
       - name: Bake manifests with Kustomize
         id: bake
         uses: azure/k8s-bake@v4
         with:
           renderEngine: 'kustomize'
-          kustomizationPath: 'kustomize/overlays/${{ steps.environment.outputs.result }}/${{ matrix.org }}'
+          kustomizationPath: 'kustomize/overlays/${{ env.ENVIRONMENT }}'
 
       - uses: azure/login@v3
         with:
-          creds: "${{ secrets[format('AKS_{0}_FINT_GITHUB', steps.environment.outputs.result)] }}"
+          creds: "${{ secrets[format('AKS_{0}_FINT_GITHUB', env.ENVIRONMENT)] }}"
 
-      - uses: azure/use-kubelogin@v1.3
+      - uses: azure/use-kubelogin@v1
         with:
           kubelogin-version: 'v0.0.26'
 
       - name: Set the target cluster
         uses: azure/aks-set-context@v5
         with:
-          cluster-name: '${{ matrix.cluster }}'
-          resource-group: '${{ steps.resource-group.outputs.result }}'
+          cluster-name: '${{ steps.aks.outputs.cluster }}'
+          resource-group: '${{ steps.aks.outputs.resource-group }}'
           admin: 'true'
           use-kubelogin: 'true'
 
-      - name: Create Namespace if it doesn't exist
-        run: |
-          if ! kubectl get namespace ${{ matrix.org }}; then
-            kubectl create namespace ${{ matrix.org }}
-          fi
+      - name: Ensure namespace ${{ env.NAMESPACE }}
+        run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy
         uses: azure/k8s-deploy@v6
         with:
           action: deploy
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
-          namespace: ${{ matrix.org }}
+          namespace: ${{ env.NAMESPACE }}

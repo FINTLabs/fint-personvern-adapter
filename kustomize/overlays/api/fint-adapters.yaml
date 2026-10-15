@@ -1,0 +1,99 @@
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-agderfk-no
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: agderfk.no
+spec:
+  orgId: agderfk.no
+  note: Personvern adapter credential for agderfk.no (tenant of fint-personvern-adapter)
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke
+---
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-rogfk-no
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: rogfk.no
+spec:
+  orgId: rogfk.no
+  note: Personvern adapter credential for rogfk.no (tenant of fint-personvern-adapter)
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke
+---
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-vestfoldfylke-no
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: vestfoldfylke.no
+spec:
+  orgId: vestfoldfylke.no
+  note: Personvern adapter credential for vestfoldfylke.no (tenant of fint-personvern-adapter)
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke
+---
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-trondelagfylke-no
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: trondelagfylke.no
+spec:
+  orgId: trondelagfylke.no
+  note: Personvern adapter credential for trondelagfylke.no (tenant of fint-personvern-adapter)
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke
+---
+apiVersion: fintlabs.no/v1alpha1
+kind: FintAdapter
+metadata:
+  name: personvern-adapter-fintlabs-no
+  namespace: fintlabs-no
+  labels:
+    app.kubernetes.io/name: fint-personvern-adapter
+    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: adapter
+    app.kubernetes.io/part-of: fint-core
+    fintlabs.no/team: core
+    fintlabs.no/org-id: fintlabs.no
+spec:
+  orgId: fintlabs.no
+  note: Personvern adapter credential for fintlabs.no (tenant of fint-personvern-adapter)
+  components:
+    - personvern_kodeverk
+    - personvern_samtykke

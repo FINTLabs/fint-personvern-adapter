@@ -1,0 +1,31 @@
+- op: replace
+  path: /spec/env
+  value:
+    - name: JAVA_TOOL_OPTIONS
+      value: '-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75'
+    - name: fint.adapter.base-url
+      value: 'https://alpha.felleskomponent.no'
+    - name: FINT_ADAPTER_TENANTS_0_ORGS
+      value: 'fintlabs.no'
+    - name: FINT_ADAPTER_TENANTS_0_ID
+      value: 'https://vigoiks.no/fintlabs-no/personvern'
+    - name: FINT_ADAPTER_TENANTS_0_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: personvern-adapter-fintlabs-no
+          key: fint.core.oauth2.username
+    - name: FINT_ADAPTER_TENANTS_0_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: personvern-adapter-fintlabs-no
+          key: fint.core.oauth2.password
+    - name: FINT_ADAPTER_TENANTS_0_CLIENTID
+      valueFrom:
+        secretKeyRef:
+          name: personvern-adapter-fintlabs-no
+          key: fint.core.oauth2.client-id
+    - name: FINT_ADAPTER_TENANTS_0_CLIENTSECRET
+      valueFrom:
+        secretKeyRef:
+          name: personvern-adapter-fintlabs-no
+          key: fint.core.oauth2.client-secret
