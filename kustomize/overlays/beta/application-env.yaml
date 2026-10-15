@@ -5,7 +5,7 @@
       value: '-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75'
     - name: fint.adapter.base-url
       value: 'https://beta.felleskomponent.no'
-    - name: FINT_ADAPTER_TENANTS_0_ORGID
+    - name: FINT_ADAPTER_TENANTS_0_ORGS
       value: 'agderfk.no'
     - name: FINT_ADAPTER_TENANTS_0_ID
       value: 'https://vigoiks.no/agderfk-no/personvern'
@@ -29,7 +29,7 @@
         secretKeyRef:
           name: personvern-adapter-agderfk-no
           key: fint.core.oauth2.client-secret
-    - name: FINT_ADAPTER_TENANTS_1_ORGID
+    - name: FINT_ADAPTER_TENANTS_1_ORGS
       value: 'rogfk.no'
     - name: FINT_ADAPTER_TENANTS_1_ID
       value: 'https://vigoiks.no/rogfk-no/personvern'
@@ -53,7 +53,7 @@
         secretKeyRef:
           name: personvern-adapter-rogfk-no
           key: fint.core.oauth2.client-secret
-    - name: FINT_ADAPTER_TENANTS_2_ORGID
+    - name: FINT_ADAPTER_TENANTS_2_ORGS
       value: 'vestfoldfylke.no'
     - name: FINT_ADAPTER_TENANTS_2_ID
       value: 'https://vigoiks.no/vestfoldfylke-no/personvern'
@@ -77,7 +77,7 @@
         secretKeyRef:
           name: personvern-adapter-vestfoldfylke-no
           key: fint.core.oauth2.client-secret
-    - name: FINT_ADAPTER_TENANTS_3_ORGID
+    - name: FINT_ADAPTER_TENANTS_3_ORGS
       value: 'trondelagfylke.no'
     - name: FINT_ADAPTER_TENANTS_3_ID
       value: 'https://vigoiks.no/trondelagfylke-no/personvern'
@@ -101,7 +101,7 @@
         secretKeyRef:
           name: personvern-adapter-trondelagfylke-no
           key: fint.core.oauth2.client-secret
-    - name: FINT_ADAPTER_TENANTS_4_ORGID
+    - name: FINT_ADAPTER_TENANTS_4_ORGS
       value: 'fintlabs.no'
     - name: FINT_ADAPTER_TENANTS_4_ID
       value: 'https://vigoiks.no/fintlabs-no/personvern'
