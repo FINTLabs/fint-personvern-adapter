@@ -1,6 +1,6 @@
 package no.fintlabs.personvern.samtykke.behandling.event;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.novari.fint.model.resource.personvern.samtykke.BehandlingResource;
 import no.fintlabs.adapter.config.AdapterProperties;
