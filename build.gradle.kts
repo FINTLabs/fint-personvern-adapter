@@ -10,6 +10,21 @@ group = "no.fintlabs"
 
 val apiVersion: String by project
 
+allprojects {
+    repositories {
+        mavenCentral()
+        maven {
+            url = uri("https://repo.fintlabs.no/releases")
+        }
+        mavenLocal()
+    }
+}
+
+subprojects {
+    group = rootProject.group
+    version = rootProject.version
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
@@ -24,14 +39,7 @@ kotlin {
 
 allOpen {
     annotation("jakarta.persistence.Entity")
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        url = uri("https://repo.fintlabs.no/releases")
-    }
-    mavenLocal()
+    annotation("jakarta.persistence.Embeddable")
 }
 
 tasks.jar {
@@ -39,26 +47,20 @@ tasks.jar {
 }
 
 dependencies {
+    implementation(project(":adapter-core"))
+
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("tools.jackson.module:jackson-module-kotlin")
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 
-    runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
-
-    implementation("no.fintlabs:fint-core-infra-models:3.4.0")
-    implementation("no.fintlabs:fint-core-adapter-common:0.1.7")
     implementation("no.novari:fint-personvern-resource-model-java:$apiVersion")
-    implementation("no.novari:fint-model-resource:1.0.1")
 
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")

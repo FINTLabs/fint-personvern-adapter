@@ -1,44 +1,53 @@
 fint:
   adapter:
-    id: https://vigoiks.no/fintlabs-no/personvern/samtykke
     base-url: https://alpha.felleskomponent.no
-    registration-id: fint
-    org-id: fintlabs.no
-    heartbeat-interval-in-minutes: 1
+    token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token
+    heartbeat-interval: 1m
+    event-poll-interval: 1s
+    full-sync-initial-delay: 10s
+    page-size: 100
     capabilities:
       samtykke:
         domain-name: personvern
-        packageName: samtykke
+        package-name: samtykke
         resource-name: samtykke
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+        full-sync-interval-in-days: 1
+        delta-sync-interval: IMMEDIATE
       behandling:
         domain-name: personvern
-        packageName: samtykke
+        package-name: samtykke
         resource-name: behandling
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+        full-sync-interval-in-days: 1
+        delta-sync-interval: IMMEDIATE
       tjeneste:
         domain-name: personvern
-        packageName: samtykke
+        package-name: samtykke
         resource-name: tjeneste
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+        full-sync-interval-in-days: 1
+        delta-sync-interval: IMMEDIATE
       behandlingsgrunnlag:
         domain-name: personvern
-        packageName: kodeverk
+        package-name: kodeverk
         resource-name: behandlingsgrunnlag
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+        full-sync-interval-in-days: 1
+        delta-sync-interval: IMMEDIATE
       personopplysning:
         domain-name: personvern
-        packageName: kodeverk
+        package-name: kodeverk
         resource-name: personopplysning
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+        full-sync-interval-in-days: 1
+        delta-sync-interval: IMMEDIATE
+    # Default: a single tenant from the credentials a FintAdapter secret provides. A deployment with several
+    # tenants replaces the whole list through FINT_ADAPTER_TENANTS_<n>_* environment variables.
+    tenants:
+      - org-id: ${fint.adapter.org-id:fintlabs.no}
+        id: ${fint.adapter.id:https://vigoiks.no/fintlabs-no/personvern}
+        username: ${fint.core.oauth2.username:}
+        password: ${fint.core.oauth2.password:}
+        client-id: ${fint.core.oauth2.client-id:}
+        client-secret: ${fint.core.oauth2.client-secret:}
 
 spring:
   profiles:
     include:
       - db
-      - oauth

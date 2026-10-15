@@ -11,8 +11,21 @@ The `kodeverk` package was previously served by `fint-personvern-kodeverk-adapte
 this service. The adapter credential needs the component roles for both `personvern_samtykke` and
 `personvern_kodeverk`.
 
-Built with Kotlin on Spring Boot 4 and `fint-core-adapter-common`. Schema is managed by Flyway
-(`src/main/resources/db/migration`).
+Built with Kotlin on Spring Boot 4. The adapter runtime (registration, heartbeat, full sync, events) is the
+`adapter-core` module in this repo, see [adapter-core/README.md](adapter-core/README.md). Schema is managed by
+Flyway (`src/main/resources/db/migration`).
+
+## Multi-tenant
+
+One instance serves any number of orgs. Each org is a *tenant* with its own adapter credential under
+`fint.adapter.tenants`; data is keyed by `(org_id, id)` in every table. By default a single tenant is built
+from the `fint.core.oauth2.*` secret keys and `fint.adapter.org-id` / `fint.adapter.id`, which is what a per-org
+deployment provides. A deployment with several tenants sets the whole list through
+`FINT_ADAPTER_TENANTS_<n>_ORGID`, `_ID`, `_USERNAME`, `_PASSWORD`, `_CLIENTID`, `_CLIENTSECRET`
+(Spring Boot drops the dashes of `org-id` and friends in environment variable names).
+
+Full sync runs every `full-sync-interval-in-days` of each capability (default one day), heartbeat every
+minute, event polling every second.
 
 ## Running locally
 

@@ -20,3 +20,5 @@ spring:
   flyway:
     locations: classpath:db/migration/
     lock-retry-count: 300
+    placeholders:
+      defaultOrgId: ${fint.adapter.tenants[0].org-id}
