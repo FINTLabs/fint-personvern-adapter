@@ -2,27 +2,32 @@ apiVersion: fintlabs.no/v1alpha1
 kind: Application
 metadata:
   name: fint-personvern-adapter
-  namespace: fintlabs-no
+  namespace: novari-no
   labels:
     app.kubernetes.io/name: fint-personvern-adapter
-    app.kubernetes.io/instance: fint-personvern-adapter_fintlabs_no
+    app.kubernetes.io/instance: fint-personvern-adapter_novari_no
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: adapter
     app.kubernetes.io/part-of: fint-core
     fintlabs.no/team: core
-    fintlabs.no/org-id: fintlabs.no
+    fintlabs.no/org-id: novari.no
 spec:
   port: 8080
   imagePullPolicy: Always
-  orgId: fintlabs.no
+  orgId: novari.no
   image: ghcr.io/fintlabs/fint-personvern-adapter:sha-0000000
-  # env is replaced per environment by the generated overlay (gateway URL and one tenant per org).
+  # Tenant credentials come from the 1Password item (fields FINT_ADAPTER_TENANTS_<n>_*), injected as env.
+  onePassword:
+    itemPath: vaults/aks-beta-vault/items/fint-personvern-adapter
+  # The operator creates the database user and injects fint.database.url/username/password.
+  database:
+    enabled: true
+    database: fint-core
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75'
-  envFrom:
-    - secretRef:
-        name: fint-personvern-adapter-pg
+    - name: fint.adapter.base-url
+      value: 'https://beta.felleskomponent.no'
   resources:
     limits:
       memory: "1Gi"
