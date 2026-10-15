@@ -52,5 +52,5 @@ python3 kustomize/generate.py
 kubectl kustomize kustomize/overlays/api
 ```
 
-Moving from the per-org deployments: each org's rows in its own `fint-personvern-adapter` database must be
-copied into the shared database (same tables, `org_id` set to the org) before its old deployment is removed.
+Branches: `develop` deploys to beta and `main` to api on push; alpha or a re-deploy is started by hand from
+the CD workflow. Moving from the per-org deployments is a manual psql step, see [scripts/README.md](scripts/README.md).

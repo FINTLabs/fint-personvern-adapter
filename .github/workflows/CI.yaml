@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   build:
@@ -36,11 +36,3 @@ jobs:
         with:
           name: ${{steps.get_repo.outputs.REPO}}
           path: ./data/app.jar
-
-      - name: Trigger CD
-        if: github.ref == 'refs/heads/main'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUBACTION_TOKEN }}
-          repository: ${{ github.repository }}
-          event-type: trigger-cd
