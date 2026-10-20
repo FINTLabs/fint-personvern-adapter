@@ -24,7 +24,7 @@ writes, and both run in one transaction. Run the new adapter at least once befor
 created the tables (V1 to V3).
 
 `migrate-personopplysning.sql` finds the schemas itself (the one holding `personopplysning_entity` and the one
-holding `personopplysning` with an `org_id` column), prints the old list and the per-org counts, and asks
+holding both `personopplysning` with an `org_id` column and `behandling`), prints the old list and the per-org counts, and asks
 `Commit? (yes/no)` before committing. Anything but yes rolls back. Orgs default to rogfk.no and
 trondelagfylke.no:
 

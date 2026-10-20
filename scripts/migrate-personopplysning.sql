@@ -30,12 +30,14 @@
   \gset
 \endif
 
--- 2. Where is the new table? Fails if there is none or more than one candidate.
+-- 2. Where is the new table? The multi-tenant schema is the one that has both personopplysning with an
+--    org_id column and the samtykke tables. Fails if there is none or more than one candidate.
 \if :{?new_schema}
 \else
-  select table_schema as new_schema
-  from information_schema.columns
-  where table_name = 'personopplysning' and column_name = 'org_id'
+  select c.table_schema as new_schema
+  from information_schema.columns c
+  join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = 'behandling'
+  where c.table_name = 'personopplysning' and c.column_name = 'org_id'
   \gset
 \endif
 
