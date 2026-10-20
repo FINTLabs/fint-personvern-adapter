@@ -47,10 +47,11 @@ class AdapterScheduler(
             )
         }
 
-        registry.forEach { client ->
-            bindings.filter { it.handler != null }.forEach { binding ->
+        val handled = bindings.filter { it.handler != null }
+        if (handled.isNotEmpty()) {
+            registry.forEach { client ->
                 futures += taskScheduler.scheduleWithFixedDelay(
-                    task("event poll of ${binding.ref} as ${client.username}") { eventService.poll(client, binding) },
+                    task("event poll as ${client.username}") { eventService.poll(client, handled) },
                     now.plus(properties.fullSyncInitialDelay),
                     properties.eventPollInterval,
                 )

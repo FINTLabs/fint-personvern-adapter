@@ -1,6 +1,7 @@
 package no.fintlabs.adapter.core.event
 
 import no.fintlabs.adapter.core.ResourceBinding
+import no.fintlabs.adapter.core.ResourceRef
 import no.fintlabs.adapter.core.TenantClient
 import no.fintlabs.adapter.core.describe
 import no.fintlabs.adapter.core.logger
@@ -12,24 +13,38 @@ import org.springframework.core.ParameterizedTypeReference
 import tools.jackson.databind.ObjectMapper
 
 /**
- * Polls the gateway for pending events of one resource as one credential and answers them through the
- * [EventHandler]. One poll returns the events of every org the credential has a contract for, so polling is
- * per credential, not per org, and the answer carries the event's own orgId.
+ * Polls the gateway for pending events as one credential and answers them through the resources'
+ * [EventHandler]s. One poll per domain returns the events of every resource the contract covers and every org
+ * the credential has a contract for, so polling is per credential, not per resource or org, and the answer
+ * carries the event's own orgId.
  */
 class EventService(
     private val objectMapper: ObjectMapper,
 ) {
     private val log = logger<EventService>()
 
-    fun <T : FintResource> poll(client: TenantClient, binding: ResourceBinding<T>) {
-        val handler = binding.handler ?: return
-        val events = fetch(client, binding)
-        if (events.isEmpty()) return
-        log.info("Received {} events for {} as {}", events.size, binding.ref, client.username)
-        events.forEach { event ->
-            if (event.orgId !in client.orgs) log.warn("Event {} is for {}, which {} is not configured to serve", event.corrId, event.orgId, client)
-            post(client, event, response(client, event, binding, handle(event, binding, handler)))
+    /** One request per domain the handled resources span; the gateway serves every package the credential has a role for. */
+    fun poll(client: TenantClient, bindings: Collection<ResourceBinding<*>>) {
+        val handled = bindings.filter { it.handler != null }.associateBy { it.ref }
+        handled.keys.map { it.domainName }.distinct().forEach { domain ->
+            val events = fetch(client, domain)
+            if (events.isEmpty()) return@forEach
+            log.info("Received {} events for {} as {}", events.size, domain, client.username)
+            events.forEach { event ->
+                val binding = handled[ResourceRef(event.domainName, event.packageName, event.resourceName)]
+                if (binding == null) {
+                    log.warn("Event {} is for {}/{}/{}, which has no EventHandler; left for its time to live to expire", event.corrId, event.domainName, event.packageName, event.resourceName)
+                } else {
+                    answer(client, event, binding)
+                }
+            }
         }
+    }
+
+    private fun <T : FintResource> answer(client: TenantClient, event: RequestFintEvent, binding: ResourceBinding<T>) {
+        val handler = binding.handler ?: return
+        if (event.orgId !in client.orgs) log.warn("Event {} is for {}, which {} is not configured to serve", event.corrId, event.orgId, client)
+        post(client, event, response(client, event, binding, handle(event, binding, handler)))
     }
 
     fun <T : FintResource> handle(event: RequestFintEvent, binding: ResourceBinding<T>, handler: EventHandler<T>): EventResult<T> {
@@ -70,15 +85,15 @@ class EventService(
         return response
     }
 
-    private fun fetch(client: TenantClient, binding: ResourceBinding<*>): List<RequestFintEvent> =
+    private fun fetch(client: TenantClient, domain: String): List<RequestFintEvent> =
         try {
             client.webClient.get()
-                .uri("/provider/event${binding.ref.entityUri}")
+                .uri("/provider/event/$domain")
                 .retrieve()
                 .bodyToMono(EVENT_LIST)
                 .block() ?: emptyList()
         } catch (e: Exception) {
-            log.error("Checking events for {} as {} failed: {}", binding.ref, client.username, e.describe())
+            log.error("Checking events for {} as {} failed: {}", domain, client.username, e.describe())
             emptyList()
         }
 

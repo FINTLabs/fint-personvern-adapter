@@ -46,7 +46,7 @@ fint:
     base-url: https://api.felleskomponent.no
     token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api
     heartbeat-interval: 1m          # also what is promised in the contract
-    event-poll-interval: 1s
+    event-poll-interval: 15s        # one request per credential (and domain) per interval
     full-sync-initial-delay: 10s
     full-sync-interval:             # optional override of every capability's fullSyncIntervalInDays
     page-size: 100
@@ -71,8 +71,9 @@ fint:
 
 A tenant is one credential. For each of its orgs it registers a contract (the gateway keys contracts on
 username + orgId), sends a heartbeat and is full-synced for every capability. Events are polled once per
-credential, because the gateway answers with the pending events of every org the credential has a contract
-for, and each answer carries the event's own orgId. The credential's token must list every configured org
+credential, with one request per domain (`GET /provider/event/<domain>`): the gateway answers with the pending
+events of every resource the contract covers and every org the credential has a contract for, each event is
+routed to its resource's `EventHandler`, and the answer carries the event's own orgId. The credential's token must list every configured org
 among its assets, and all orgs of one credential must belong to the same main org (one gateway).
 
 Tenants given through the environment, as `fint.adapter.tenants.rogfk.orgs=rogfk.no`,
