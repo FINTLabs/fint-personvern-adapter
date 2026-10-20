@@ -3,7 +3,7 @@ fint:
     base-url: https://alpha.felleskomponent.no
     token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api
     heartbeat-interval: 1m
-    event-poll-interval: 1s
+    event-poll-interval: 15s
     full-sync-initial-delay: 10s
     page-size: 100
     # Resources are the ResourceSource beans; per-resource settings are optional, e.g.

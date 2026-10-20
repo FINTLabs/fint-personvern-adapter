@@ -33,7 +33,7 @@ data class AdapterProperties(
 
     val heartbeatInterval: Duration = Duration.ofMinutes(1),
 
-    val eventPollInterval: Duration = Duration.ofSeconds(1),
+    val eventPollInterval: Duration = Duration.ofSeconds(15),
 
     /** Delay from startup to the first full sync. */
     val fullSyncInitialDelay: Duration = Duration.ofSeconds(10),

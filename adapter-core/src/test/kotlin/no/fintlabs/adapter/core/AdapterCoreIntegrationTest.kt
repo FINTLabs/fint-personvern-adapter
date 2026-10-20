@@ -6,6 +6,7 @@ import no.fintlabs.adapter.core.sync.ResourceSource
 import no.fintlabs.adapter.models.event.RequestFintEvent
 import no.novari.fint.model.felles.kompleksedatatyper.Identifikator
 import no.novari.fint.model.resource.personvern.samtykke.BehandlingResource
+import no.novari.fint.model.resource.personvern.samtykke.TjenesteResource
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -23,7 +24,8 @@ import kotlin.test.assertTrue
 
 /**
  * Two credentials against a stub gateway, one of them serving two orgs: a contract per org, a token per
- * credential, a full sync per org, and events polled once per credential and answered with the event's orgId.
+ * credential, a full sync per org, and events polled once per credential for every resource and answered
+ * with the event's orgId.
  */
 @SpringBootTest(
     properties = [
@@ -46,6 +48,7 @@ import kotlin.test.assertTrue
 )
 class AdapterCoreIntegrationTest(
     @Autowired private val behandlinger: BehandlingStub,
+    @Autowired private val tjenester: TjenesteStub,
 ) {
 
     @Test
@@ -67,16 +70,24 @@ class AdapterCoreIntegrationTest(
         assertEquals(4, pages.count { it.bearer == "token-for-novari-user" })
         assertTrue(pages.all { it.body.contains("\"totalPages\":2") && it.body.contains("\"totalSize\":3") })
 
-        gateway.queueEvent("token-for-novari-user", """{"corrId":"corr-1","orgId":"side.novari.no","operationType":"CREATE","value":"{\"systemId\":{\"identifikatorverdi\":\"new-one\"}}"}""")
+        gateway.queueEvent("token-for-novari-user", event("corr-1", "side.novari.no", "behandling", "new-one"))
+        gateway.queueEvent("token-for-novari-user", event("corr-2", "novari.no", "tjeneste", "new-service"))
+        gateway.queueEvent("token-for-rogfk-user", event("corr-3", "rogfk.no", "behandling", "rogfk-one"))
         await().atMost(Duration.ofSeconds(10)).untilAsserted {
-            assertEquals(1, gateway.calls("POST", "/provider/event").size)
+            assertEquals(3, gateway.calls("POST", "/provider/event").size)
         }
-        val answer = gateway.calls("POST", "/provider/event").single()
-        assertTrue(answer.body.contains("\"corrId\":\"corr-1\""))
-        assertTrue(answer.body.contains("\"orgId\":\"side.novari.no\""))
-        assertTrue(answer.body.contains("\"identifier\":\"new-one\""))
-        assertEquals("token-for-novari-user", answer.bearer)
-        assertEquals(listOf("side.novari.no" to "new-one"), behandlinger.handled, "handled once although the credential serves two orgs")
+        val answers = gateway.calls("POST", "/provider/event")
+        val first = answers.single { it.body.contains("\"corrId\":\"corr-1\"") }
+        assertTrue(first.body.contains("\"orgId\":\"side.novari.no\""))
+        assertTrue(first.body.contains("\"identifier\":\"new-one\""))
+        assertEquals("token-for-novari-user", first.bearer)
+        assertEquals("token-for-rogfk-user", answers.single { it.body.contains("\"corrId\":\"corr-3\"") }.bearer)
+        assertEquals(setOf("side.novari.no" to "new-one", "rogfk.no" to "rogfk-one"), behandlinger.handled.toSet(), "each event handled once, by the resource's handler")
+        assertEquals(listOf("novari.no" to "new-service"), tjenester.handled)
+
+        val polls = gateway.calls.filter { it.method == "GET" && it.path.startsWith("/provider/event") }
+        assertTrue(polls.isNotEmpty())
+        assertTrue(polls.all { it.path == "/provider/event/personvern" }, "one request per credential and domain, not per resource: ${polls.map { it.path }.distinct()}")
 
         await().atMost(Duration.ofSeconds(5)).untilAsserted {
             assertTrue(gateway.calls("POST", "/provider/heartbeat").size >= 3)
@@ -89,6 +100,9 @@ class AdapterCoreIntegrationTest(
     class TestApp {
         @Bean
         fun behandlingStub() = BehandlingStub()
+
+        @Bean
+        fun tjenesteStub() = TjenesteStub()
     }
 
     /** Only the type parameter says which resource this is; ref, type and identifier are derived. */
@@ -103,8 +117,20 @@ class AdapterCoreIntegrationTest(
         private fun behandling(id: String) = BehandlingResource().apply { systemId = Identifikator().apply { identifikatorverdi = id } }
     }
 
+    class TjenesteStub : ResourceSource<TjenesteResource>, EventHandler<TjenesteResource> {
+        val handled = CopyOnWriteArrayList<Pair<String, String>>()
+        override fun resources(orgId: String) = emptyList<TjenesteResource>()
+        override fun handle(event: RequestFintEvent, resource: TjenesteResource): EventResult<TjenesteResource> {
+            handled += event.orgId to resource.systemId.identifikatorverdi
+            return EventResult.Saved(resource)
+        }
+    }
+
     companion object {
         private val gateway = StubGateway()
+
+        private fun event(corrId: String, orgId: String, resource: String, id: String) =
+            """{"corrId":"$corrId","orgId":"$orgId","domainName":"personvern","packageName":"samtykke","resourceName":"$resource","operationType":"CREATE","value":"{\"systemId\":{\"identifikatorverdi\":\"$id\"}}"}"""
 
         @DynamicPropertySource
         @JvmStatic
