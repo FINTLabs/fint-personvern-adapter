@@ -32,51 +32,63 @@ class PasswordGrantTokenClient(
     private val log = logger<PasswordGrantTokenClient>()
     private val tokens = ConcurrentHashMap<String, Mono<AccessToken>>()
 
-    fun token(tenant: TenantProperties): Mono<String> =
-        tokens.computeIfAbsent(tenant.username) { cached(tenant) }.map { it.value }
+    fun token(tenant: TenantProperties): Mono<String> = tokens.computeIfAbsent(tenant.username) { cached(tenant) }.map { it.value }
 
     fun evict(tenant: TenantProperties) {
         tokens.remove(tenant.username)
     }
 
     /** Adds `Authorization: Bearer` for [tenant] to every request, and forgets the token if the gateway rejects it. */
-    fun bearerFilter(tenant: TenantProperties): ExchangeFilterFunction = ExchangeFilterFunction { request, next ->
-        token(tenant).flatMap { token ->
-            next.exchange(ClientRequest.from(request).headers { it.setBearerAuth(token) }.build())
-        }.doOnNext { response ->
-            if (response.statusCode() == HttpStatus.UNAUTHORIZED) evict(tenant)
+    fun bearerFilter(tenant: TenantProperties): ExchangeFilterFunction =
+        ExchangeFilterFunction { request, next ->
+            token(tenant)
+                .flatMap { token ->
+                    next.exchange(ClientRequest.from(request).headers { it.setBearerAuth(token) }.build())
+                }.doOnNext { response ->
+                    if (response.statusCode() == HttpStatus.UNAUTHORIZED) evict(tenant)
+                }
         }
-    }
 
     private fun cached(tenant: TenantProperties): Mono<AccessToken> =
         fetch(tenant).cache(
-            { token -> Duration.between(Instant.now(clock), token.expiresAt).minus(clockSkew).coerceAtLeast(Duration.ZERO) },
+            { token ->
+                Duration.between(Instant.now(clock), token.expiresAt).minus(clockSkew).coerceAtLeast(Duration.ZERO)
+            },
             { Duration.ZERO },
             { Duration.ZERO },
         )
 
     private fun fetch(tenant: TenantProperties): Mono<AccessToken> =
-        webClient.post()
+        webClient
+            .post()
             .uri(tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
             .body(BodyInserters.fromFormData(form(tenant)))
             .retrieve()
             .bodyToMono(TokenResponse::class.java)
-            .map { AccessToken(requireNotNull(it.accessToken) { "Token response had no access_token" }, Instant.now(clock).plusSeconds(it.expiresIn)) }
-            .doOnError { log.error("Token request for {} failed: {}", tenant, it.describe()) }
+            .map {
+                AccessToken(
+                    requireNotNull(it.accessToken) { "Token response had no access_token" },
+                    Instant.now(clock).plusSeconds(it.expiresIn),
+                )
+            }.doOnError { log.error("Token request for {} failed: {}", tenant, it.describe()) }
 
-    private fun form(tenant: TenantProperties) = LinkedMultiValueMap<String, String>().apply {
-        add("grant_type", "password")
-        add("client_id", tenant.clientId)
-        add("client_secret", tenant.clientSecret)
-        add("username", tenant.username)
-        add("password", tenant.password)
-        if (tenant.scope.isNotBlank()) add("scope", tenant.scope)
-    }
+    private fun form(tenant: TenantProperties) =
+        LinkedMultiValueMap<String, String>().apply {
+            add("grant_type", "password")
+            add("client_id", tenant.clientId)
+            add("client_secret", tenant.clientSecret)
+            add("username", tenant.username)
+            add("password", tenant.password)
+            if (tenant.scope.isNotBlank()) add("scope", tenant.scope)
+        }
 
     private fun Duration.coerceAtLeast(min: Duration): Duration = if (this < min) min else this
 
-    private data class AccessToken(val value: String, val expiresAt: Instant)
+    private data class AccessToken(
+        val value: String,
+        val expiresAt: Instant,
+    )
 
     class TokenResponse {
         @JsonProperty("access_token")

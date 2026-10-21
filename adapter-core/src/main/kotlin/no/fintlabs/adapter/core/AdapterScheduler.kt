@@ -36,25 +36,49 @@ class AdapterScheduler(
         registrationService.registerAll()
 
         val now = Instant.now()
-        futures += taskScheduler.scheduleAtFixedRate(task("heartbeat") { heartbeatService.beatAll() }, now.plus(properties.heartbeatInterval), properties.heartbeatInterval)
+        futures +=
+            taskScheduler.scheduleAtFixedRate(
+                task("heartbeat") {
+                    heartbeatService.beatAll()
+                },
+                now.plus(properties.heartbeatInterval),
+                properties.heartbeatInterval,
+            )
 
         bindings.forEach { binding ->
-            log.info("Full sync of {} every {}{}", binding.ref, binding.fullSyncInterval, if (binding.handler != null) ", events for ${binding.handler.operations}" else ", no events")
-            futures += taskScheduler.scheduleAtFixedRate(
-                task("full sync of ${binding.ref}") { registry.forEach { client -> client.orgs.forEach { org -> fullSyncService.sync(client, org, binding) } } },
-                now.plus(properties.fullSyncInitialDelay),
+            log.info(
+                "Full sync of {} every {}{}",
+                binding.ref,
                 binding.fullSyncInterval,
+                if (binding.handler !=
+                    null
+                ) {
+                    ", events for ${binding.handler.operations}"
+                } else {
+                    ", no events"
+                },
             )
+            futures +=
+                taskScheduler.scheduleAtFixedRate(
+                    task("full sync of ${binding.ref}") {
+                        registry.forEach { client ->
+                            client.orgs.forEach { org -> fullSyncService.sync(client, org, binding) }
+                        }
+                    },
+                    now.plus(properties.fullSyncInitialDelay),
+                    binding.fullSyncInterval,
+                )
         }
 
         val handled = bindings.filter { it.handler != null }
         if (handled.isNotEmpty()) {
             registry.forEach { client ->
-                futures += taskScheduler.scheduleWithFixedDelay(
-                    task("event poll as ${client.username}") { eventService.poll(client, handled) },
-                    now.plus(properties.fullSyncInitialDelay),
-                    properties.eventPollInterval,
-                )
+                futures +=
+                    taskScheduler.scheduleWithFixedDelay(
+                        task("event poll as ${client.username}") { eventService.poll(client, handled) },
+                        now.plus(properties.fullSyncInitialDelay),
+                        properties.eventPollInterval,
+                    )
             }
         }
         running = true
@@ -73,11 +97,19 @@ class AdapterScheduler(
 
     private fun verifyTenants() {
         require(registry.tenants.isNotEmpty()) { "No enabled tenants under fint.adapter.tenants" }
-        val orgTwice = properties.orgs.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+        val orgTwice =
+            properties.orgs
+                .groupingBy { it }
+                .eachCount()
+                .filterValues { it > 1 }
+                .keys
         require(orgTwice.isEmpty()) { "Orgs served by more than one tenant: $orgTwice" }
     }
 
-    private fun task(name: String, body: () -> Unit) = Runnable {
+    private fun task(
+        name: String,
+        body: () -> Unit,
+    ) = Runnable {
         try {
             body()
         } catch (e: Exception) {

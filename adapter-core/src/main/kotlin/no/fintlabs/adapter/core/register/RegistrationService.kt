@@ -29,35 +29,59 @@ class RegistrationService(
     fun registerAllOrgs(client: TenantClient): Flux<Boolean> = Flux.fromIterable(client.orgs).concatMap { register(client, it) }
 
     /** Completes with whether the gateway accepted the contract; never errors. */
-    fun register(client: TenantClient, orgId: String): Mono<Boolean> =
-        client.webClient.post()
+    fun register(
+        client: TenantClient,
+        orgId: String,
+    ): Mono<Boolean> =
+        client.webClient
+            .post()
             .uri("/provider/register")
             .bodyValue(contract(client, orgId))
             .retrieve()
             .toBodilessEntity()
             .retryWhen(
-                Retry.fixedDelay(3, Duration.ofSeconds(5))
-                    .doBeforeRetry { log.warn("Registration of {} for {} failed, retrying: {}", client, orgId, it.failure().describe()) },
-            )
-            .map { response ->
+                Retry
+                    .fixedDelay(3, Duration.ofSeconds(5))
+                    .doBeforeRetry {
+                        log.warn(
+                            "Registration of {} for {} failed, retrying: {}",
+                            client,
+                            orgId,
+                            it.failure().describe(),
+                        )
+                    },
+            ).map { response ->
                 val ok = response.statusCode.is2xxSuccessful
                 client.setRegistered(orgId, ok)
-                if (ok) log.info("Registered {} for {} ({})", client, orgId, response.statusCode) else log.error("Registration of {} for {} returned {}", client, orgId, response.statusCode)
+                if (ok) {
+                    log.info(
+                        "Registered {} for {} ({})",
+                        client,
+                        orgId,
+                        response.statusCode,
+                    )
+                } else {
+                    log.error("Registration of {} for {} returned {}", client, orgId, response.statusCode)
+                }
                 ok
-            }
-            .onErrorResume { error ->
+            }.onErrorResume { error ->
                 client.setRegistered(orgId, false)
                 log.error("Registration of {} for {} failed after retries: {}", client, orgId, error.describe())
                 Mono.just(false)
             }
 
-    fun contract(client: TenantClient, orgId: String): AdapterContract = AdapterContract.builder()
-        .adapterId(client.adapterId)
-        .orgId(orgId)
-        .username(client.username)
-        .heartbeatIntervalInMinutes(properties.heartbeatIntervalInMinutes)
-        .capabilities(bindings.capabilities)
-        .eventCapabilities(bindings.eventCapabilities)
-        .time(System.currentTimeMillis())
-        .build()
+    fun contract(
+        client: TenantClient,
+        orgId: String,
+    ): AdapterContract =
+        AdapterContract
+            .builder()
+            .adapterId(client.adapterId)
+            .orgId(orgId)
+            .username(client.username)
+            .heartbeatIntervalInMinutes(properties.heartbeatIntervalInMinutes)
+            .capabilities(bindings.capabilities)
+            .eventCapabilities(bindings.eventCapabilities)
+            .time(System.currentTimeMillis())
+            .build()
 }

@@ -26,14 +26,19 @@ class FullSyncService(
 ) {
     private val log = logger<FullSyncService>()
 
-    fun <T : FintResource> sync(client: TenantClient, orgId: String, binding: ResourceBinding<T>) {
+    fun <T : FintResource> sync(
+        client: TenantClient,
+        orgId: String,
+        binding: ResourceBinding<T>,
+    ) {
         val resources = binding.source.resources(orgId)
         val pages = pages(client, orgId, binding, resources, SyncType.FULL)
         if (properties.debug) validator.validate(pages, resources.size)
 
         log.info("Syncing {} {} for {} in {} pages", resources.size, binding.ref, orgId, pages.size)
         val start = Instant.now()
-        Flux.fromIterable(pages)
+        Flux
+            .fromIterable(pages)
             .concatMap { page -> send(client, binding, page) }
             .blockLast()
         log.info("Synced {} {} for {} in {}", resources.size, binding.ref, orgId, format(Duration.between(start, Instant.now())))
@@ -50,30 +55,59 @@ class FullSyncService(
         val chunks = resources.chunked(properties.pageSize)
         return chunks.mapIndexed { index, chunk ->
             val entries = chunk.map { SyncPageEntry.of(binding.identifier(it), it) }
-            val metadata = SyncPageMetadata.builder()
-                .orgId(orgId)
-                .adapterId(client.adapterId)
-                .corrId(corrId)
-                .totalPages(chunks.size.toLong())
-                .totalSize(resources.size.toLong())
-                .pageSize(entries.size.toLong())
-                .page(index + 1L)
-                .uriRef(binding.ref.entityUri)
-                .time(System.currentTimeMillis())
+            val metadata =
+                SyncPageMetadata
+                    .builder()
+                    .orgId(orgId)
+                    .adapterId(client.adapterId)
+                    .corrId(corrId)
+                    .totalPages(chunks.size.toLong())
+                    .totalSize(resources.size.toLong())
+                    .pageSize(entries.size.toLong())
+                    .page(index + 1L)
+                    .uriRef(binding.ref.entityUri)
+                    .time(System.currentTimeMillis())
+                    .build()
+            SyncPage
+                .builder()
+                .metadata(metadata)
+                .resources(entries)
+                .syncType(syncType)
                 .build()
-            SyncPage.builder().metadata(metadata).resources(entries).syncType(syncType).build()
         }
     }
 
-    private fun send(client: TenantClient, binding: ResourceBinding<*>, page: SyncPage): Mono<ResponseEntity<Void>> =
+    private fun send(
+        client: TenantClient,
+        binding: ResourceBinding<*>,
+        page: SyncPage,
+    ): Mono<ResponseEntity<Void>> =
         client.webClient
             .method(page.syncType.httpMethod)
             .uri("/provider${binding.ref.entityUri}")
             .bodyValue(page)
             .retrieve()
             .toBodilessEntity()
-            .doOnNext { log.info("Page {}/{} of {} for {} returned {}", page.metadata.page, page.metadata.totalPages, binding.ref, page.metadata.orgId, it.statusCode) }
-            .doOnError { log.error("Page {}/{} of {} for {} failed: {}", page.metadata.page, page.metadata.totalPages, binding.ref, page.metadata.orgId, it.describe()) }
+            .doOnNext {
+                log.info(
+                    "Page {}/{} of {} for {} returned {}",
+                    page.metadata.page,
+                    page.metadata.totalPages,
+                    binding.ref,
+                    page.metadata.orgId,
+                    it.statusCode,
+                )
+            }.doOnError {
+                log.error(
+                    "Page {}/{} of {} for {} failed: {}",
+                    page.metadata.page,
+                    page.metadata.totalPages,
+                    binding.ref,
+                    page.metadata.orgId,
+                    it.describe(),
+                )
+            }
 
-    private fun format(duration: Duration) = "%02d:%02d:%02d".format(duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart())
+    private fun format(duration: Duration) =
+        "%02d:%02d:%02d".format(duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart())
 }

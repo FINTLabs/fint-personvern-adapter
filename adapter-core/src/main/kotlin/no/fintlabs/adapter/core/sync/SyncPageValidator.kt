@@ -9,20 +9,27 @@ import no.fintlabs.adapter.models.sync.SyncPage
 class SyncPageValidator {
     private val log = logger<SyncPageValidator>()
 
-    fun validate(pages: List<SyncPage>, resourceSize: Int): List<String> {
-        val problems = buildList {
-            if (!validPageSize(pages)) add("Page size does not match resources size")
-            if (!validTotalSize(pages, resourceSize)) add("Total size does not match amount of resources")
-            if (hasDuplicateIds(pages)) add("Duplicate ids found")
-            if (!validIds(pages)) add("One or more ids is not a valid URN")
-        }
+    fun validate(
+        pages: List<SyncPage>,
+        resourceSize: Int,
+    ): List<String> {
+        val problems =
+            buildList {
+                if (!validPageSize(pages)) add("Page size does not match resources size")
+                if (!validTotalSize(pages, resourceSize)) add("Total size does not match amount of resources")
+                if (hasDuplicateIds(pages)) add("Duplicate ids found")
+                if (!validIds(pages)) add("One or more ids is not a valid URN")
+            }
         problems.forEach { log.warn("{}", it) }
         return problems
     }
 
     fun validPageSize(pages: List<SyncPage>): Boolean = pages.all { it.metadata.pageSize == it.resources.size.toLong() }
 
-    fun validTotalSize(pages: List<SyncPage>, totalSize: Int): Boolean = pages.sumOf { it.resources.size } == totalSize
+    fun validTotalSize(
+        pages: List<SyncPage>,
+        totalSize: Int,
+    ): Boolean = pages.sumOf { it.resources.size } == totalSize
 
     fun hasDuplicateIds(pages: List<SyncPage>): Boolean {
         val seen = HashSet<String>()

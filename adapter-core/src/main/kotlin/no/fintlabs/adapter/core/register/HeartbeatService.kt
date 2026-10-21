@@ -17,19 +17,25 @@ class HeartbeatService(
 
     fun beatAll() = registry.forEach { client -> client.orgs.forEach { beat(client, it) } }
 
-    fun beat(client: TenantClient, orgId: String) {
+    fun beat(
+        client: TenantClient,
+        orgId: String,
+    ) {
         if (!client.isRegistered(orgId)) {
             log.info("{} has no contract for {} yet, registering instead of sending heartbeat", client, orgId)
             registrationService.register(client, orgId).subscribe()
             return
         }
-        val heartbeat = AdapterHeartbeat.builder()
-            .adapterId(client.adapterId)
-            .username(client.username)
-            .orgId(orgId)
-            .time(System.currentTimeMillis())
-            .build()
-        client.webClient.post()
+        val heartbeat =
+            AdapterHeartbeat
+                .builder()
+                .adapterId(client.adapterId)
+                .username(client.username)
+                .orgId(orgId)
+                .time(System.currentTimeMillis())
+                .build()
+        client.webClient
+            .post()
             .uri("/provider/heartbeat")
             .bodyValue(heartbeat)
             .retrieve()

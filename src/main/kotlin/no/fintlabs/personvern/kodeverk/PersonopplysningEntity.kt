@@ -17,10 +17,8 @@ import java.util.Date
 class PersonopplysningEntity(
     @EmbeddedId
     var key: ResourceKey,
-
     @Column(nullable = false)
     var navn: String,
-
     var kode: String? = null,
     var passiv: Boolean = false,
     var startGyldighetsdato: Date? = null,
@@ -29,20 +27,25 @@ class PersonopplysningEntity(
     var startIdentifikatorDato: Date? = null,
     var endIdentifikatorDato: Date? = null,
 ) {
-    fun toResource(): PersonopplysningResource = PersonopplysningResource().apply {
-        systemId = Identifikator().apply { identifikatorverdi = key.id }
-        kode = this@PersonopplysningEntity.kode
-        navn = this@PersonopplysningEntity.navn
-        passiv = this@PersonopplysningEntity.passiv
-        gyldighetsperiode = Periode().apply {
-            start = startGyldighetsdato
-            slutt = endGyldighetsdato
-            beskrivelse = beskrivelseGyldighetsPeriode
+    fun toResource(): PersonopplysningResource =
+        PersonopplysningResource().apply {
+            systemId = Identifikator().apply { identifikatorverdi = key.id }
+            kode = this@PersonopplysningEntity.kode
+            navn = this@PersonopplysningEntity.navn
+            passiv = this@PersonopplysningEntity.passiv
+            gyldighetsperiode =
+                Periode().apply {
+                    start = startGyldighetsdato
+                    slutt = endGyldighetsdato
+                    beskrivelse = beskrivelseGyldighetsPeriode
+                }
         }
-    }
 
     companion object {
-        fun toEntity(resource: PersonopplysningResource, orgId: String) = PersonopplysningEntity(
+        fun toEntity(
+            resource: PersonopplysningResource,
+            orgId: String,
+        ) = PersonopplysningEntity(
             key = ResourceKey(orgId, resource.systemId.identifikatorverdi),
             navn = resource.navn,
             kode = resource.kode,

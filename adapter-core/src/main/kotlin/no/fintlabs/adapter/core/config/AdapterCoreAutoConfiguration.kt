@@ -34,27 +34,30 @@ import java.time.Duration
 @AutoConfiguration
 @EnableConfigurationProperties(AdapterProperties::class)
 class AdapterCoreAutoConfiguration {
-
     @Bean
     @ConditionalOnMissingBean
-    fun passwordGrantTokenClient(properties: AdapterProperties, webClientBuilder: WebClient.Builder): PasswordGrantTokenClient =
-        PasswordGrantTokenClient(properties.tokenUri, webClientBuilder.build())
+    fun passwordGrantTokenClient(
+        properties: AdapterProperties,
+        webClientBuilder: WebClient.Builder,
+    ): PasswordGrantTokenClient = PasswordGrantTokenClient(properties.tokenUri, webClientBuilder.build())
 
     @Bean
     @ConditionalOnMissingBean(name = ["adapterClientHttpConnector"])
-    fun adapterClientHttpConnector(): ClientHttpConnector = ReactorClientHttpConnector(
-        HttpClient.create(
-            ConnectionProvider.builder("fint-adapter")
-                .maxConnections(25)
-                .pendingAcquireMaxCount(-1)
-                .pendingAcquireTimeout(Duration.ofMinutes(15))
-                .maxLifeTime(Duration.ofMinutes(30))
-                .maxIdleTime(Duration.ofMinutes(5))
-                .build(),
+    fun adapterClientHttpConnector(): ClientHttpConnector =
+        ReactorClientHttpConnector(
+            HttpClient
+                .create(
+                    ConnectionProvider
+                        .builder("fint-adapter")
+                        .maxConnections(25)
+                        .pendingAcquireMaxCount(-1)
+                        .pendingAcquireTimeout(Duration.ofMinutes(15))
+                        .maxLifeTime(Duration.ofMinutes(30))
+                        .maxIdleTime(Duration.ofMinutes(5))
+                        .build(),
+                ).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 900_000)
+                .responseTimeout(Duration.ofMinutes(10)),
         )
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 900_000)
-            .responseTimeout(Duration.ofMinutes(10)),
-    )
 
     @Bean
     @ConditionalOnMissingBean
@@ -64,27 +67,32 @@ class AdapterCoreAutoConfiguration {
         tokenClient: PasswordGrantTokenClient,
         adapterClientHttpConnector: ClientHttpConnector,
         webClientBuilder: WebClient.Builder,
-    ): TenantRegistry = TenantRegistry(
-        properties.enabledTenants.map { (name, tenant) ->
-            TenantClient(
-                name,
-                tenant,
-                webClientBuilder.clone()
-                    .baseUrl(properties.baseUrl)
-                    .clientConnector(adapterClientHttpConnector)
-                    .codecs { it.defaultCodecs().maxInMemorySize(-1) }
-                    .filter(tokenClient.bearerFilter(tenant))
-                    .build(),
-                tenant.id ?: bindings.defaultAdapterId(properties.idPrefix, tenant.orgs.first()),
-            )
-        },
-    )
+    ): TenantRegistry =
+        TenantRegistry(
+            properties.enabledTenants.map { (name, tenant) ->
+                TenantClient(
+                    name,
+                    tenant,
+                    webClientBuilder
+                        .clone()
+                        .baseUrl(properties.baseUrl)
+                        .clientConnector(adapterClientHttpConnector)
+                        .codecs { it.defaultCodecs().maxInMemorySize(-1) }
+                        .filter(tokenClient.bearerFilter(tenant))
+                        .build(),
+                    tenant.id ?: bindings.defaultAdapterId(properties.idPrefix, tenant.orgs.first()),
+                )
+            },
+        )
 
     /** Built once at startup; fails the context on inconsistent sources, handlers or capability overrides. */
     @Bean
     @ConditionalOnMissingBean
-    fun resourceBindings(properties: AdapterProperties, sources: List<ResourceSource<*>>, handlers: List<EventHandler<*>>): ResourceBindings =
-        ResourceBindings.of(properties, sources, handlers)
+    fun resourceBindings(
+        properties: AdapterProperties,
+        sources: List<ResourceSource<*>>,
+        handlers: List<EventHandler<*>>,
+    ): ResourceBindings = ResourceBindings.of(properties, sources, handlers)
 
     @Bean
     @ConditionalOnMissingBean
@@ -92,7 +100,10 @@ class AdapterCoreAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun fullSyncService(properties: AdapterProperties, validator: SyncPageValidator) = FullSyncService(properties, validator)
+    fun fullSyncService(
+        properties: AdapterProperties,
+        validator: SyncPageValidator,
+    ) = FullSyncService(properties, validator)
 
     @Bean
     @ConditionalOnMissingBean
@@ -100,19 +111,27 @@ class AdapterCoreAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun registrationService(properties: AdapterProperties, registry: TenantRegistry, bindings: ResourceBindings) = RegistrationService(properties, registry, bindings)
+    fun registrationService(
+        properties: AdapterProperties,
+        registry: TenantRegistry,
+        bindings: ResourceBindings,
+    ) = RegistrationService(properties, registry, bindings)
 
     @Bean
     @ConditionalOnMissingBean
-    fun heartbeatService(registry: TenantRegistry, registrationService: RegistrationService) = HeartbeatService(registry, registrationService)
+    fun heartbeatService(
+        registry: TenantRegistry,
+        registrationService: RegistrationService,
+    ) = HeartbeatService(registry, registrationService)
 
     @Bean
     @ConditionalOnMissingBean(name = ["adapterTaskScheduler"])
-    fun adapterTaskScheduler(properties: AdapterProperties): ThreadPoolTaskScheduler = ThreadPoolTaskScheduler().apply {
-        poolSize = properties.schedulerPoolSize
-        setThreadNamePrefix("fint-adapter-")
-        setWaitForTasksToCompleteOnShutdown(false)
-    }
+    fun adapterTaskScheduler(properties: AdapterProperties): ThreadPoolTaskScheduler =
+        ThreadPoolTaskScheduler().apply {
+            poolSize = properties.schedulerPoolSize
+            setThreadNamePrefix("fint-adapter-")
+            setWaitForTasksToCompleteOnShutdown(false)
+        }
 
     @Bean
     @ConditionalOnMissingBean
@@ -125,5 +144,14 @@ class AdapterCoreAutoConfiguration {
         fullSyncService: FullSyncService,
         eventService: EventService,
         adapterTaskScheduler: TaskScheduler,
-    ) = AdapterScheduler(properties, registry, bindings, registrationService, heartbeatService, fullSyncService, eventService, adapterTaskScheduler)
+    ) = AdapterScheduler(
+        properties,
+        registry,
+        bindings,
+        registrationService,
+        heartbeatService,
+        fullSyncService,
+        eventService,
+        adapterTaskScheduler,
+    )
 }

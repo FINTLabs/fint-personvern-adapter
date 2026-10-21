@@ -17,16 +17,25 @@ interface EventHandler<T : FintResource> : ResourceDefinition<T> {
         get() = setOf(OperationType.CREATE, OperationType.UPDATE)
 
     /** The org the event is for is in [RequestFintEvent.getOrgId]. Throwing is reported as [EventResult.Failed]. */
-    fun handle(event: RequestFintEvent, resource: T): EventResult<T>
+    fun handle(
+        event: RequestFintEvent,
+        resource: T,
+    ): EventResult<T>
 }
 
 sealed interface EventResult<out T : Any> {
     /** The resource as stored, which is what the client gets back. */
-    data class Saved<T : Any>(val resource: T) : EventResult<T>
+    data class Saved<T : Any>(
+        val resource: T,
+    ) : EventResult<T>
 
     /** The request was understood but not acceptable; reported to the client as a 400. */
-    data class Rejected(val reason: String) : EventResult<Nothing>
+    data class Rejected(
+        val reason: String,
+    ) : EventResult<Nothing>
 
     /** Something went wrong on the adapter side; reported to the client as a 500. */
-    data class Failed(val message: String) : EventResult<Nothing>
+    data class Failed(
+        val message: String,
+    ) : EventResult<Nothing>
 }

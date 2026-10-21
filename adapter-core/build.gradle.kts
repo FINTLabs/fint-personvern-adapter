@@ -5,9 +5,11 @@ plugins {
     kotlin("plugin.spring")
     id("io.spring.dependency-management")
     `java-library`
+    kotlin("kapt")
 }
 
-description = "Tenant-aware FINT adapter runtime: registration, heartbeat, full sync and event handling driven by configuration"
+description =
+    "Tenant-aware FINT adapter runtime: registration, heartbeat, full sync and event handling driven by configuration"
 
 java {
     toolchain {
@@ -37,15 +39,25 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("tools.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.awaitility:awaitility")
-    testImplementation("no.novari:fint-personvern-resource-model-java:${rootProject.extra["apiVersion"] ?: project.property("apiVersion")}")
+    testImplementation(
+        "no.novari:fint-personvern-resource-model-java:${
+            rootProject.extra["apiVersion"] ?: project.property(
+                "apiVersion",
+            )
+        }",
+    )
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+repositories {
+    mavenCentral()
 }

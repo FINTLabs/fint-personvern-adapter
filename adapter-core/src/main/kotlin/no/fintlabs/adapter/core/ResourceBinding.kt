@@ -24,14 +24,16 @@ class ResourceBinding<T : FintResource>(
     fun identifier(resource: T): String = source.identifier(resource)
 
     val eventCapability: EventCapability?
-        get() = handler?.let {
-            EventCapability.builder()
-                .domainName(ref.domainName)
-                .packageName(ref.packageName)
-                .resourceName(ref.resourceName)
-                .operations(it.operations.toHashSet())
-                .build()
-        }
+        get() =
+            handler?.let {
+                EventCapability
+                    .builder()
+                    .domainName(ref.domainName)
+                    .packageName(ref.packageName)
+                    .resourceName(ref.resourceName)
+                    .operations(it.operations.toHashSet())
+                    .build()
+            }
 
     override fun toString(): String = ref.toString()
 }
@@ -44,18 +46,31 @@ class ResourceBinding<T : FintResource>(
 class ResourceBindings(
     val bindings: List<ResourceBinding<*>>,
 ) : Iterable<ResourceBinding<*>> by bindings {
-
     /** `<prefix>/<org with dots as dashes>/<domain(s) served>`, e.g. `https://vigoiks.no/novari-no/personvern`. */
-    fun defaultAdapterId(prefix: String, orgId: String): String =
-        "${prefix.trimEnd('/')}/${orgId.replace('.', '-')}/${bindings.map { it.ref.domainName }.distinct().sorted().joinToString("-")}"
+    fun defaultAdapterId(
+        prefix: String,
+        orgId: String,
+    ): String =
+        "${prefix.trimEnd('/')}/${orgId.replace('.', '-')}/${
+            bindings.map { it.ref.domainName }.distinct().sorted().joinToString("-")
+        }"
 
     val capabilities: Set<AdapterCapability> get() = bindings.map { it.capability }.toHashSet()
     val eventCapabilities: Set<EventCapability> get() = bindings.mapNotNull { it.eventCapability }.toHashSet()
 
     companion object {
-        fun of(properties: AdapterProperties, sources: List<ResourceSource<*>>, handlers: List<EventHandler<*>>): ResourceBindings {
+        fun of(
+            properties: AdapterProperties,
+            sources: List<ResourceSource<*>>,
+            handlers: List<EventHandler<*>>,
+        ): ResourceBindings {
             val sourceRefs = sources.map { it.ref }
-            val duplicates = sourceRefs.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+            val duplicates =
+                sourceRefs
+                    .groupingBy { it }
+                    .eachCount()
+                    .filterValues { it > 1 }
+                    .keys
             require(duplicates.isEmpty()) { "More than one ResourceSource bean for: $duplicates" }
 
             val unknown = (sourceRefs + handlers.map { it.ref }).filterNot { it.isKnown }.toSet()
@@ -72,20 +87,26 @@ class ResourceBindings(
             return ResourceBindings(bindings)
         }
 
-        private fun <T : FintResource> bind(properties: AdapterProperties, source: ResourceSource<T>, handlers: List<EventHandler<*>>): ResourceBinding<T> {
+        private fun <T : FintResource> bind(
+            properties: AdapterProperties,
+            source: ResourceSource<T>,
+            handlers: List<EventHandler<*>>,
+        ): ResourceBinding<T> {
             val ref = source.ref
             val matching = handlers.filter { it.ref == ref }
             require(matching.size <= 1) { "More than one EventHandler bean for $ref" }
             @Suppress("UNCHECKED_CAST")
             val handler = matching.firstOrNull() as EventHandler<T>?
             val settings = properties.capabilities[ref.resourceName] ?: CapabilityProperties()
-            val capability = AdapterCapability.builder()
-                .domainName(ref.domainName)
-                .packageName(ref.packageName)
-                .resourceName(ref.resourceName)
-                .fullSyncIntervalInDays(settings.fullSyncIntervalInDays)
-                .deltaSyncInterval(settings.deltaSyncInterval)
-                .build()
+            val capability =
+                AdapterCapability
+                    .builder()
+                    .domainName(ref.domainName)
+                    .packageName(ref.packageName)
+                    .resourceName(ref.resourceName)
+                    .fullSyncIntervalInDays(settings.fullSyncIntervalInDays)
+                    .deltaSyncInterval(settings.deltaSyncInterval)
+                    .build()
             return ResourceBinding(ref, source, handler, properties.fullSyncIntervalFor(settings), capability)
         }
     }

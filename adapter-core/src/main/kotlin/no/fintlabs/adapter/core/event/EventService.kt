@@ -24,7 +24,10 @@ class EventService(
     private val log = logger<EventService>()
 
     /** One request per domain the handled resources span; the gateway serves every package the credential has a role for. */
-    fun poll(client: TenantClient, bindings: Collection<ResourceBinding<*>>) {
+    fun poll(
+        client: TenantClient,
+        bindings: Collection<ResourceBinding<*>>,
+    ) {
         val handled = bindings.filter { it.handler != null }.associateBy { it.ref }
         handled.keys.map { it.domainName }.distinct().forEach { domain ->
             val events = fetch(client, domain)
@@ -33,7 +36,13 @@ class EventService(
             events.forEach { event ->
                 val binding = handled[ResourceRef(event.domainName, event.packageName, event.resourceName)]
                 if (binding == null) {
-                    log.warn("Event {} is for {}/{}/{}, which has no EventHandler; left for its time to live to expire", event.corrId, event.domainName, event.packageName, event.resourceName)
+                    log.warn(
+                        "Event {} is for {}/{}/{}, which has no EventHandler; left for its time to live to expire",
+                        event.corrId,
+                        event.domainName,
+                        event.packageName,
+                        event.resourceName,
+                    )
                 } else {
                     answer(client, event, binding)
                 }
@@ -41,19 +50,40 @@ class EventService(
         }
     }
 
-    private fun <T : FintResource> answer(client: TenantClient, event: RequestFintEvent, binding: ResourceBinding<T>) {
+    private fun <T : FintResource> answer(
+        client: TenantClient,
+        event: RequestFintEvent,
+        binding: ResourceBinding<T>,
+    ) {
         val handler = binding.handler ?: return
-        if (event.orgId !in client.orgs) log.warn("Event {} is for {}, which {} is not configured to serve", event.corrId, event.orgId, client)
+        if (event.orgId !in client.orgs) {
+            log.warn(
+                "Event {} is for {}, which {} is not configured to serve",
+                event.corrId,
+                event.orgId,
+                client,
+            )
+        }
         post(client, event, response(client, event, binding, handle(event, binding, handler)))
     }
 
-    fun <T : FintResource> handle(event: RequestFintEvent, binding: ResourceBinding<T>, handler: EventHandler<T>): EventResult<T> {
-        val resource = try {
-            objectMapper.readValue(event.value, binding.resourceType)
-        } catch (e: Exception) {
-            log.warn("Event {} carries a value that is not a {}: {}", event.corrId, binding.resourceType.simpleName, e.message)
-            return EventResult.Failed("Could not read ${binding.resourceType.simpleName}: ${e.message}")
-        }
+    fun <T : FintResource> handle(
+        event: RequestFintEvent,
+        binding: ResourceBinding<T>,
+        handler: EventHandler<T>,
+    ): EventResult<T> {
+        val resource =
+            try {
+                objectMapper.readValue(event.value, binding.resourceType)
+            } catch (e: Exception) {
+                log.warn(
+                    "Event {} carries a value that is not a {}: {}",
+                    event.corrId,
+                    binding.resourceType.simpleName,
+                    e.message,
+                )
+                return EventResult.Failed("Could not read ${binding.resourceType.simpleName}: ${e.message}")
+            }
         return try {
             handler.handle(event, resource)
         } catch (e: Exception) {
@@ -62,21 +92,33 @@ class EventService(
         }
     }
 
-    fun <T : FintResource> response(client: TenantClient, event: RequestFintEvent, binding: ResourceBinding<T>, result: EventResult<T>): ResponseFintEvent {
-        val response = ResponseFintEvent.builder()
-            .corrId(event.corrId)
-            .orgId(event.orgId)
-            .adapterId(client.adapterId)
-            .operationType(event.operationType)
-            .handledAt(System.currentTimeMillis())
-            .value(SyncPageEntry())
-            .build()
+    fun <T : FintResource> response(
+        client: TenantClient,
+        event: RequestFintEvent,
+        binding: ResourceBinding<T>,
+        result: EventResult<T>,
+    ): ResponseFintEvent {
+        val response =
+            ResponseFintEvent
+                .builder()
+                .corrId(event.corrId)
+                .orgId(event.orgId)
+                .adapterId(client.adapterId)
+                .operationType(event.operationType)
+                .handledAt(System.currentTimeMillis())
+                .value(SyncPageEntry())
+                .build()
         when (result) {
-            is EventResult.Saved -> response.value = SyncPageEntry.of(binding.identifier(result.resource), result.resource)
+            is EventResult.Saved -> {
+                response.value =
+                    SyncPageEntry.of(binding.identifier(result.resource), result.resource)
+            }
+
             is EventResult.Rejected -> {
                 response.isRejected = true
                 response.rejectReason = result.reason
             }
+
             is EventResult.Failed -> {
                 response.isFailed = true
                 response.errorMessage = result.message
@@ -85,9 +127,13 @@ class EventService(
         return response
     }
 
-    private fun fetch(client: TenantClient, domain: String): List<RequestFintEvent> =
+    private fun fetch(
+        client: TenantClient,
+        domain: String,
+    ): List<RequestFintEvent> =
         try {
-            client.webClient.get()
+            client.webClient
+                .get()
                 .uri("/provider/event/$domain")
                 .retrieve()
                 .bodyToMono(EVENT_LIST)
@@ -97,8 +143,13 @@ class EventService(
             emptyList()
         }
 
-    private fun post(client: TenantClient, event: RequestFintEvent, response: ResponseFintEvent) {
-        client.webClient.post()
+    private fun post(
+        client: TenantClient,
+        event: RequestFintEvent,
+        response: ResponseFintEvent,
+    ) {
+        client.webClient
+            .post()
             .uri("/provider/event")
             .bodyValue(response)
             .retrieve()

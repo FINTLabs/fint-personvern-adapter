@@ -22,7 +22,10 @@ class TenantClient(
 
     fun isRegistered(orgId: String): Boolean = orgId in registeredOrgs
 
-    fun setRegistered(orgId: String, registered: Boolean) {
+    fun setRegistered(
+        orgId: String,
+        registered: Boolean,
+    ) {
         if (registered) registeredOrgs += orgId else registeredOrgs -= orgId
     }
 

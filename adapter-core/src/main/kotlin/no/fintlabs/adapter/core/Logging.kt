@@ -8,4 +8,8 @@ inline fun <reified T : Any> logger(): Logger = LoggerFactory.getLogger(T::class
 
 /** Message plus response body when the gateway answered with one, so a 4xx is explained in the log. */
 fun Throwable.describe(): String =
-    if (this is WebClientResponseException && responseBodyAsString.isNotEmpty()) "$message - response body: $responseBodyAsString" else message ?: toString()
+    if (this is WebClientResponseException && responseBodyAsString.isNotEmpty()) {
+        "$message - response body: $responseBodyAsString"
+    } else {
+        message ?: toString()
+    }

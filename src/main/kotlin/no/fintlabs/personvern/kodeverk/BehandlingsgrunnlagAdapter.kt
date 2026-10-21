@@ -14,27 +14,28 @@ import java.util.Date
  */
 @Component
 class BehandlingsgrunnlagAdapter : ResourceSource<BehandlingsgrunnlagResource> {
-
-    override fun resources(orgId: String): List<BehandlingsgrunnlagResource> = BEHANDLINGSGRUNNLAG.map { (kode, navn) ->
-        BehandlingsgrunnlagResource().apply {
-            systemId = Identifikator().apply { identifikatorverdi = kode }
-            this.kode = kode
-            this.navn = navn
-            passiv = false
-            gyldighetsperiode = Periode().apply { start = Date.from(VALID_FROM) }
+    override fun resources(orgId: String): List<BehandlingsgrunnlagResource> =
+        BEHANDLINGSGRUNNLAG.map { (kode, navn) ->
+            BehandlingsgrunnlagResource().apply {
+                systemId = Identifikator().apply { identifikatorverdi = kode }
+                this.kode = kode
+                this.navn = navn
+                passiv = false
+                gyldighetsperiode = Periode().apply { start = Date.from(VALID_FROM) }
+            }
         }
-    }
 
     companion object {
         private val VALID_FROM: Instant = Instant.parse("2018-07-20T00:00:00.00Z")
 
-        private val BEHANDLINGSGRUNNLAG = linkedMapOf(
-            "a" to "Samtykke",
-            "b" to "Nødvendig for å oppfylle en avtale",
-            "c" to "Nødvendig for å oppfylle en rettslig plikt",
-            "d" to "Nødvendig for å beskytte vitale interesser",
-            "e" to "Nødvendig for å utføre en oppgave i offentlig interesse eller utøve offentlig myndighet",
-            "f" to "Nødvendig for å ivareta legitime interesser - interesseavveiing",
-        )
+        private val BEHANDLINGSGRUNNLAG =
+            linkedMapOf(
+                "a" to "Samtykke",
+                "b" to "Nødvendig for å oppfylle en avtale",
+                "c" to "Nødvendig for å oppfylle en rettslig plikt",
+                "d" to "Nødvendig for å beskytte vitale interesser",
+                "e" to "Nødvendig for å utføre en oppgave i offentlig interesse eller utøve offentlig myndighet",
+                "f" to "Nødvendig for å ivareta legitime interesser - interesseavveiing",
+            )
     }
 }

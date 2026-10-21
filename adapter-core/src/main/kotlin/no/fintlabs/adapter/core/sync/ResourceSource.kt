@@ -12,12 +12,13 @@ import org.springframework.core.GenericTypeResolver
  * resource breaks the convention, e.g. one identified by something other than systemId.
  */
 interface ResourceDefinition<T : FintResource> {
-
     val resourceType: Class<T>
         get() {
             @Suppress("UNCHECKED_CAST")
             return GenericTypeResolver.resolveTypeArgument(javaClass, ResourceDefinition::class.java) as Class<T>?
-                ?: throw IllegalStateException("${javaClass.name} must bind the type parameter of ResourceDefinition, or override resourceType")
+                ?: throw IllegalStateException(
+                    "${javaClass.name} must bind the type parameter of ResourceDefinition, or override resourceType",
+                )
         }
 
     /** The FINT resource this bean serves, e.g. personvern/samtykke/behandling. */
@@ -26,8 +27,13 @@ interface ResourceDefinition<T : FintResource> {
 
     /** The identifier a sync page entry or event answer is keyed by: the systemId value unless overridden. */
     fun identifier(resource: T): String =
-        resource.identifikators?.get(ID_FIELD)?.identifikatorverdi?.takeIf { it.isNotBlank() }
-            ?: throw IllegalArgumentException("${resourceType.simpleName} has no $ID_FIELD; override identifier() for resources identified differently")
+        resource.identifikators
+            ?.get(ID_FIELD)
+            ?.identifikatorverdi
+            ?.takeIf { it.isNotBlank() }
+            ?: throw IllegalArgumentException(
+                "${resourceType.simpleName} has no $ID_FIELD; override identifier() for resources identified differently",
+            )
 
     companion object {
         const val ID_FIELD = "systemId"
