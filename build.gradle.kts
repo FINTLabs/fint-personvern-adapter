@@ -8,7 +8,7 @@ plugins {
 
 group = "no.fintlabs"
 
-val apiVersion: String by project
+val apiVersion = project.property("apiVersion") as String
 
 allprojects {
     repositories {
