@@ -1,4 +1,4 @@
-FROM gradle:9.8.1-jdk25 AS builder
+FROM gradle:9.8.2-jdk25 AS builder
 USER root
 COPY . .
 RUN gradle --no-daemon build -x test
