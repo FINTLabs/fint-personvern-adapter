@@ -1,32 +1,18 @@
 fint:
   adapter:
-    id: https://vigoiks.no/fintlabs-no/personvern/samtykke
     base-url: https://alpha.felleskomponent.no
-    registration-id: fint
-    org-id: fintlabs.no
-    heartbeat-interval: 1
-    capabilities:
-      samtykke:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: samtykke
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      behandling:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: behandling
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
-      tjeneste:
-        domain-name: personvern
-        packageName: samtykke
-        resource-name: tjeneste
-        fullSyncIntervalInDays: 1
-        deltaSyncInterval: IMMEDIATE
+    token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api
+    heartbeat-interval: 1m
+    event-poll-interval: 15s
+    full-sync-initial-delay: 10s
+    page-size: 100
+    # Resources are the ResourceSource beans; per-resource settings are optional, e.g.
+    # capabilities.samtykke.full-sync-interval-in-days: 7
+    # Tenants (credentials and the orgs they serve) are not configured here: they come from the environment as
+    # fint.adapter.tenants.<name>.orgs/username/password/client-id/client-secret, see README. Entries given in
+    # YAML would be merged with them, not replaced.
 
 spring:
   profiles:
     include:
       - db
-      - oauth

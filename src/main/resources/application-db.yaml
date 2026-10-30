@@ -20,3 +20,6 @@ spring:
   flyway:
     locations: classpath:db/migration/
     lock-retry-count: 300
+    placeholders:
+      # Only used by V3 for rows without org_id, which exist only in the old per-org databases.
+      defaultOrgId: ${fint.adapter.org-id:unknown}
