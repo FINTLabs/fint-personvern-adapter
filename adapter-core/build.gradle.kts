@@ -29,10 +29,10 @@ dependencyManagement {
 }
 
 dependencies {
-    api("no.fintlabs:fint-core-infra-models:3.4.0")
+    api("no.fintlabs:fint-core-infra-models:3.4.3")
     api("no.novari:fint-model-resource:1.0.1")
     api("no.novari:fint-model-core:1.0.0")
-    implementation("no.novari:fint-core-information-model:0.7.0")
+    implementation("no.novari:fint-core-information-model:0.8.1")
     api("org.springframework.boot:spring-boot-starter-webclient")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("tools.jackson.module:jackson-module-kotlin")
