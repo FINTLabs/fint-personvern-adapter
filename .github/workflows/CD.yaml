@@ -70,7 +70,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.exists.outputs.exists == 'false'
 
       - name: Build and push
@@ -94,7 +94,7 @@ jobs:
       ENVIRONMENT: ${{ needs.setup.outputs.environment }}
       IMAGE: ${{ needs.setup.outputs.image }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Resolve cluster and resource group
         id: aks
@@ -138,7 +138,7 @@ jobs:
         run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy
-        uses: azure/k8s-deploy@v6
+        uses: azure/k8s-deploy@v7
         with:
           action: deploy
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
